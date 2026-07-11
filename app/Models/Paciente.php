@@ -14,8 +14,20 @@ class Paciente extends Model
 
     protected $primaryKey = 'id_paciente';
 
+    /**
+     * Indica a Laravel qué columna usar para el route model binding.
+     * Necesario porque el PK no es 'id' sino 'id_paciente'.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'id_paciente';
+    }
+
     protected $fillable = [
         'user_id',
+        'nombres',
+        'apellido_paterno',
+        'apellido_materno',
         'ci',
         'fecha_nacimiento',
         'sexo',
@@ -109,6 +121,9 @@ class Paciente extends Model
             ->useLogName('pacientes')
             ->logOnly([
                 'user_id',
+                'nombres',
+                'apellido_paterno',
+                'apellido_materno',
                 'ci',
                 'fecha_nacimiento',
                 'sexo',
@@ -118,6 +133,7 @@ class Paciente extends Model
                 'estado_civil',
                 'fecha_registro',
                 'estado',
+                'observaciones',
             ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();

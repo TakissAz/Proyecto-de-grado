@@ -16,6 +16,11 @@ class ResultadoPerfilGonadotropo extends Model
 
     protected $primaryKey = 'id_perfil_gonadotropo';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_perfil_gonadotropo';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

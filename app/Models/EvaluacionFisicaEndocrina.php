@@ -16,6 +16,11 @@ class EvaluacionFisicaEndocrina extends Model
 
     protected $primaryKey = 'id_evaluacion_fisica';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_evaluacion_fisica';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

@@ -16,6 +16,11 @@ class HistoriaHiperandrogenica extends Model
 
     protected $primaryKey = 'id_historia_hiperandrogenica';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_historia_hiperandrogenica';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

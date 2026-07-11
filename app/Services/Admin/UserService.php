@@ -50,9 +50,11 @@ class UserService
 
             $this->asignarRol($user, (int) $data['id_rol']);
 
+            $actor = Auth::user();
+
             activity()
                 ->useLog('usuarios')
-                ->causedBy(Auth::user())
+                ->causedBy($actor)
                 ->performedOn($user)
                 ->event('crear_usuario')
                 ->withProperties([
@@ -83,9 +85,11 @@ class UserService
                 $this->asignarRol($user, (int) $data['id_rol']);
             }
 
+            $actor = Auth::user();
+
             activity()
                 ->useLog('usuarios')
-                ->causedBy(Auth::user())
+                ->causedBy($actor)
                 ->performedOn($user)
                 ->event('actualizar_usuario')
                 ->log('Usuario actualizado desde el modulo administrador.');
@@ -101,9 +105,11 @@ class UserService
                 'estado' => $estado,
             ]);
 
+            $actor = Auth::user();
+
             activity()
                 ->useLog('usuarios')
-                ->causedBy(Auth::user())
+                ->causedBy($actor)
                 ->performedOn($user)
                 ->event('cambiar_estado_usuario')
                 ->withProperties([
@@ -140,9 +146,11 @@ class UserService
             ]);
         }
 
+        $actor = Auth::user();
+
         activity()
             ->useLog('usuarios')
-            ->causedBy(Auth::user())
+            ->causedBy($actor)
             ->performedOn($user)
             ->event('asignar_rol_usuario')
             ->withProperties([

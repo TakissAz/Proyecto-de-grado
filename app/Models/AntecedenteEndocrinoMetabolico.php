@@ -16,6 +16,11 @@ class AntecedenteEndocrinoMetabolico extends Model
 
     protected $primaryKey = 'id_antecedente';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_antecedente';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

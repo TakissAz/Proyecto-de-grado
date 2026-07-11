@@ -16,6 +16,11 @@ class EvaluacionEcografica extends Model
 
     protected $primaryKey = 'id_ecografia';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_ecografia';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

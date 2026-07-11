@@ -17,6 +17,10 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
+            $table->string('nombres', 150);
+            $table->string('apellido_paterno', 100);
+            $table->string('apellido_materno', 100)->nullable();
+
             $table->string('ci', 30)->unique();
 
             $table->date('fecha_nacimiento');

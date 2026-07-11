@@ -16,6 +16,11 @@ class ResultadoPerfilAndrogenico extends Model
 
     protected $primaryKey = 'id_perfil_androgenico';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_perfil_androgenico';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

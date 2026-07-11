@@ -16,6 +16,11 @@ class HistoriaMenstrual extends Model
 
     protected $primaryKey = 'id_historia_menstrual';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_historia_menstrual';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

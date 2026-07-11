@@ -16,6 +16,11 @@ class ResultadoPerfilLipidico extends Model
 
     protected $primaryKey = 'id_perfil_lipidico';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_perfil_lipidico';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

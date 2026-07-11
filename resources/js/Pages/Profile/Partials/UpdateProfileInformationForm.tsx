@@ -1,4 +1,4 @@
-import InputError from '@/Components/InputError';
+﻿import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
@@ -15,7 +15,7 @@ export default function UpdateProfileInformation({
     status?: string;
     className?: string;
 }) {
-    const user = usePage().props.auth.user;
+    const user = usePage().props.auth.user!;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
@@ -116,3 +116,4 @@ export default function UpdateProfileInformation({
         </section>
     );
 }
+

@@ -175,7 +175,7 @@ export default function Index({ users, roles, filters, flash }: Props) {
                     >
                         <Box>
                             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                GestiÃ³n de usuarios
+                                Gestión de usuarios
                             </Typography>
                             <Typography color="text.secondary">
                                 Busca, filtra y administra cuentas del sistema.

@@ -170,7 +170,7 @@ export default function Create({ roles, estados, flash }: Props) {
                                     label="Rol activo"
                                     value={data.id_rol}
                                     onChange={(event) =>
-                                        setData('id_rol', event.target.value)
+                                        setData('id_rol', String(event.target.value))
                                     }
                                 >
                                     <MenuItem value="">

@@ -1,15 +1,15 @@
+﻿/* global route */
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Stack,
-    Typography,
-} from '@mui/material';
-import PeopleIcon from '@mui/icons-material/People';
+    EncabezadoDashboard,
+    SeccionDashboard,
+    TarjetaAccion,
+} from '@/Components/Dashboard';
+import { Head } from '@inertiajs/react';
+import { Box } from '@mui/material';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import HistoryIcon from '@mui/icons-material/History';
+import PeopleIcon from '@mui/icons-material/People';
 
 export default function Dashboard() {
     return (
@@ -22,93 +22,41 @@ export default function Dashboard() {
         >
             <Head title="Administrador" />
 
-            <Box sx={{ padding: 3 }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, marginBottom: 1 }}>
-                    Módulo Administrador
-                </Typography>
+            <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <EncabezadoDashboard
+                    titulo="Panel de Administración"
+                    descripcion="Gestión de usuarios, auditoría clínica y configuración del sistema."
+                    modulo="Administrador"
+                />
 
-                <Typography color="text.secondary" sx={{ marginBottom: 3 }}>
-                    Gestión de usuarios, roles y trazabilidad de actividad del sistema.
-                </Typography>
+                <SeccionDashboard titulo="Gestión del sistema" columnas={3}>
+                    <TarjetaAccion
+                        titulo="Usuarios"
+                        descripcion="Crear, editar, activar, inactivar y bloquear usuarios del sistema."
+                        Icono={PeopleIcon}
+                        textoCta="Gestionar usuarios"
+                        href={route('admin.users.index')}
+                        variante="contained"
+                    />
 
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            md: 'repeat(3, 1fr)',
-                        },
-                        gap: 3,
-                    }}
-                >
-                    <Card>
-                        <CardContent>
-                            <Stack spacing={2}>
-                                <PeopleIcon fontSize="large" />
+                    <TarjetaAccion
+                        titulo="Auditoría de pacientes"
+                        descripcion="Revisar origen, creador, editor y flujo clínico de cada paciente."
+                        Icono={AssignmentIndIcon}
+                        textoCta="Ver pacientes"
+                        href={route('admin.auditoria.pacientes')}
+                        variante="contained"
+                    />
 
-                                <Box>
-                                    <Typography variant="h6">
-                                        Usuarios
-                                    </Typography>
-
-                                    <Typography color="text.secondary">
-                                        Crear, editar, activar, inactivar y bloquear usuarios.
-                                    </Typography>
-                                </Box>
-
-                                <Button
-                                    component={Link}
-                                    href="/admin/users"
-                                    variant="contained"
-                                >
-                                    Gestionar usuarios
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent>
-                            <Stack spacing={2}>
-                                <HistoryIcon fontSize="large" />
-
-                                <Box>
-                                    <Typography variant="h6">
-                                        Actividad
-                                    </Typography>
-
-                                    <Typography color="text.secondary">
-                                        Revisión de acciones importantes registradas en el sistema.
-                                    </Typography>
-                                </Box>
-
-                                <Button variant="outlined" disabled>
-                                    Próximamente
-                                </Button>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardContent>
-                            <Stack spacing={2}>
-                                <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                                    PMOS
-                                </Typography>
-
-                                <Box>
-                                    <Typography variant="h6">
-                                        Sistema clínico
-                                    </Typography>
-
-                                    <Typography color="text.secondary">
-                                        Base preparada para los módulos endocrinológico y nutricional.
-                                    </Typography>
-                                </Box>
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                </Box>
+                    <TarjetaAccion
+                        titulo="Actividad del sistema"
+                        descripcion="Revisar eventos y cambios recientes registrados en el módulo clínico."
+                        Icono={HistoryIcon}
+                        textoCta="Ver actividad"
+                        href={route('admin.auditoria.actividad')}
+                        variante="outlined"
+                    />
+                </SeccionDashboard>
             </Box>
         </AuthenticatedLayout>
     );

@@ -15,6 +15,13 @@ class UpdateUserRequest extends FormRequest
         return $user !== null && $user->tieneRol('administrador');
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'password' => $this->input('password') === '' ? null : $this->input('password'),
+        ]);
+    }
+
     public function rules(): array
     {
         $userId = $this->route('user')?->id;

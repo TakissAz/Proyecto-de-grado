@@ -16,6 +16,11 @@ class DiagnosticoResistenciaInsulina extends Model
 
     protected $primaryKey = 'id_diagnostico_ri';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_diagnostico_ri';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

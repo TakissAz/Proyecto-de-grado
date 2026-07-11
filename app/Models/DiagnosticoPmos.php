@@ -16,6 +16,11 @@ class DiagnosticoPmos extends Model
 
     protected $primaryKey = 'id_diagnostico_pmos';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_diagnostico_pmos';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

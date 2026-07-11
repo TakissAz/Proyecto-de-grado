@@ -14,6 +14,20 @@ class ConsultaEndocrinologica extends Model
 
     protected $primaryKey = 'id_consulta_endocrinologica';
 
+    /**
+     * Nombre explícito de la tabla — Laravel inferiría 'consulta_endocrinologicas'
+     * pero la migración la creó como 'consultas_endocrinologicas'.
+     */
+    protected $table = 'consultas_endocrinologicas';
+
+    /**
+     * Indica a Laravel qué columna usar para el route model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'id_consulta_endocrinologica';
+    }
+
     protected $fillable = [
         'id_paciente',
         'id_endocrinologo',

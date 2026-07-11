@@ -16,6 +16,11 @@ class ResultadoDiferencialEndocrino extends Model
 
     protected $primaryKey = 'id_diferencial_endocrino';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_diferencial_endocrino';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',

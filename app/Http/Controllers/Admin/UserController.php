@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Admin\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,6 +23,8 @@ class UserController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->ensureAdministrator();
+
         $users = $this->userService->listar(
             $request->only(['buscar', 'estado', 'rol'])
         );
@@ -39,6 +42,8 @@ class UserController extends Controller
 
     public function create(): Response
     {
+        $this->ensureAdministrator();
+
         return Inertia::render('Admin/Users/Create', [
             'roles' => $this->userService->rolesActivos(),
             'estados' => [
@@ -51,6 +56,8 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $this->ensureAdministrator();
+
         $this->userService->crear($request->validated());
 
         return redirect()
@@ -60,6 +67,8 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
+        $this->ensureAdministrator();
+
         $user->load('roles');
 
         return Inertia::render('Admin/Users/Edit', [
@@ -75,6 +84,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->ensureAdministrator();
+
         $this->userService->actualizar($user, $request->validated());
 
         return redirect()
@@ -84,6 +95,8 @@ class UserController extends Controller
 
     public function activar(User $user): RedirectResponse
     {
+        $this->ensureAdministrator();
+
         $this->userService->cambiarEstado($user, 'activo');
 
         return back()->with('success', 'Usuario activado correctamente.');
@@ -91,6 +104,8 @@ class UserController extends Controller
 
     public function inactivar(User $user): RedirectResponse
     {
+        $this->ensureAdministrator();
+
         $this->userService->cambiarEstado($user, 'inactivo');
 
         return back()->with('success', 'Usuario inactivado correctamente.');
@@ -98,8 +113,17 @@ class UserController extends Controller
 
     public function bloquear(User $user): RedirectResponse
     {
+        $this->ensureAdministrator();
+
         $this->userService->cambiarEstado($user, 'bloqueado');
 
         return back()->with('success', 'Usuario bloqueado correctamente.');
+    }
+
+    private function ensureAdministrator(): void
+    {
+        $user = Auth::user();
+
+        abort_unless($user !== null && $user->tieneRol('administrador'), 403, 'No tienes permiso para acceder a este módulo.');
     }
 }

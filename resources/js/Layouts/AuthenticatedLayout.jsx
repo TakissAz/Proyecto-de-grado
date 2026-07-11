@@ -1,16 +1,29 @@
+﻿/* global route */
+
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
     const user = auth?.user;
 
+    const roleNames = useMemo(
+        () => user?.roles?.map((role) => role.nombre) ?? [],
+        [user?.roles],
+    );
+
+    const isAdmin = roleNames.includes('administrador');
+    const isEndocrinologo = !isAdmin && roleNames.includes('endocrinologo');
+    const isNutricionista = !isAdmin && !isEndocrinologo && roleNames.includes('nutricionista');
+
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    const dashboardHref = route('dashboard');
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -19,25 +32,54 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href="/dashboard">
+                                <Link href={dashboardHref}>
                                     <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink
-                                    href="/dashboard"
+                                    href={dashboardHref}
                                     active={route().current('dashboard')}
                                 >
                                     Dashboard
                                 </NavLink>
 
-                                <NavLink
-                                    href="/admin/users"
-                                    active={route().current('admin.users.*')}
-                                >
-                                    Usuarios
-                                </NavLink>
+                                {isAdmin ? (
+                                    <>
+                                        <NavLink
+                                            href={route('admin.users.index')}
+                                            active={route().current('admin.users.*')}
+                                        >
+                                            Usuarios
+                                        </NavLink>
+
+                                        <NavLink
+                                            href={route('admin.auditoria.pacientes')}
+                                            active={route().current('admin.auditoria.*')}
+                                        >
+                                            Auditoria
+                                        </NavLink>
+                                    </>
+                                ) : null}
+
+                                {isNutricionista ? (
+                                    <NavLink
+                                        href={route('nutricionista.pacientes.index')}
+                                        active={route().current('nutricionista.pacientes.*')}
+                                    >
+                                        Pacientes
+                                    </NavLink>
+                                ) : null}
+
+                                {isEndocrinologo ? (
+                                    <NavLink
+                                        href={route('endocrinologo.pacientes.index')}
+                                        active={route().current('endocrinologo.pacientes.*')}
+                                    >
+                                        Pacientes
+                                    </NavLink>
+                                ) : null}
                             </div>
                         </div>
 
@@ -78,7 +120,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             method="post"
                                             as="button"
                                         >
-                                            Cerrar sesión
+                                            Cerrar sesion
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
@@ -136,18 +178,47 @@ export default function AuthenticatedLayout({ header, children }) {
                 >
                     <div className="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            href="/dashboard"
+                            href={dashboardHref}
                             active={route().current('dashboard')}
                         >
                             Dashboard
                         </ResponsiveNavLink>
 
-                        <ResponsiveNavLink
-                            href="/admin/users"
-                            active={route().current('admin.users.*')}
-                        >
-                            Usuarios
-                        </ResponsiveNavLink>
+                        {isAdmin ? (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route('admin.users.index')}
+                                    active={route().current('admin.users.*')}
+                                >
+                                    Usuarios
+                                </ResponsiveNavLink>
+
+                                <ResponsiveNavLink
+                                    href={route('admin.auditoria.pacientes')}
+                                    active={route().current('admin.auditoria.*')}
+                                >
+                                    Auditoria
+                                </ResponsiveNavLink>
+                            </>
+                        ) : null}
+
+                        {isNutricionista ? (
+                            <ResponsiveNavLink
+                                href={route('nutricionista.pacientes.index')}
+                                active={route().current('nutricionista.pacientes.*')}
+                            >
+                                Pacientes
+                            </ResponsiveNavLink>
+                        ) : null}
+
+                        {isEndocrinologo ? (
+                            <ResponsiveNavLink
+                                href={route('endocrinologo.pacientes.index')}
+                                active={route().current('endocrinologo.pacientes.*')}
+                            >
+                                Pacientes
+                            </ResponsiveNavLink>
+                        ) : null}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">
@@ -155,7 +226,6 @@ export default function AuthenticatedLayout({ header, children }) {
                             <div className="text-base font-medium text-gray-800">
                                 {user?.name ?? 'Usuario'}
                             </div>
-
                             <div className="text-sm font-medium text-gray-500">
                                 {user?.email ?? ''}
                             </div>
@@ -165,13 +235,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             <ResponsiveNavLink href={route('profile.edit')}>
                                 Perfil
                             </ResponsiveNavLink>
-
                             <ResponsiveNavLink
                                 method="post"
                                 href={route('logout')}
                                 as="button"
                             >
-                                Cerrar sesión
+                                Cerrar sesion
                             </ResponsiveNavLink>
                         </div>
                     </div>

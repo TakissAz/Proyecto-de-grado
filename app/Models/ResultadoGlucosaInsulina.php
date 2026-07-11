@@ -16,6 +16,11 @@ class ResultadoGlucosaInsulina extends Model
 
     protected $primaryKey = 'id_glucosa_insulina';
 
+    public function getRouteKeyName(): string
+    {
+        return 'id_glucosa_insulina';
+    }
+
     protected $fillable = [
         'id_consulta_endocrinologica',
         'id_paciente',
