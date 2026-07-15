@@ -1,6 +1,5 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
 import { useForm } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import type { EcografiaData } from '../tipos';
 
 interface Props {
@@ -49,74 +48,96 @@ export default function FormularioEcografia({ abierto, idPaciente, idConsulta, e
 
     const handleCerrar = () => { reset(); onCerrar(); };
 
+    // Preview compatibilidad
+    const volDer = parseFloat(data.volumen_ovario_derecho) || 0;
+    const volIzq = parseFloat(data.volumen_ovario_izquierdo) || 0;
+    const folDer = parseInt(data.foliculos_ovario_derecho) || 0;
+    const folIzq = parseInt(data.foliculos_ovario_izquierdo) || 0;
+    const compatiblePreview = volDer >= 10 || volIzq >= 10 || folDer >= 12 || folIzq >= 12;
+
+    if (!abierto) return null;
+
     return (
-        <Dialog open={abierto} onClose={handleCerrar} maxWidth="md" fullWidth>
-            <DialogTitle>
-                <Typography variant="h6" fontWeight={700}>
+        <dialog className="modal modal-open" key={existente?.id_ecografia ?? 'new'}>
+            <div className="modal-box max-w-2xl">
+                <h3 className="font-bold text-lg mb-4">
                     {esEdicion ? 'Editar evaluación ecográfica' : 'Registrar evaluación ecográfica'}
-                </Typography>
-            </DialogTitle>
+                </h3>
 
-            <Divider />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Fecha de ecografía</span></div>
+                            <input type="date" className="input input-bordered input-sm w-full" value={data.fecha_ecografia} onChange={(e) => setData('fecha_ecografia', e.target.value)} required />
+                            {errors.fecha_ecografia ? <div className="label"><span className="label-text-alt text-error text-xs">{errors.fecha_ecografia}</span></div> : null}
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Tipo de ecografía</span></div>
+                            <select className="select select-bordered select-sm w-full" value={data.tipo_ecografia} onChange={(e) => setData('tipo_ecografia', e.target.value)}>
+                                <option value="">Sin especificar</option>
+                                <option value="transvaginal">Transvaginal</option>
+                                <option value="abdominal">Abdominal</option>
+                                <option value="otra">Otra</option>
+                            </select>
+                        </label>
+                    </div>
 
-            <Box component="form" onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Stack spacing={3}>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                            <TextField label="Fecha de ecografía" type="date" value={data.fecha_ecografia} onChange={(e) => setData('fecha_ecografia', e.target.value)} error={Boolean(errors.fecha_ecografia)} helperText={errors.fecha_ecografia} size="small" required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Tipo de ecografía</InputLabel>
-                                <Select value={data.tipo_ecografia} label="Tipo de ecografía" onChange={(e) => setData('tipo_ecografia', e.target.value)}>
-                                    <MenuItem value="">Sin especificar</MenuItem>
-                                    <MenuItem value="transvaginal">Transvaginal</MenuItem>
-                                    <MenuItem value="abdominal">Abdominal</MenuItem>
-                                    <MenuItem value="otra">Otra</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Box>
+                    <div className="divider my-1" />
 
-                        <Divider />
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Ovario derecho</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputNum label="Volumen ovario derecho (mL)" value={data.volumen_ovario_derecho} onChange={(v) => setData('volumen_ovario_derecho', v)} error={errors.volumen_ovario_derecho} step="0.01" hint="Compatible si ≥ 10 mL" />
+                        <InputNum label="Conteo folicular OD" value={data.foliculos_ovario_derecho} onChange={(v) => setData('foliculos_ovario_derecho', v)} error={errors.foliculos_ovario_derecho} hint="Compatible si ≥ 12" />
+                    </div>
 
-                        <Typography variant="subtitle2" color="text.secondary">Ovario derecho</Typography>
+                    <div className="divider my-1" />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                            <TextField label="Volumen ovario derecho (mL)" type="number" value={data.volumen_ovario_derecho} onChange={(e) => setData('volumen_ovario_derecho', e.target.value)} error={Boolean(errors.volumen_ovario_derecho)} helperText={errors.volumen_ovario_derecho ?? 'Compatible si >= 10 mL'} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Conteo folicular OD" type="number" value={data.foliculos_ovario_derecho} onChange={(e) => setData('foliculos_ovario_derecho', e.target.value)} error={Boolean(errors.foliculos_ovario_derecho)} helperText={errors.foliculos_ovario_derecho ?? 'Compatible si >= 12'} size="small" fullWidth />
-                        </Box>
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Ovario izquierdo</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputNum label="Volumen ovario izquierdo (mL)" value={data.volumen_ovario_izquierdo} onChange={(v) => setData('volumen_ovario_izquierdo', v)} error={errors.volumen_ovario_izquierdo} step="0.01" hint="Compatible si ≥ 10 mL" />
+                        <InputNum label="Conteo folicular OI" value={data.foliculos_ovario_izquierdo} onChange={(v) => setData('foliculos_ovario_izquierdo', v)} error={errors.foliculos_ovario_izquierdo} hint="Compatible si ≥ 12" />
+                    </div>
 
-                        <Divider />
+                    <div className="divider my-1" />
 
-                        <Typography variant="subtitle2" color="text.secondary">Ovario izquierdo</Typography>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="checkbox checkbox-sm checkbox-primary" checked={data.distribucion_periferica} onChange={(e) => setData('distribucion_periferica', e.target.checked)} />
+                        <span className="text-sm text-base-content/80">Distribución periférica de folículos</span>
+                    </label>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                            <TextField label="Volumen ovario izquierdo (mL)" type="number" value={data.volumen_ovario_izquierdo} onChange={(e) => setData('volumen_ovario_izquierdo', e.target.value)} error={Boolean(errors.volumen_ovario_izquierdo)} helperText={errors.volumen_ovario_izquierdo ?? 'Compatible si >= 10 mL'} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Conteo folicular OI" type="number" value={data.foliculos_ovario_izquierdo} onChange={(e) => setData('foliculos_ovario_izquierdo', e.target.value)} error={Boolean(errors.foliculos_ovario_izquierdo)} helperText={errors.foliculos_ovario_izquierdo ?? 'Compatible si >= 12'} size="small" fullWidth />
-                        </Box>
+                    {compatiblePreview ? (
+                        <div className="alert alert-warning text-xs py-2">
+                            Morfología compatible con PMOS (se confirma en backend)
+                        </div>
+                    ) : null}
 
-                        <Divider />
+                    <label className="form-control w-full">
+                        <div className="label"><span className="label-text text-xs">Observaciones</span></div>
+                        <textarea className="textarea textarea-bordered text-sm" rows={3} value={data.observaciones} onChange={(e) => setData('observaciones', e.target.value)} />
+                    </label>
 
-                        <FormControlLabel
-                            control={<Checkbox checked={data.distribucion_periferica} onChange={(e) => setData('distribucion_periferica', e.target.checked)} />}
-                            label="Distribución periférica de folículos"
-                        />
+                    <div className="modal-action">
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={handleCerrar} disabled={processing}>Cancelar</button>
+                        <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
+                            <Save size={14} /> {processing ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Registrar'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button onClick={handleCerrar}>close</button></form>
+        </dialog>
+    );
+}
 
-                        <Typography variant="caption" color="text.secondary">
-                            La morfología compatible con PMOS se evalúa automáticamente en base al volumen y conteo folicular.
-                        </Typography>
-
-                        <TextField label="Observaciones" value={data.observaciones} onChange={(e) => setData('observaciones', e.target.value)} error={Boolean(errors.observaciones)} helperText={errors.observaciones} fullWidth multiline rows={3} />
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-                    <Button variant="outlined" onClick={handleCerrar} disabled={processing}>Cancelar</Button>
-                    <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={processing}>
-                        {processing ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Registrar')}
-                    </Button>
-                </DialogActions>
-            </Box>
-        </Dialog>
+function InputNum({ label, value, onChange, error, step, hint }: {
+    label: string; value: string; onChange: (v: string) => void; error?: string; step?: string; hint?: string;
+}) {
+    return (
+        <label className="form-control w-full">
+            <div className="label"><span className="label-text text-xs">{label}</span></div>
+            <input type="number" step={step} className="input input-bordered input-sm w-full" value={value} onChange={(e) => onChange(e.target.value)} />
+            {error ? <div className="label"><span className="label-text-alt text-error text-xs">{error}</span></div> : null}
+            {hint && !error ? <div className="label"><span className="label-text-alt text-base-content/40">{hint}</span></div> : null}
+        </label>
     );
 }

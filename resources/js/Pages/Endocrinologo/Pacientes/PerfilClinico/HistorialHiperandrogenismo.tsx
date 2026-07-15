@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Box, Button, Card, CardContent, Chip, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
+import { EstadoVacio } from '@/Components/ui/estado-vacio';
 import type { PageProps } from '@/types';
 import type { HiperandrogenismoData } from './tipos';
 
@@ -20,92 +22,86 @@ export default function HistorialHiperandrogenismo({ paciente, registros }: Prop
     const id = paciente.id_paciente;
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Historial de hiperandrogenismo</h2>}>
+        <AuthenticatedLayout header={<h2>Historial de hiperandrogenismo</h2>}>
             <Head title={`Historial hiperandrogenismo: ${paciente.nombre_completo}`} />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button component={Link} href={`/endocrinologo/pacientes/${id}/perfil-clinico`} variant="text" startIcon={<ArrowBackIcon />} size="small">
-                            Volver al perfil clínico
-                        </Button>
-                    </Box>
+            <div className="space-y-5">
+                <Link href={`/endocrinologo/pacientes/${id}/perfil-clinico`} className="btn btn-ghost btn-xs gap-1">
+                    <ArrowLeft size={14} /> Volver al perfil clínico
+                </Link>
 
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                        <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-                            <Box>
-                                <Typography variant="h5" fontWeight={700}>{paciente.nombre_completo}</Typography>
-                                <Typography variant="body2" color="text.secondary">CI: {paciente.ci}</Typography>
-                            </Box>
-                            <Chip label={`${registros.length} registro(s)`} size="small" variant="outlined" />
-                        </Stack>
-                    </Paper>
+                <div className="bg-base-100 border border-base-300 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+                    <div>
+                        <h2 className="text-lg font-extrabold text-base-content">{paciente.nombre_completo}</h2>
+                        <p className="text-xs text-base-content/50">CI: {paciente.ci}</p>
+                    </div>
+                    <Badge>{registros.length} registro(s)</Badge>
+                </div>
 
-                    <Typography variant="h6" fontWeight={600}>Historial de hiperandrogenismo</Typography>
+                <h3 className="text-base font-bold text-base-content">Historial de hiperandrogenismo</h3>
 
-                    {registros.length === 0 ? (
-                        <Card variant="outlined">
-                            <CardContent>
-                                <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                                    No existen registros de hiperandrogenismo para esta paciente.
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Paper variant="outlined">
-                            <TableContainer sx={{ overflowX: 'auto' }}>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Fecha registro</TableCell>
-                                            <TableCell>Signos clínicos</TableCell>
-                                            <TableCell>Ferriman-Gallwey</TableCell>
-                                            <TableCell>Inicio</TableCell>
-                                            <TableCell>Progresión</TableCell>
-                                            <TableCell>Observaciones</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {registros.map((r) => (
-                                            <TableRow key={r.id_historia_hiperandrogenica} hover>
-                                                <TableCell>
-                                                    <Typography variant="body2" fontWeight={500}>{r.created_at ?? '-'}</Typography>
-                                                    {r.updated_at && r.updated_at !== r.created_at ? (
-                                                        <Typography variant="caption" color="text.secondary">Act: {r.updated_at}</Typography>
+                {registros.length === 0 ? (
+                    <Tarjeta>
+                        <EstadoVacio mensaje="No existen registros de hiperandrogenismo para esta paciente." />
+                    </Tarjeta>
+                ) : (
+                    <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="table table-sm">
+                                <thead>
+                                    <tr className="text-base-content/50">
+                                        <th>Fecha</th>
+                                        <th>Signos clínicos</th>
+                                        <th>Ferriman-Gallwey</th>
+                                        <th>Inicio</th>
+                                        <th>Progresión</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {registros.map((r) => (
+                                        <tr key={r.id_historia_hiperandrogenica} className="hover">
+                                            <td>
+                                                <p className="font-medium text-xs">{r.created_at ?? '-'}</p>
+                                                {r.updated_at && r.updated_at !== r.created_at ? (
+                                                    <p className="text-[10px] text-base-content/40">Act: {r.updated_at}</p>
+                                                ) : null}
+                                            </td>
+                                            <td>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {r.acne ? <Badge variante={r.acne_grado === 'moderado' || r.acne_grado === 'severo' ? 'warning' : 'ghost'}>Acné {r.acne_grado !== 'no_aplica' ? r.acne_grado : ''}</Badge> : null}
+                                                    {r.hirsutismo ? <Badge variante="warning">{r.hirsutismo_zona ? `Hirsutismo (${r.hirsutismo_zona})` : 'Hirsutismo'}</Badge> : null}
+                                                    {r.alopecia_androgenica ? <Badge variante="warning">Alopecia</Badge> : null}
+                                                    {r.seborrea ? <Badge>Seborrea</Badge> : null}
+                                                    {!r.acne && !r.hirsutismo && !r.alopecia_androgenica && !r.seborrea ? (
+                                                        <span className="text-[10px] text-base-content/40">Sin signos</span>
                                                     ) : null}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
-                                                        {r.acne ? <Chip label={`Acné ${r.acne_grado !== 'no_aplica' ? r.acne_grado : ''}`} size="small" color={r.acne_grado === 'moderado' || r.acne_grado === 'severo' ? 'warning' : 'default'} /> : null}
-                                                        {r.hirsutismo ? <Chip label={r.hirsutismo_zona ? `Hirsutismo (${r.hirsutismo_zona})` : 'Hirsutismo'} size="small" color="warning" /> : null}
-                                                        {r.alopecia_androgenica ? <Chip label="Alopecia" size="small" color="warning" /> : null}
-                                                        {r.seborrea ? <Chip label="Seborrea" size="small" variant="outlined" /> : null}
-                                                        {!r.acne && !r.hirsutismo && !r.alopecia_androgenica && !r.seborrea ? <Typography variant="caption" color="text.secondary">Sin signos</Typography> : null}
-                                                    </Stack>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {r.puntaje_ferriman_gallwey != null ? (
-                                                        <Chip label={`${r.puntaje_ferriman_gallwey} pts`} size="small" color={r.puntaje_ferriman_gallwey >= 8 ? 'error' : 'default'} variant="outlined" />
-                                                    ) : '-'}
-                                                </TableCell>
-                                                <TableCell>{r.inicio_sintomas ?? '-'}</TableCell>
-                                                <TableCell>
-                                                    {r.progresion_sintomas ? (
-                                                        <Chip label={formatProgresion(r.progresion_sintomas)} size="small" color={r.progresion_sintomas === 'progresivo' ? 'error' : 'default'} variant="outlined" />
-                                                    ) : '-'}
-                                                </TableCell>
-                                                <TableCell sx={{ maxWidth: 200 }}>
-                                                    <Typography variant="caption" noWrap>{r.observaciones ?? '-'}</Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Paper>
-                    )}
-                </Stack>
-            </Box>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {r.puntaje_ferriman_gallwey != null ? (
+                                                    <Badge variante={r.puntaje_ferriman_gallwey >= 8 ? 'error' : 'ghost'}>
+                                                        {r.puntaje_ferriman_gallwey} pts
+                                                    </Badge>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="text-xs">{r.inicio_sintomas ?? '-'}</td>
+                                            <td>
+                                                {r.progresion_sintomas ? (
+                                                    <Badge variante={r.progresion_sintomas === 'progresivo' ? 'error' : 'ghost'}>
+                                                        {formatProgresion(r.progresion_sintomas)}
+                                                    </Badge>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="text-xs max-w-[150px] truncate">{r.observaciones ?? '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
         </AuthenticatedLayout>
     );
 }

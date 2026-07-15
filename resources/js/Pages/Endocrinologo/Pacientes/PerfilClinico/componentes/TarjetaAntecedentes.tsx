@@ -1,9 +1,8 @@
-import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import HistoryIcon from '@mui/icons-material/History';
+import clsx from 'clsx';
 import { Link } from '@inertiajs/react';
+import { Stethoscope, Edit, Plus, History } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
 import type { AntecedentesData } from '../tipos';
 
 interface Props {
@@ -16,26 +15,19 @@ interface Props {
 export default function TarjetaAntecedentes({ antecedentes, idPaciente, onRegistrar, onEditar }: Props) {
     if (!antecedentes) {
         return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <MedicalServicesIcon color="disabled" />
-                            <Typography variant="subtitle1" fontWeight={700}>Antecedentes endocrino-metabólicos</Typography>
-                            <Chip label="Pendiente" size="small" variant="outlined" />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                            No se han registrado los antecedentes endocrino-metabólicos de esta paciente.
-                            Estos datos son necesarios para evaluar riesgo metabólico y cardiovascular.
-                        </Typography>
-                        <Box>
-                            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={onRegistrar}>
-                                Registrar antecedentes
-                            </Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Tarjeta>
+                <div className="flex items-center gap-2 mb-2">
+                    <Stethoscope size={18} className="text-base-content/30" />
+                    <h3 className="font-bold text-base-content text-sm">Antecedentes endocrino-metabólicos</h3>
+                    <Badge>Pendiente</Badge>
+                </div>
+                <p className="text-xs text-base-content/60 mb-3">
+                    No se han registrado los antecedentes endocrino-metabólicos. Estos datos son necesarios para evaluar riesgo metabólico y cardiovascular.
+                </p>
+                <button onClick={onRegistrar} className="btn btn-primary btn-sm gap-1.5">
+                    <Plus size={14} /> Registrar antecedentes
+                </button>
+            </Tarjeta>
         );
     }
 
@@ -43,7 +35,7 @@ export default function TarjetaAntecedentes({ antecedentes, idPaciente, onRegist
         antecedentes.diabetes_personal && 'Diabetes',
         antecedentes.hipertension_personal && 'Hipertensión',
         antecedentes.dislipidemia_personal && 'Dislipidemia',
-        antecedentes.enfermedad_tiroidea && 'Enfermedad tiroidea',
+        antecedentes.enfermedad_tiroidea && 'Enf. tiroidea',
         antecedentes.hiperprolactinemia_previa && 'Hiperprolactinemia',
     ].filter(Boolean) as string[];
 
@@ -61,90 +53,81 @@ export default function TarjetaAntecedentes({ antecedentes, idPaciente, onRegist
 
     const tieneHallazgos = personales.length > 0 || familiares.length > 0;
 
-    const badgeEstado = tieneHallazgos
-        ? { label: 'Antecedentes relevantes', color: 'warning' as const }
-        : { label: 'Sin antecedentes relevantes', color: 'success' as const };
-
     const interpretacion = tieneHallazgos
         ? 'Existen antecedentes endocrino-metabólicos relevantes.'
         : 'Sin antecedentes endocrino-metabólicos relevantes registrados.';
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <MedicalServicesIcon color={tieneHallazgos ? 'warning' : 'success'} />
-                            <Typography variant="subtitle1" fontWeight={700}>Antecedentes endocrino-metabólicos</Typography>
-                            <Chip label={badgeEstado.label} color={badgeEstado.color} size="small" variant="outlined" />
-                        </Stack>
+        <Tarjeta>
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <Stethoscope size={18} className={tieneHallazgos ? 'text-warning' : 'text-success'} />
+                    <h3 className="font-bold text-base-content text-sm">Antecedentes endocrino-metabólicos</h3>
+                    <Badge variante={tieneHallazgos ? 'warning' : 'success'}>
+                        {tieneHallazgos ? 'Antecedentes relevantes' : 'Sin antecedentes relevantes'}
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Link href={`/endocrinologo/pacientes/${idPaciente}/antecedentes/historial`} className="btn btn-ghost btn-xs gap-1 text-base-content/60">
+                        <History size={13} /> Historial
+                    </Link>
+                    <button onClick={onEditar} className="btn btn-outline btn-primary btn-xs gap-1">
+                        <Edit size={13} /> Editar
+                    </button>
+                </div>
+            </div>
 
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                component={Link}
-                                href={`/endocrinologo/pacientes/${idPaciente}/antecedentes/historial`}
-                                variant="text"
-                                size="small"
-                                startIcon={<HistoryIcon />}
-                            >
-                                Historial
-                            </Button>
-                            <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={onEditar}>
-                                Editar
-                            </Button>
-                        </Stack>
-                    </Box>
+            <div className="border-b border-base-300 mb-3" />
 
-                    <Divider />
+            {/* Personales */}
+            {personales.length > 0 ? (
+                <div className="mb-3">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1.5">Antecedentes personales</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {personales.map((p) => <Badge key={p} variante="warning">{p}</Badge>)}
+                    </div>
+                </div>
+            ) : null}
 
-                    {personales.length > 0 ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Antecedentes personales</Typography>
-                            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mt: 0.5 }}>
-                                {personales.map((item) => <Chip key={item} label={item} color="warning" size="small" variant="filled" />)}
-                            </Stack>
-                        </Box>
-                    ) : null}
+            {/* Familiares */}
+            {familiares.length > 0 ? (
+                <div className="mb-3">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1.5">Antecedentes familiares</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {familiares.map((f) => <Badge key={f}>{f}</Badge>)}
+                    </div>
+                </div>
+            ) : null}
 
-                    {familiares.length > 0 ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Antecedentes familiares</Typography>
-                            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mt: 0.5 }}>
-                                {familiares.map((item) => <Chip key={item} label={item} size="small" variant="outlined" />)}
-                            </Stack>
-                        </Box>
-                    ) : null}
+            {/* Medicamentos */}
+            {medicamentos.length > 0 ? (
+                <div className="mb-3">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1.5">Medicamentos en uso</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {medicamentos.map((m) => <Badge key={m} variante="info">{m}</Badge>)}
+                    </div>
+                </div>
+            ) : null}
 
-                    {medicamentos.length > 0 ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Medicamentos en uso</Typography>
-                            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mt: 0.5 }}>
-                                {medicamentos.map((item) => <Chip key={item} label={item} color="primary" size="small" variant="outlined" />)}
-                            </Stack>
-                        </Box>
-                    ) : null}
+            {/* Interpretación */}
+            <p className={clsx('text-xs font-medium', tieneHallazgos ? 'text-warning' : 'text-base-content/50')}>
+                {interpretacion}
+            </p>
 
-                    {/* Interpretación */}
-                    <Typography variant="body2" color={tieneHallazgos ? 'warning.main' : 'text.secondary'} fontWeight={500}>
-                        {interpretacion}
-                    </Typography>
+            {antecedentes.otros_medicamentos ? (
+                <div className="mt-2">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">Otros medicamentos</p>
+                    <p className="text-sm text-base-content">{antecedentes.otros_medicamentos}</p>
+                </div>
+            ) : null}
 
-                    {antecedentes.otros_medicamentos ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Otros medicamentos</Typography>
-                            <Typography variant="body2">{antecedentes.otros_medicamentos}</Typography>
-                        </Box>
-                    ) : null}
-
-                    {antecedentes.observaciones ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Observaciones</Typography>
-                            <Typography variant="body2">{antecedentes.observaciones}</Typography>
-                        </Box>
-                    ) : null}
-                </Stack>
-            </CardContent>
-        </Card>
+            {antecedentes.observaciones ? (
+                <div className="mt-2">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">Observaciones</p>
+                    <p className="text-sm text-base-content">{antecedentes.observaciones}</p>
+                </div>
+            ) : null}
+        </Tarjeta>
     );
 }

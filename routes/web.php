@@ -240,6 +240,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.ecografia.store');
         Route::match(['put', 'patch'], 'pacientes/{paciente}/ecografia/{ecografia}', [EcografiaController::class, 'update'])
             ->name('pacientes.ecografia.update');
+        Route::get('pacientes/{paciente}/ecografia/historial', [EcografiaController::class, 'historial'])
+            ->name('pacientes.ecografia.historial');
 
         // Diagnóstico PMOS
         Route::post('pacientes/{paciente}/diagnostico-pmos', [DiagnosticoPmosController::class, 'store'])

@@ -9,6 +9,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class EcografiaController extends Controller
 {
@@ -87,5 +89,39 @@ class EcografiaController extends Controller
         ]);
 
         return back()->with('success', 'Evaluación ecográfica actualizada correctamente.');
+    }
+
+    /**
+     * Muestra el historial completo de evaluaciones ecográficas.
+     */
+    public function historial(Paciente $paciente): Response
+    {
+        $registros = EvaluacionEcografica::where('id_paciente', $paciente->id_paciente)
+            ->latest('fecha_ecografia')
+            ->get()
+            ->map(fn ($r) => [
+                'id_ecografia'                => $r->id_ecografia,
+                'fecha_ecografia'             => $r->fecha_ecografia?->format('Y-m-d'),
+                'tipo_ecografia'              => $r->tipo_ecografia,
+                'volumen_ovario_derecho'      => $r->volumen_ovario_derecho,
+                'volumen_ovario_izquierdo'    => $r->volumen_ovario_izquierdo,
+                'foliculos_ovario_derecho'    => $r->foliculos_ovario_derecho,
+                'foliculos_ovario_izquierdo'  => $r->foliculos_ovario_izquierdo,
+                'morfologia_compatible_pmos'  => $r->morfologia_compatible_pmos,
+                'distribucion_periferica'     => $r->distribucion_periferica,
+                'observaciones'               => $r->observaciones,
+                'estado'                      => $r->estado,
+                'created_at'                  => $r->created_at?->format('Y-m-d H:i'),
+                'updated_at'                  => $r->updated_at?->format('Y-m-d H:i'),
+            ]);
+
+        return Inertia::render('Endocrinologo/Pacientes/PerfilClinico/HistorialEcografia', [
+            'paciente' => [
+                'id_paciente'     => $paciente->id_paciente,
+                'nombre_completo' => trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' ')),
+                'ci'              => $paciente->ci,
+            ],
+            'registros' => $registros,
+        ]);
     }
 }

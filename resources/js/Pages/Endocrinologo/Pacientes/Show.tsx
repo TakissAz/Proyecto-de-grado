@@ -1,16 +1,12 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { Alert, Box, Button } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
-import EditIcon from '@mui/icons-material/Edit';
-import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
-import PacienteResumen from '@/Components/Pacientes/PacienteResumen';
-import ModalNuevaConsulta from '@/Components/Consultas/ModalNuevaConsulta';
 import { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Alerta from '@/Components/ui/alerta';
+import ModalNuevaConsulta from '@/Components/Consultas/ModalNuevaConsulta';
+import PerfilCabecera from './Show/PerfilCabecera';
+import PerfilDatosPersonales from './Show/PerfilDatosPersonales';
+import PerfilAccesosRapidos from './Show/PerfilAccesosRapidos';
+import type { PageProps } from '@/types';
 
 interface PacienteRow {
     id_paciente: number;
@@ -35,37 +31,13 @@ interface Props extends PageProps {
 
 export default function Show({ paciente, flash }: Props) {
     const [modalConsultaAbierto, setModalConsultaAbierto] = useState(false);
+    const id = paciente.id_paciente;
+    const nombre = paciente.nombre_completo ?? paciente.user?.name ?? 'Paciente';
 
-    const id = paciente?.id_paciente;
-    const nombrePaciente = paciente?.nombre_completo ?? paciente?.user?.name ?? 'Paciente';
-
-    // Guard: si por algún motivo el ID no llega, no construimos URLs rotas
-    if (!id) {
-        return (
-            <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Perfil de paciente</h2>}>
-                <Head title="Paciente" />
-                <Box sx={{ p: 3 }}>
-                    <Alert severity="error">No se pudo cargar el perfil de la paciente. Por favor vuelve al listado.</Alert>
-                    <Button component={Link} href="/endocrinologo/pacientes" sx={{ mt: 2 }} startIcon={<ArrowBackIcon />}>
-                        Volver al listado
-                    </Button>
-                </Box>
-            </AuthenticatedLayout>
-        );
-    }
-
-    // URLs construidas directamente — sin depender del helper route() de Ziggy
-    const urlEdit   = `/endocrinologo/pacientes/${id}/edit`;
-    const urlIndex  = `/endocrinologo/pacientes`;
-    const urlActivar   = `/endocrinologo/pacientes/${id}/activar`;
-    const urlInactivar = `/endocrinologo/pacientes/${id}/inactivar`;
-    const urlConsultas = `/endocrinologo/pacientes/${id}/consultas`;
-    const urlPerfilClinico = `/endocrinologo/pacientes/${id}/perfil-clinico`;
-
-    const enviarFormEstado = (url: string) => {
+    function enviarEstado(accion: 'activar' | 'inactivar') {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = url;
+        form.action = `/endocrinologo/pacientes/${id}/${accion}`;
         form.style.display = 'none';
 
         const csrf = document.createElement('input');
@@ -76,99 +48,58 @@ export default function Show({ paciente, flash }: Props) {
         method.name = '_method';
         method.value = 'PATCH';
 
-        form.appendChild(csrf);
-        form.appendChild(method);
+        form.append(csrf, method);
         document.body.appendChild(form);
         form.submit();
-    };
-
-    const actions = (
-        <>
-            <Button
-                component={Link}
-                href={urlPerfilClinico}
-                variant="contained"
-                color="primary"
-                startIcon={<MedicalInformationIcon />}
-            >
-                Perfil clínico
-            </Button>
-
-            <Button
-                component={Link}
-                href={urlEdit}
-                variant="outlined"
-                startIcon={<EditIcon />}
-            >
-                Editar
-            </Button>
-
-            <Button
-                variant="outlined"
-                color="success"
-                startIcon={<CheckCircleIcon />}
-                disabled={paciente.estado === 'activo'}
-                onClick={() => enviarFormEstado(urlActivar)}
-            >
-                Activar
-            </Button>
-
-            <Button
-                variant="outlined"
-                color="warning"
-                startIcon={<DoNotDisturbIcon />}
-                disabled={paciente.estado === 'inactivo'}
-                onClick={() => enviarFormEstado(urlInactivar)}
-            >
-                Inactivar
-            </Button>
-
-            <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<AssignmentIcon />}
-                onClick={() => setModalConsultaAbierto(true)}
-            >
-                Nueva consulta
-            </Button>
-
-            <Button
-                component={Link}
-                href={urlIndex}
-                variant="text"
-                startIcon={<ArrowBackIcon />}
-            >
-                Volver al listado
-            </Button>
-        </>
-    );
+    }
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Perfil de paciente
-                </h2>
-            }
-        >
+        <AuthenticatedLayout title="Perfil de paciente">
             <Head title={`Paciente: ${paciente.ci}`} />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                {flash?.success ? (
-                    <Alert severity="success" sx={{ mb: 2 }}>{flash.success}</Alert>
-                ) : null}
-                {flash?.error ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>{flash.error}</Alert>
-                ) : null}
+            <div className="space-y-5">
+                {flash?.success && <Alerta tipo="success">{flash.success}</Alerta>}
+                {flash?.error && <Alerta tipo="error">{flash.error}</Alerta>}
 
-                <PacienteResumen paciente={paciente} actions={actions} />
-            </Box>
+                {/* Cabecera tipo perfil */}
+                <PerfilCabecera
+                    id={id}
+                    nombre={nombre}
+                    ci={paciente.ci}
+                    email={paciente.user?.email}
+                    edad={paciente.edad}
+                    estado={paciente.estado}
+                    onActivar={() => enviarEstado('activar')}
+                    onInactivar={() => enviarEstado('inactivar')}
+                    onNuevaConsulta={() => setModalConsultaAbierto(true)}
+                />
+
+                {/* Contenido en 2 columnas */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+                    <div className="lg:col-span-3">
+                        <PerfilDatosPersonales
+                            sexo={paciente.sexo}
+                            fechaNacimiento={paciente.fecha_nacimiento}
+                            edad={paciente.edad}
+                            telefono={paciente.telefono}
+                            direccion={paciente.direccion}
+                            ocupacion={paciente.ocupacion}
+                            estadoCivil={paciente.estado_civil}
+                            fechaRegistro={paciente.fecha_registro}
+                            observaciones={paciente.observaciones}
+                        />
+                    </div>
+                    <div className="lg:col-span-2">
+                        <PerfilAccesosRapidos idPaciente={id} />
+                    </div>
+                </div>
+            </div>
 
             <ModalNuevaConsulta
                 abierto={modalConsultaAbierto}
                 idPaciente={id}
-                nombrePaciente={nombrePaciente}
-                urlGuardar={urlConsultas}
+                nombrePaciente={nombre}
+                urlGuardar={`/endocrinologo/pacientes/${id}/consultas`}
                 onCerrar={() => setModalConsultaAbierto(false)}
             />
         </AuthenticatedLayout>

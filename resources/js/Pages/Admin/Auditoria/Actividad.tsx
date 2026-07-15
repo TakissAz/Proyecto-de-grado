@@ -3,30 +3,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Box,
-    Button,
-    Chip,
-    Paper,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
+import { X } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 import { useEffect, useState } from 'react';
 
-interface ActivityUser {
-    id: number;
-    name: string;
-    email?: string | null;
-}
+interface ActivityUser { id: number; name: string; email?: string | null; }
 
 interface ActivityRow {
     id: number;
@@ -41,25 +22,11 @@ interface ActivityRow {
 
 interface PaginatedActivities {
     data: ActivityRow[];
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
-    meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number | null;
-        to: number | null;
-    };
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+    meta: { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null; };
 }
 
-interface Filters {
-    buscar: string;
-    paciente: string;
-}
+interface Filters { buscar: string; paciente: string; }
 
 interface Props extends PageProps {
     actividades: PaginatedActivities;
@@ -76,126 +43,94 @@ export default function Actividad({ actividades, filtros }: Props) {
     }, [filtros.buscar, filtros.paciente]);
 
     const applyFilters = (page = 1) => {
-        router.get(
-            route('admin.auditoria.actividad'),
-            { buscar, paciente, page },
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        router.get(route('admin.auditoria.actividad'), { buscar, paciente, page }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const clearFilters = () => {
-        setBuscar('');
-        setPaciente('');
+        setBuscar(''); setPaciente('');
         router.get(route('admin.auditoria.actividad'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const pageCount = actividades.meta?.last_page ?? 1;
-    const currentPage = actividades.meta?.current_page ?? 1;
 
     return (
-        <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Actividad de pacientes</h2>}
-        >
+        <AuthenticatedLayout header={<h2>Actividad de pacientes</h2>}>
             <Head title="Actividad de pacientes" />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', gap: 2, alignItems: { xs: 'stretch', md: 'center' } }}>
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                Actividad
-                            </Typography>
-                            <Typography color="text.secondary">
-                                Eventos generados por el modulo de pacientes.
-                            </Typography>
-                        </Box>
+            <div className="space-y-5">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-base-content">Actividad</h2>
+                        <p className="text-sm text-base-content/60">Eventos generados por el módulo de pacientes.</p>
+                    </div>
+                    <Link href={route('admin.auditoria.pacientes')} className="btn btn-ghost btn-sm">Volver a pacientes</Link>
+                </div>
 
-                        <Button component={Link} href={route('admin.auditoria.pacientes')} variant="outlined">
-                            Volver a pacientes
-                        </Button>
-                    </Box>
+                {/* Filtros */}
+                <form className="bg-base-100 border border-base-300 rounded-2xl p-4" onSubmit={(e) => { e.preventDefault(); applyFilters(1); }}>
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-3 items-end">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Buscar</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full" placeholder="Evento, descripción o usuario" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Paciente ID</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full" value={paciente} onChange={(e) => setPaciente(e.target.value)} />
+                        </label>
+                        <div className="flex gap-2 items-end">
+                            <button type="submit" className="btn btn-primary btn-sm">Filtrar</button>
+                            <button type="button" className="btn btn-ghost btn-sm gap-1" onClick={clearFilters}><X size={14} /> Limpiar</button>
+                        </div>
+                    </div>
+                </form>
 
-                    <Paper elevation={1} sx={{ p: 2 }}>
-                        <Stack
-                            component="form"
-                            spacing={2}
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                applyFilters(1);
-                            }}
-                        >
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr auto' }, gap: 2, alignItems: 'center' }}>
-                                <TextField label="Buscar por evento, descripcion o usuario" value={buscar} onChange={(event) => setBuscar(event.target.value)} fullWidth size="small" />
-                                <TextField label="Paciente ID" value={paciente} onChange={(event) => setPaciente(event.target.value)} fullWidth size="small" />
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' }, flexWrap: 'wrap' }}>
-                                    <Button type="submit" variant="contained">Filtrar</Button>
-                                    <Button type="button" variant="outlined" startIcon={<ClearIcon />} onClick={clearFilters}>Limpiar</Button>
-                                </Box>
-                            </Box>
-                        </Stack>
-                    </Paper>
+                {/* Tabla */}
+                <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                            <thead>
+                                <tr className="border-base-300">
+                                    <th>Fecha</th>
+                                    <th>Evento</th>
+                                    <th>Descripción</th>
+                                    <th>Usuario</th>
+                                    <th>Subject</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {actividades.data.length === 0 ? (
+                                    <tr><td colSpan={5} className="text-center py-10 text-base-content/50">No se encontraron actividades.</td></tr>
+                                ) : actividades.data.map((a) => (
+                                    <tr key={a.id} className="hover border-base-300">
+                                        <td className="text-xs">{a.created_at ?? '-'}</td>
+                                        <td><Badge variante="ghost">{a.event ?? '-'}</Badge></td>
+                                        <td className="text-sm">{a.description}</td>
+                                        <td className="text-xs">{a.causer?.name ?? '-'}</td>
+                                        <td className="text-xs">{a.subject_type ?? '-'} {a.subject_id ?? ''}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <Paper elevation={1}>
-                        <TableContainer sx={{ overflowX: 'auto' }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Fecha</TableCell>
-                                        <TableCell>Evento</TableCell>
-                                        <TableCell>Descripcion</TableCell>
-                                        <TableCell>Usuario</TableCell>
-                                        <TableCell>Subject</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {actividades.data.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
-                                                No se encontraron actividades.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        actividades.data.map((actividad) => (
-                                            <TableRow key={actividad.id} hover>
-                                                <TableCell>{actividad.created_at ?? '-'}</TableCell>
-                                                <TableCell>
-                                                    <Chip label={actividad.event ?? '-'} size="small" variant="outlined" />
-                                                </TableCell>
-                                                <TableCell>{actividad.description}</TableCell>
-                                                <TableCell>{actividad.causer?.name ?? '-'}</TableCell>
-                                                <TableCell>{actividad.subject_type ?? '-'} {actividad.subject_id ?? ''}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, px: 2, py: 1 }}>
-                            <Typography variant="body2" color="text.secondary">Total: {actividades.meta.total} eventos</Typography>
-                            <TablePagination component="div" count={actividades.meta.total} page={Math.max(currentPage - 1, 0)} rowsPerPage={actividades.meta.per_page} rowsPerPageOptions={[actividades.meta.per_page]} onPageChange={(_, nextPage) => applyFilters(nextPage + 1)} onRowsPerPageChange={() => undefined} labelRowsPerPage="" labelDisplayedRows={({ from, to, count }) => `${from} - ${to} de ${count}`} />
-                        </Box>
-                    </Paper>
-
-                    {pageCount > 1 ? (
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {actividades.links.map((link, index) => {
-                                const label = link.label.replace('&laquo; Previous', 'Anterior').replace('Next &raquo;', 'Siguiente');
-
-                                if (! link.url) {
-                                    return <Button key={`${label}-${index}`} variant="outlined" disabled>{label}</Button>;
-                                }
-
-                                return (
-                                    <Button key={`${label}-${index}`} variant={link.active ? 'contained' : 'outlined'} onClick={() => router.get(link.url as string, {}, { preserveScroll: true, preserveState: true, replace: true })}>
-                                        {label}
-                                    </Button>
-                                );
-                            })}
-                        </Box>
-                    ) : null}
-                </Stack>
-            </Box>
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 px-4 py-3 border-t border-base-300">
+                        <p className="text-xs text-base-content/50">Total: {actividades.meta.total} eventos</p>
+                        {pageCount > 1 ? (
+                            <div className="join">
+                                {actividades.links.map((link, i) => {
+                                    const label = link.label.replace('&laquo; Previous', '«').replace('Next &raquo;', '»');
+                                    return (
+                                        <button key={`${label}-${i}`} className={`join-item btn btn-xs ${link.active ? 'btn-primary' : 'btn-ghost'}`} disabled={!link.url} onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true, preserveState: true, replace: true })}>
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

@@ -1,9 +1,8 @@
-import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import HistoryIcon from '@mui/icons-material/History';
+import clsx from 'clsx';
 import { Link } from '@inertiajs/react';
+import { Activity, Edit, Plus, History } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
 import type { EvaluacionFisicaData } from '../tipos';
 
 interface Props {
@@ -16,29 +15,22 @@ interface Props {
 export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegistrar, onEditar }: Props) {
     if (!evaluacion) {
         return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <FitnessCenterIcon color="disabled" />
-                            <Typography variant="subtitle1" fontWeight={700}>Evaluación física endocrina</Typography>
-                            <Chip label="Pendiente" size="small" variant="outlined" />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                            No se ha registrado la evaluación física endocrina. Estos datos son necesarios para evaluar riesgo metabólico.
-                        </Typography>
-                        <Box>
-                            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={onRegistrar}>
-                                Registrar evaluación física
-                            </Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Tarjeta>
+                <div className="flex items-center gap-2 mb-2">
+                    <Activity size={18} className="text-base-content/30" />
+                    <h3 className="font-bold text-base-content text-sm">Evaluación física endocrina</h3>
+                    <Badge>Pendiente</Badge>
+                </div>
+                <p className="text-xs text-base-content/60 mb-3">
+                    No se ha registrado la evaluación física endocrina. Estos datos son necesarios para evaluar riesgo metabólico.
+                </p>
+                <button onClick={onRegistrar} className="btn btn-primary btn-sm gap-1.5">
+                    <Plus size={14} /> Registrar evaluación física
+                </button>
+            </Tarjeta>
         );
     }
 
-    // Evaluar hallazgos
     const alertas: string[] = [];
     if (evaluacion.imc != null && evaluacion.imc >= 25) alertas.push(`IMC elevado (${evaluacion.imc})`);
     if (evaluacion.circunferencia_cintura != null && evaluacion.circunferencia_cintura >= 80) alertas.push('Cintura elevada');
@@ -54,99 +46,85 @@ export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegi
     if (evaluacion.alopecia_visible) alertas.push('Alopecia visible');
 
     const tieneHallazgos = alertas.length > 0;
-
-    const badgeEstado = tieneHallazgos
-        ? { label: 'Hallazgos relevantes', color: 'warning' as const }
-        : { label: 'Sin hallazgos relevantes', color: 'success' as const };
-
     const interpretacion = tieneHallazgos
         ? 'Existen hallazgos físicos relevantes para riesgo metabólico.'
         : 'Sin hallazgos físicos relevantes registrados.';
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <FitnessCenterIcon color={tieneHallazgos ? 'warning' : 'success'} />
-                            <Typography variant="subtitle1" fontWeight={700}>Evaluación física endocrina</Typography>
-                            <Chip label={badgeEstado.label} color={badgeEstado.color} size="small" variant="outlined" />
-                        </Stack>
+        <Tarjeta>
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <Activity size={18} className={tieneHallazgos ? 'text-warning' : 'text-success'} />
+                    <h3 className="font-bold text-base-content text-sm">Evaluación física endocrina</h3>
+                    <Badge variante={tieneHallazgos ? 'warning' : 'success'}>
+                        {tieneHallazgos ? 'Hallazgos relevantes' : 'Sin hallazgos relevantes'}
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Link href={`/endocrinologo/pacientes/${idPaciente}/evaluacion-fisica/historial`} className="btn btn-ghost btn-xs gap-1 text-base-content/60">
+                        <History size={13} /> Historial
+                    </Link>
+                    <button onClick={onEditar} className="btn btn-outline btn-primary btn-xs gap-1">
+                        <Edit size={13} /> Editar
+                    </button>
+                </div>
+            </div>
 
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                component={Link}
-                                href={`/endocrinologo/pacientes/${idPaciente}/evaluacion-fisica/historial`}
-                                variant="text"
-                                size="small"
-                                startIcon={<HistoryIcon />}
-                            >
-                                Historial
-                            </Button>
-                            <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={onEditar}>
-                                Editar
-                            </Button>
-                        </Stack>
-                    </Box>
+            <div className="border-b border-base-300 mb-3" />
 
-                    <Divider />
+            {/* Mediciones */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                <Medicion etiqueta="Peso" valor={evaluacion.peso} unidad="kg" />
+                <Medicion etiqueta="Talla" valor={evaluacion.talla} unidad="m" />
+                <Medicion etiqueta="IMC" valor={evaluacion.imc} alerta={evaluacion.imc != null && evaluacion.imc >= 25} />
+                <Medicion etiqueta="ICC" valor={evaluacion.indice_cintura_cadera} alerta={evaluacion.indice_cintura_cadera != null && evaluacion.indice_cintura_cadera >= 0.85} />
+                <Medicion etiqueta="Cintura" valor={evaluacion.circunferencia_cintura} unidad="cm" alerta={evaluacion.circunferencia_cintura != null && evaluacion.circunferencia_cintura >= 80} />
+                <Medicion etiqueta="Cadera" valor={evaluacion.circunferencia_cadera} unidad="cm" />
+                <Medicion etiqueta="PA sist." valor={evaluacion.presion_sistolica} unidad="mmHg" alerta={evaluacion.presion_sistolica != null && evaluacion.presion_sistolica >= 130} />
+                <Medicion etiqueta="PA diast." valor={evaluacion.presion_diastolica} unidad="mmHg" alerta={evaluacion.presion_diastolica != null && evaluacion.presion_diastolica >= 85} />
+            </div>
 
-                    {/* Mediciones principales */}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
-                        <Medicion etiqueta="Peso" valor={evaluacion.peso} unidad="kg" />
-                        <Medicion etiqueta="Talla" valor={evaluacion.talla} unidad="m" />
-                        <Medicion etiqueta="IMC" valor={evaluacion.imc} alerta={evaluacion.imc != null && evaluacion.imc >= 25} />
-                        <Medicion etiqueta="ICC" valor={evaluacion.indice_cintura_cadera} alerta={evaluacion.indice_cintura_cadera != null && evaluacion.indice_cintura_cadera >= 0.85} />
-                        <Medicion etiqueta="Cintura" valor={evaluacion.circunferencia_cintura} unidad="cm" alerta={evaluacion.circunferencia_cintura != null && evaluacion.circunferencia_cintura >= 80} />
-                        <Medicion etiqueta="Cadera" valor={evaluacion.circunferencia_cadera} unidad="cm" />
-                        <Medicion etiqueta="PA sistólica" valor={evaluacion.presion_sistolica} unidad="mmHg" alerta={evaluacion.presion_sistolica != null && evaluacion.presion_sistolica >= 130} />
-                        <Medicion etiqueta="PA diastólica" valor={evaluacion.presion_diastolica} unidad="mmHg" alerta={evaluacion.presion_diastolica != null && evaluacion.presion_diastolica >= 85} />
-                    </Box>
+            {/* Alertas */}
+            {tieneHallazgos ? (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                    {alertas.map(a => <Badge key={a} variante="warning">{a}</Badge>)}
+                </div>
+            ) : null}
 
-                    {/* Chips de alertas */}
-                    {tieneHallazgos ? (
-                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                            {alertas.map(a => <Chip key={a} label={a} color="warning" size="small" variant="filled" />)}
-                        </Stack>
-                    ) : null}
+            {/* Hallazgos al examen */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+                <ChipExamen label="Hirsutismo" activo={evaluacion.hirsutismo_visible} />
+                <ChipExamen label="Acné" activo={evaluacion.acne_visible} />
+                <ChipExamen label="Alopecia" activo={evaluacion.alopecia_visible} />
+            </div>
 
-                    {/* Hallazgos al examen */}
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                        <ChipExamen label="Hirsutismo" activo={evaluacion.hirsutismo_visible} />
-                        <ChipExamen label="Acné" activo={evaluacion.acne_visible} />
-                        <ChipExamen label="Alopecia" activo={evaluacion.alopecia_visible} />
-                    </Stack>
+            {/* Interpretación */}
+            <p className={clsx('text-xs font-medium', tieneHallazgos ? 'text-warning' : 'text-base-content/50')}>
+                {interpretacion}
+            </p>
 
-                    {/* Interpretación */}
-                    <Typography variant="body2" color={tieneHallazgos ? 'warning.main' : 'text.secondary'} fontWeight={500}>
-                        {interpretacion}
-                    </Typography>
-
-                    {evaluacion.observaciones ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Observaciones</Typography>
-                            <Typography variant="body2">{evaluacion.observaciones}</Typography>
-                        </Box>
-                    ) : null}
-                </Stack>
-            </CardContent>
-        </Card>
+            {evaluacion.observaciones ? (
+                <div className="mt-2">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">Observaciones</p>
+                    <p className="text-sm text-base-content">{evaluacion.observaciones}</p>
+                </div>
+            ) : null}
+        </Tarjeta>
     );
 }
 
 function Medicion({ etiqueta, valor, unidad, alerta }: { etiqueta: string; valor?: number | null; unidad?: string; alerta?: boolean }) {
     return (
-        <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>{etiqueta}</Typography>
-            <Typography variant="body2" fontWeight={500} color={alerta ? 'warning.main' : 'text.primary'}>
+        <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">{etiqueta}</p>
+            <p className={clsx('text-sm font-semibold', alerta ? 'text-warning' : 'text-base-content')}>
                 {valor != null ? `${valor}${unidad ? ` ${unidad}` : ''}` : '-'}
-            </Typography>
-        </Box>
+            </p>
+        </div>
     );
 }
 
 function ChipExamen({ label, activo }: { label: string; activo: boolean }) {
-    if (!activo) return <Chip label={label} size="small" variant="outlined" />;
-    return <Chip label={label} size="small" color="warning" variant="filled" />;
+    return <Badge variante={activo ? 'warning' : 'ghost'}>{label}</Badge>;
 }

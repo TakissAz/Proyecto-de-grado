@@ -3,55 +3,15 @@ declare const route: any;
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    FormControl,
-    IconButton,
-    InputLabel,
-    MenuItem,
-    Paper,
-    Select,
-    SelectChangeEvent,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Eye, X } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 import { useEffect, useMemo, useState } from 'react';
 
 type EstadoPaciente = 'activo' | 'inactivo';
-type EstadoFlujoPaciente =
-    | 'pendiente_nutricion'
-    | 'pendiente_endocrino'
-    | 'en_seguimiento'
-    | 'completo'
-    | 'inactivo';
+type EstadoFlujoPaciente = 'pendiente_nutricion' | 'pendiente_endocrino' | 'en_seguimiento' | 'completo' | 'inactivo';
 
-interface RoleOption {
-    id_rol: number;
-    nombre: string;
-    descripcion?: string | null;
-    estado?: string | null;
-}
-
-interface UserOption {
-    id: number;
-    name: string;
-    email: string;
-    estado?: string | null;
-    roles?: RoleOption[];
-}
+interface RoleOption { id_rol: number; nombre: string; descripcion?: string | null; estado?: string | null; }
+interface UserOption { id: number; name: string; email: string; estado?: string | null; roles?: RoleOption[]; }
 
 interface PacienteRow {
     id_paciente: number;
@@ -79,27 +39,11 @@ interface PacienteRow {
 
 interface PaginatedPacientes {
     data: PacienteRow[];
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
-    meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number | null;
-        to: number | null;
-    };
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+    meta: { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null; };
 }
 
-interface Filters {
-    buscar: string;
-    estado: string;
-    estado_flujo: string;
-    origen_registro: string;
-}
+interface Filters { buscar: string; estado: string; estado_flujo: string; origen_registro: string; }
 
 interface Props extends PageProps {
     pacientes: PaginatedPacientes;
@@ -109,24 +53,15 @@ interface Props extends PageProps {
     origenes: string[];
 }
 
-function estadoColor(estado: EstadoPaciente): 'success' | 'warning' {
+function estadoVariante(estado: EstadoPaciente): 'success' | 'warning' {
     return estado === 'activo' ? 'success' : 'warning';
 }
 
-function flujoColor(estadoFlujo?: EstadoFlujoPaciente | null): 'info' | 'warning' | 'success' | 'default' {
-    if (estadoFlujo === 'pendiente_nutricion' || estadoFlujo === 'pendiente_endocrino') {
-        return 'warning';
-    }
-
-    if (estadoFlujo === 'en_seguimiento') {
-        return 'info';
-    }
-
-    if (estadoFlujo === 'completo') {
-        return 'success';
-    }
-
-    return 'default';
+function flujoVariante(f?: EstadoFlujoPaciente | null): 'warning' | 'info' | 'success' | 'ghost' {
+    if (f === 'pendiente_nutricion' || f === 'pendiente_endocrino') return 'warning';
+    if (f === 'en_seguimiento') return 'info';
+    if (f === 'completo') return 'success';
+    return 'ghost';
 }
 
 export default function Pacientes({ pacientes, filtros, estados, estados_flujo, origenes, flash }: Props) {
@@ -142,266 +77,132 @@ export default function Pacientes({ pacientes, filtros, estados, estados_flujo, 
         setOrigenRegistro(filtros.origen_registro ?? '');
     }, [filtros.buscar, filtros.estado, filtros.estado_flujo, filtros.origen_registro]);
 
-    const estadoOptions = useMemo(
-        () => [
-            { value: '', label: 'Todos los estados' },
-            ...estados.map((option) => ({ value: option, label: option })),
-        ],
-        [estados],
-    );
-
-    const estadoFlujoOptions = useMemo(
-        () => [
-            { value: '', label: 'Todos los flujos' },
-            ...estados_flujo.map((option) => ({ value: option, label: option })),
-        ],
-        [estados_flujo],
-    );
-
-    const origenOptions = useMemo(
-        () => [
-            { value: '', label: 'Todos los origenes' },
-            ...origenes.map((option) => ({ value: option, label: option })),
-        ],
-        [origenes],
-    );
-
     const applyFilters = (page = 1) => {
-        router.get(
-            route('admin.auditoria.pacientes'),
-            {
-                buscar,
-                estado,
-                estado_flujo: estadoFlujo,
-                origen_registro: origenRegistro,
-                page,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
+        router.get(route('admin.auditoria.pacientes'), { buscar, estado, estado_flujo: estadoFlujo, origen_registro: origenRegistro, page }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const clearFilters = () => {
-        setBuscar('');
-        setEstado('');
-        setEstadoFlujo('');
-        setOrigenRegistro('');
-
-        router.get(
-            route('admin.auditoria.pacientes'),
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
+        setBuscar(''); setEstado(''); setEstadoFlujo(''); setOrigenRegistro('');
+        router.get(route('admin.auditoria.pacientes'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const pageCount = pacientes.meta?.last_page ?? 1;
-    const currentPage = pacientes.meta?.current_page ?? 1;
 
     return (
-        <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Auditoria de pacientes</h2>}
-        >
-            <Head title="Auditoria de pacientes" />
+        <AuthenticatedLayout header={<h2>Auditoría de pacientes</h2>}>
+            <Head title="Auditoría de pacientes" />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', md: 'row' },
-                            justifyContent: 'space-between',
-                            gap: 2,
-                            alignItems: { xs: 'stretch', md: 'center' },
-                        }}
-                    >
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                Auditoria clinica
-                            </Typography>
-                            <Typography color="text.secondary">
-                                Revisa origen de registro, creador, editor y flujo clinico.
-                            </Typography>
-                        </Box>
+            <div className="space-y-5">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-base-content">Auditoría clínica</h2>
+                        <p className="text-sm text-base-content/60">Revisa origen de registro, creador, editor y flujo clínico.</p>
+                    </div>
+                    <Link href={route('admin.auditoria.actividad')} className="btn btn-ghost btn-sm">Ver actividad</Link>
+                </div>
 
-                        <Button
-                            component={Link}
-                            href={route('admin.auditoria.actividad')}
-                            variant="outlined"
-                        >
-                            Ver actividad
-                        </Button>
-                    </Box>
+                {flash?.success ? <div className="alert alert-success text-sm">{flash.success}</div> : null}
+                {flash?.error ? <div className="alert alert-error text-sm">{flash.error}</div> : null}
 
-                    {flash?.success ? <Alert severity="success">{flash.success}</Alert> : null}
-                    {flash?.error ? <Alert severity="error">{flash.error}</Alert> : null}
+                {/* Filtros */}
+                <form className="bg-base-100 border border-base-300 rounded-2xl p-4" onSubmit={(e) => { e.preventDefault(); applyFilters(1); }}>
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-end">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Buscar</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full" placeholder="Nombre, correo, CI, teléfono, creador o editor" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Estado</span></div>
+                            <select className="select select-bordered select-sm w-full" value={estado} onChange={(e) => setEstado(e.target.value)}>
+                                <option value="">Todos</option>
+                                {estados.map((o) => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Flujo</span></div>
+                            <select className="select select-bordered select-sm w-full" value={estadoFlujo} onChange={(e) => setEstadoFlujo(e.target.value)}>
+                                <option value="">Todos</option>
+                                {estados_flujo.map((o) => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Origen</span></div>
+                            <select className="select select-bordered select-sm w-full" value={origenRegistro} onChange={(e) => setOrigenRegistro(e.target.value)}>
+                                <option value="">Todos</option>
+                                {origenes.map((o) => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                        </label>
+                        <div className="flex gap-2 items-end">
+                            <button type="submit" className="btn btn-primary btn-sm">Filtrar</button>
+                            <button type="button" className="btn btn-ghost btn-sm gap-1" onClick={clearFilters}><X size={14} /> Limpiar</button>
+                        </div>
+                    </div>
+                </form>
 
-                    <Paper elevation={1} sx={{ p: 2 }}>
-                        <Stack
-                            component="form"
-                            spacing={2}
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                applyFilters(1);
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: {
-                                        xs: '1fr',
-                                        md: '2fr 1fr 1fr 1fr auto',
-                                    },
-                                    gap: 2,
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <TextField
-                                    label="Buscar por nombre, correo, CI, telefono, creador o editor"
-                                    value={buscar}
-                                    onChange={(event) => setBuscar(event.target.value)}
-                                    fullWidth
-                                    size="small"
-                                />
+                {/* Tabla */}
+                <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                            <thead>
+                                <tr className="border-base-300">
+                                    <th>Paciente</th>
+                                    <th>CI</th>
+                                    <th>Estado</th>
+                                    <th>Flujo</th>
+                                    <th>Origen</th>
+                                    <th>Creado por</th>
+                                    <th>Actualizado por</th>
+                                    <th>Creado</th>
+                                    <th>Actualizado</th>
+                                    <th className="text-right">Actividad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pacientes.data.length === 0 ? (
+                                    <tr><td colSpan={10} className="text-center py-10 text-base-content/50">No se encontraron pacientes.</td></tr>
+                                ) : pacientes.data.map((p) => (
+                                    <tr key={p.id_paciente} className="hover border-base-300">
+                                        <td>
+                                            <p className="font-semibold">{p.nombre_completo ?? p.user?.name ?? 'Sin usuario'}</p>
+                                            <p className="text-xs text-base-content/50">{p.user?.email ?? ''}</p>
+                                        </td>
+                                        <td>{p.ci}</td>
+                                        <td><Badge variante={estadoVariante(p.estado)}>{p.estado}</Badge></td>
+                                        <td><Badge variante={flujoVariante(p.estado_flujo)}>{p.estado_flujo ?? '-'}</Badge></td>
+                                        <td className="text-xs">{p.origen_registro ?? '-'}</td>
+                                        <td className="text-xs">{p.creado_por_user?.name ?? '-'}</td>
+                                        <td className="text-xs">{p.actualizado_por_user?.name ?? '-'}</td>
+                                        <td className="text-xs">{p.created_at ?? '-'}</td>
+                                        <td className="text-xs">{p.updated_at ?? '-'}</td>
+                                        <td className="text-right">
+                                            <Link href={route('admin.auditoria.actividad', { paciente: p.id_paciente })} className="btn btn-ghost btn-xs btn-square text-info" aria-label="Ver actividad">
+                                                <Eye size={14} />
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="estado-filter-label">Estado</InputLabel>
-                                    <Select labelId="estado-filter-label" label="Estado" value={estado} onChange={(event: SelectChangeEvent<string>) => setEstado(event.target.value)}>
-                                        {estadoOptions.map((option) => (
-                                            <MenuItem key={option.value || 'todos-estados'} value={option.value}>
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="estado-flujo-filter-label">Flujo</InputLabel>
-                                    <Select labelId="estado-flujo-filter-label" label="Flujo" value={estadoFlujo} onChange={(event: SelectChangeEvent<string>) => setEstadoFlujo(event.target.value)}>
-                                        {estadoFlujoOptions.map((option) => (
-                                            <MenuItem key={option.value || 'todos-flujos'} value={option.value}>
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="origen-filter-label">Origen</InputLabel>
-                                    <Select labelId="origen-filter-label" label="Origen" value={origenRegistro} onChange={(event: SelectChangeEvent<string>) => setOrigenRegistro(event.target.value)}>
-                                        {origenOptions.map((option) => (
-                                            <MenuItem key={option.value || 'todos-origenes'} value={option.value}>
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' }, flexWrap: 'wrap' }}>
-                                    <Button type="submit" variant="contained">Filtrar</Button>
-                                    <Button type="button" variant="outlined" startIcon={<ClearIcon />} onClick={clearFilters}>Limpiar</Button>
-                                </Box>
-                            </Box>
-                        </Stack>
-                    </Paper>
-
-                    <Paper elevation={1}>
-                        <TableContainer sx={{ overflowX: 'auto' }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Paciente</TableCell>
-                                        <TableCell>CI</TableCell>
-                                        <TableCell>Estado</TableCell>
-                                        <TableCell>Flujo</TableCell>
-                                        <TableCell>Origen</TableCell>
-                                        <TableCell>Creado por</TableCell>
-                                        <TableCell>Actualizado por</TableCell>
-                                        <TableCell>Creado</TableCell>
-                                        <TableCell>Actualizado</TableCell>
-                                        <TableCell align="right">Actividad</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {pacientes.data.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
-                                                No se encontraron pacientes con los filtros actuales.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        pacientes.data.map((paciente) => (
-                                            <TableRow key={paciente.id_paciente} hover>
-                                                <TableCell>
-                                                    <Stack spacing={0.25}>
-                                                        <Typography sx={{ fontWeight: 600 }}>
-                                                            {paciente.nombre_completo ?? paciente.user?.name ?? 'Sin usuario'}
-                                                        </Typography>
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            {paciente.user?.email ?? ''}
-                                                        </Typography>
-                                                    </Stack>
-                                                </TableCell>
-                                                <TableCell>{paciente.ci}</TableCell>
-                                                <TableCell><Chip label={paciente.estado} color={estadoColor(paciente.estado)} size="small" /></TableCell>
-                                                <TableCell><Chip label={paciente.estado_flujo ?? '-'} color={flujoColor(paciente.estado_flujo)} size="small" variant="outlined" /></TableCell>
-                                                <TableCell>{paciente.origen_registro ?? '-'}</TableCell>
-                                                <TableCell>{paciente.creado_por_user?.name ?? '-'}</TableCell>
-                                                <TableCell>{paciente.actualizado_por_user?.name ?? '-'}</TableCell>
-                                                <TableCell>{paciente.created_at ?? '-'}</TableCell>
-                                                <TableCell>{paciente.updated_at ?? '-'}</TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton
-                                                        component={Link}
-                                                        href={route('admin.auditoria.actividad', { paciente: paciente.id_paciente })}
-                                                        size="small"
-                                                        color="info"
-                                                        aria-label="Ver actividad"
-                                                    >
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, px: 2, py: 1 }}>
-                            <Typography variant="body2" color="text.secondary">Total: {pacientes.meta.total} pacientes</Typography>
-                            <TablePagination component="div" count={pacientes.meta.total} page={Math.max(currentPage - 1, 0)} rowsPerPage={pacientes.meta.per_page} rowsPerPageOptions={[pacientes.meta.per_page]} onPageChange={(_, nextPage) => applyFilters(nextPage + 1)} onRowsPerPageChange={() => undefined} labelRowsPerPage="" labelDisplayedRows={({ from, to, count }) => `${from} - ${to} de ${count}`} />
-                        </Box>
-                    </Paper>
-
-                    {pageCount > 1 ? (
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {pacientes.links.map((link, index) => {
-                                const label = link.label.replace('&laquo; Previous', 'Anterior').replace('Next &raquo;', 'Siguiente');
-
-                                if (! link.url) {
-                                    return <Button key={`${label}-${index}`} variant="outlined" disabled>{label}</Button>;
-                                }
-
-                                return (
-                                    <Button key={`${label}-${index}`} variant={link.active ? 'contained' : 'outlined'} onClick={() => router.get(link.url as string, {}, { preserveScroll: true, preserveState: true, replace: true })}>
-                                        {label}
-                                    </Button>
-                                );
-                            })}
-                        </Box>
-                    ) : null}
-                </Stack>
-            </Box>
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 px-4 py-3 border-t border-base-300">
+                        <p className="text-xs text-base-content/50">Total: {pacientes.meta.total} pacientes</p>
+                        {pageCount > 1 ? (
+                            <div className="join">
+                                {pacientes.links.map((link, i) => {
+                                    const label = link.label.replace('&laquo; Previous', '«').replace('Next &raquo;', '»');
+                                    return (
+                                        <button key={`${label}-${i}`} className={`join-item btn btn-xs ${link.active ? 'btn-primary' : 'btn-ghost'}`} disabled={!link.url} onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true, preserveState: true, replace: true })}>
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }
-
-
-

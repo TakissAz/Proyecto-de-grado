@@ -1,18 +1,8 @@
 ﻿import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { EncabezadoDashboard } from '@/Components/Dashboard';
 import { Head, usePage } from '@inertiajs/react';
-import {
-    Alert,
-    Box,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    Stack,
-    Typography,
-} from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { User, Info, Calendar, Phone } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
 
 interface DatosPaciente {
     nombre_completo?: string | null;
@@ -26,97 +16,77 @@ interface Props {
     paciente?: DatosPaciente;
 }
 
-/**
- * Dashboard del módulo Paciente.
- * Vista de solo lectura con información personal y estado de atención.
- *
- * El prop `paciente` es opcional para no romper si el backend
- * todavía no lo envía (backward-compatible).
- */
 export default function Dashboard({ paciente }: Props) {
     const { auth } = usePage().props as { auth: { user: { name: string } } };
     const nombreUsuario = paciente?.nombre_completo ?? auth?.user?.name ?? 'Paciente';
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Mi panel
-                </h2>
-            }
-        >
+        <AuthenticatedLayout header={<h2>Mi panel</h2>}>
             <Head title="Mi panel" />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <EncabezadoDashboard
-                    titulo={`Hola, ${nombreUsuario}`}
-                    descripcion="Bienvenida al sistema clínico PMOS. Aquí encontrarás tu información médica y de seguimiento."
-                    modulo="Paciente"
-                />
+            <div className="space-y-6">
+                {/* Saludo */}
+                <div>
+                    <h2 className="text-2xl font-extrabold text-base-content">
+                        Hola, {nombreUsuario.split(' ')[0]}
+                    </h2>
+                    <p className="text-sm text-base-content/60 mt-1">
+                        Bienvenida al sistema clínico PMOS. Aquí encontrarás tu información médica y de seguimiento.
+                    </p>
+                </div>
 
-                <Alert
-                    severity="info"
-                    icon={<InfoOutlinedIcon />}
-                    sx={{ mb: 3 }}
-                >
-                    Tu módulo de seguimiento estará disponible próximamente. Si tienes alguna consulta, comunícate con tu médico tratante.
-                </Alert>
+                {/* Alerta informativa */}
+                <div className="alert border border-info/20 bg-info/5">
+                    <Info size={18} className="text-info shrink-0" />
+                    <p className="text-sm text-base-content/80">
+                        Tu módulo de seguimiento estará disponible próximamente. Si tienes alguna consulta, comunícate con tu médico tratante.
+                    </p>
+                </div>
 
+                {/* Datos personales */}
                 {paciente ? (
-                    <Card variant="outlined">
-                        <CardContent>
-                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                                <PersonOutlineIcon color="primary" />
-                                <Typography variant="h6" fontWeight={700}>
-                                    Mis datos
-                                </Typography>
-                            </Stack>
+                    <Tarjeta>
+                        <div className="flex items-center gap-2 mb-4">
+                            <User size={18} className="text-primary" />
+                            <h3 className="font-bold text-base-content">Mis datos</h3>
+                        </div>
 
-                            <Divider sx={{ mb: 2 }} />
-
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                                    gap: 2,
-                                }}
-                            >
+                        <div className="border-t border-base-300 pt-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {paciente.ci ? (
-                                    <Box>
-                                        <Typography variant="overline" color="text.secondary">CI</Typography>
-                                        <Typography>{paciente.ci}</Typography>
-                                    </Box>
+                                    <Detalle label="CI" valor={paciente.ci} />
                                 ) : null}
-
                                 {paciente.fecha_nacimiento ? (
-                                    <Box>
-                                        <Typography variant="overline" color="text.secondary">Fecha de nacimiento</Typography>
-                                        <Typography>{paciente.fecha_nacimiento}</Typography>
-                                    </Box>
+                                    <Detalle label="Fecha de nacimiento" valor={paciente.fecha_nacimiento} icono={<Calendar size={13} />} />
                                 ) : null}
-
                                 {paciente.telefono ? (
-                                    <Box>
-                                        <Typography variant="overline" color="text.secondary">Teléfono</Typography>
-                                        <Typography>{paciente.telefono}</Typography>
-                                    </Box>
+                                    <Detalle label="Teléfono" valor={paciente.telefono} icono={<Phone size={13} />} />
                                 ) : null}
-
                                 {paciente.estado ? (
-                                    <Box>
-                                        <Typography variant="overline" color="text.secondary" display="block">Estado</Typography>
-                                        <Chip
-                                            label={paciente.estado}
-                                            color={paciente.estado === 'activo' ? 'success' : 'default'}
-                                            size="small"
-                                        />
-                                    </Box>
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1">Estado</p>
+                                        <Badge variante={paciente.estado === 'activo' ? 'success' : 'ghost'}>
+                                            {paciente.estado}
+                                        </Badge>
+                                    </div>
                                 ) : null}
-                            </Box>
-                        </CardContent>
-                    </Card>
+                            </div>
+                        </div>
+                    </Tarjeta>
                 ) : null}
-            </Box>
+            </div>
         </AuthenticatedLayout>
+    );
+}
+
+function Detalle({ label, valor, icono }: { label: string; valor: string; icono?: React.ReactNode }) {
+    return (
+        <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1">{label}</p>
+            <p className="text-sm font-medium text-base-content flex items-center gap-1.5">
+                {icono ? <span className="text-base-content/40">{icono}</span> : null}
+                {valor}
+            </p>
+        </div>
     );
 }

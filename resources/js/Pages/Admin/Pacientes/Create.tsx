@@ -1,9 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
+import { ArrowLeft, Save } from 'lucide-react';
 import PacienteFormulario, { PacienteFormValues } from '@/Components/Pacientes/PacienteFormulario';
 
 interface Props extends PageProps {}
@@ -27,65 +25,44 @@ const valoresIniciales: PacienteFormValues = {
 export default function Create({ flash }: Props) {
     const { data, setData, post, processing, errors } = useForm<PacienteFormValues>({ ...valoresIniciales });
 
-    const handleSubmit = (event: React.FormEvent) => {
-        event.preventDefault();
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
         post('/admin/pacientes', { preserveScroll: false });
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Crear paciente
-                </h2>
-            }
-        >
+        <AuthenticatedLayout header={<h2>Crear paciente</h2>}>
             <Head title="Crear paciente" />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Paper elevation={1} sx={{ p: { xs: 2, md: 3 } }}>
-                    <Stack spacing={3}>
-                        <Box>
-                            <Typography variant="h4" fontWeight={700}>Nueva paciente</Typography>
-                            <Typography color="text.secondary">
-                                Completa los datos de la paciente y su cuenta de acceso al sistema.
-                            </Typography>
-                        </Box>
+            <div className="space-y-5">
+                <div className="bg-base-100 border border-base-300 rounded-2xl p-5">
+                    <div className="mb-5">
+                        <h2 className="text-xl font-extrabold text-base-content">Nueva paciente</h2>
+                        <p className="text-sm text-base-content/60">Completa los datos de la paciente y su cuenta de acceso al sistema.</p>
+                    </div>
 
-                        {flash?.success ? <Alert severity="success">{flash.success}</Alert> : null}
-                        {flash?.error ? <Alert severity="error">{flash.error}</Alert> : null}
+                    {flash?.success ? <div className="alert alert-success text-sm mb-4">{flash.success}</div> : null}
+                    {flash?.error ? <div className="alert alert-error text-sm mb-4">{flash.error}</div> : null}
 
-                        <Box component="form" onSubmit={handleSubmit}>
-                            <PacienteFormulario
-                                data={data}
-                                setData={setData as (field: keyof PacienteFormValues, value: string) => void}
-                                errors={errors}
-                                mode="create"
-                            />
+                    <form onSubmit={handleSubmit}>
+                        <PacienteFormulario
+                            data={data}
+                            setData={setData as (field: keyof PacienteFormValues, value: string) => void}
+                            errors={errors}
+                            mode="create"
+                        />
 
-                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3, flexWrap: 'wrap' }}>
-                                <Button
-                                    component={Link}
-                                    href="/admin/pacientes"
-                                    variant="outlined"
-                                    startIcon={<ArrowBackIcon />}
-                                    disabled={processing}
-                                >
-                                    Volver al listado
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    startIcon={<SaveIcon />}
-                                    disabled={processing}
-                                >
-                                    {processing ? 'Guardando...' : 'Crear paciente'}
-                                </Button>
-                            </Box>
-                        </Box>
-                    </Stack>
-                </Paper>
-            </Box>
+                        <div className="flex gap-2 justify-end mt-5 flex-wrap">
+                            <Link href="/admin/pacientes" className="btn btn-ghost btn-sm gap-1.5">
+                                <ArrowLeft size={14} /> Volver al listado
+                            </Link>
+                            <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
+                                <Save size={14} /> {processing ? 'Guardando...' : 'Crear paciente'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

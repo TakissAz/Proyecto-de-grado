@@ -1,36 +1,13 @@
-/* global route */
+declare const route: any;
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import {
-    Alert,
-    Box,
-    Button,
-    IconButton,
-    Paper,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ClearIcon from '@mui/icons-material/Clear';
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Head, Link, router } from '@inertiajs/react';
+import { Plus, Eye, Pencil, CheckCircle, Ban, X } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 import { useEffect, useRef, useState } from 'react';
 
-interface UserOption {
-    name: string;
-    email: string;
-}
+interface UserOption { name: string; email: string; }
 
 interface PacienteRow {
     id_paciente: number;
@@ -47,19 +24,10 @@ interface PacienteRow {
 interface PaginatedPacientes {
     data: PacienteRow[];
     links: Array<{ url: string | null; label: string; active: boolean }>;
-    meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from: number | null;
-        to: number | null;
-    };
+    meta: { current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null; };
 }
 
-interface Filters {
-    buscar: string;
-}
+interface Filters { buscar: string; }
 
 interface Props extends PageProps {
     pacientes: PaginatedPacientes;
@@ -71,9 +39,7 @@ export default function Index({ pacientes, filtros, flash }: Props) {
     const buscarRef = useRef(buscar);
     buscarRef.current = buscar;
 
-    useEffect(() => {
-        setBuscar(filtros.buscar ?? '');
-    }, [filtros.buscar]);
+    useEffect(() => { setBuscar(filtros.buscar ?? ''); }, [filtros.buscar]);
 
     const applyFilters = (page = 1) => {
         const params = new URLSearchParams();
@@ -82,176 +48,120 @@ export default function Index({ pacientes, filtros, flash }: Props) {
         window.location.href = `/admin/pacientes?${params.toString()}`;
     };
 
-    const clearFilters = () => {
-        setBuscar('');
-        window.location.href = '/admin/pacientes';
-    };
+    const clearFilters = () => { setBuscar(''); window.location.href = '/admin/pacientes'; };
 
     const cambiarEstado = (idPaciente: number, accion: 'activar' | 'inactivar') => {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/admin/pacientes/${idPaciente}/${accion}`;
         form.style.display = 'none';
-
         const csrfInput = document.createElement('input');
         csrfInput.name = '_token';
         csrfInput.value = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
-
         const methodInput = document.createElement('input');
         methodInput.name = '_method';
         methodInput.value = 'PATCH';
-
         form.appendChild(csrfInput);
         form.appendChild(methodInput);
         document.body.appendChild(form);
         form.submit();
     };
 
+    const pageCount = pacientes.meta?.last_page ?? 1;
+
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Pacientes</h2>}>
+        <AuthenticatedLayout header={<h2>Pacientes</h2>}>
             <Head title="Pacientes" />
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', gap: 2, alignItems: { xs: 'stretch', md: 'center' } }}>
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 700 }}>Gestión de pacientes</Typography>
-                            <Typography color="text.secondary">Busca y administra los registros clínicos base.</Typography>
-                        </Box>
-                        <Button
-                            component={Link}
-                            href={route('admin.pacientes.create')}
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            sx={{ alignSelf: { xs: 'flex-start', md: 'auto' } }}
-                        >
-                            Crear paciente
-                        </Button>
-                    </Box>
 
-                    {flash?.success ? <Alert severity="success">{flash.success}</Alert> : null}
-                    {flash?.error ? <Alert severity="error">{flash.error}</Alert> : null}
+            <div className="space-y-5">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-base-content">Gestión de pacientes</h2>
+                        <p className="text-sm text-base-content/60">Busca y administra los registros clínicos base.</p>
+                    </div>
+                    <Link href={route('admin.pacientes.create')} className="btn btn-primary btn-sm gap-1.5">
+                        <Plus size={15} /> Crear paciente
+                    </Link>
+                </div>
 
-                    <Paper elevation={1} sx={{ p: 2 }}>
-                        <Stack component="form" spacing={2} onSubmit={(event) => { event.preventDefault(); applyFilters(1); }}>
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr auto' }, gap: 2, alignItems: 'center' }}>
-                                <TextField
-                                    label="Buscar por nombre, correo, CI o teléfono"
-                                    value={buscar}
-                                    onChange={(event) => setBuscar(event.target.value)}
-                                    fullWidth
-                                    size="small"
-                                />
-                                <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' }, flexWrap: 'wrap' }}>
-                                    <Button type="submit" variant="contained">Filtrar</Button>
-                                    <Button type="button" variant="outlined" startIcon={<ClearIcon />} onClick={clearFilters}>Limpiar</Button>
-                                </Box>
-                            </Box>
-                        </Stack>
-                    </Paper>
+                {flash?.success ? <div className="alert alert-success text-sm">{flash.success}</div> : null}
+                {flash?.error ? <div className="alert alert-error text-sm">{flash.error}</div> : null}
 
-                    <Paper elevation={1}>
-                        <TableContainer sx={{ overflowX: 'auto' }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Paciente</TableCell>
-                                        <TableCell>CI</TableCell>
-                                        <TableCell>Contacto</TableCell>
-                                        <TableCell>Nacimiento</TableCell>
-                                        <TableCell>Edad</TableCell>
-                                        <TableCell>Registro</TableCell>
-                                        <TableCell align="right">Acciones</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {pacientes.data.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                                                No se encontraron pacientes con los filtros actuales.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : pacientes.data.map((paciente) => (
-                                        <TableRow key={paciente.id_paciente} hover>
-                                            <TableCell>
-                                                <Stack spacing={0.25}>
-                                                    <Typography sx={{ fontWeight: 600 }}>
-                                                        {paciente.nombre_completo ?? paciente.user?.name ?? 'Sin nombre'}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {paciente.user?.email ?? 'Sin correo'}
-                                                    </Typography>
-                                                </Stack>
-                                            </TableCell>
-                                            <TableCell>{paciente.ci}</TableCell>
-                                            <TableCell>{paciente.telefono ?? '-'}</TableCell>
-                                            <TableCell>{paciente.fecha_nacimiento}</TableCell>
-                                            <TableCell>{paciente.edad ?? '-'}</TableCell>
-                                            <TableCell>{paciente.fecha_registro ?? '-'}</TableCell>
-                                            <TableCell align="right">
-                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                                                    <IconButton
-                                                        component={Link}
-                                                        href={route('admin.pacientes.show', { paciente: paciente.id_paciente })}
-                                                        size="small"
-                                                        color="info"
-                                                        aria-label="Ver paciente"
-                                                    >
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        component={Link}
-                                                        href={route('admin.pacientes.edit', { paciente: paciente.id_paciente })}
-                                                        size="small"
-                                                        color="primary"
-                                                        aria-label="Editar paciente"
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="success"
-                                                        aria-label="Activar paciente"
-                                                        disabled={paciente.estado === 'activo'}
-                                                        onClick={() => cambiarEstado(paciente.id_paciente, 'activar')}
-                                                    >
-                                                        <CheckCircleIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="warning"
-                                                        aria-label="Inactivar paciente"
-                                                        disabled={paciente.estado === 'inactivo'}
-                                                        onClick={() => cambiarEstado(paciente.id_paciente, 'inactivar')}
-                                                    >
-                                                        <DoNotDisturbIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Box>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                {/* Filtros */}
+                <form className="bg-base-100 border border-base-300 rounded-2xl p-4" onSubmit={(e) => { e.preventDefault(); applyFilters(1); }}>
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_auto] gap-3 items-end">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Buscar</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full" placeholder="Nombre, correo, CI o teléfono" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+                        </label>
+                        <div className="flex gap-2 items-end">
+                            <button type="submit" className="btn btn-primary btn-sm">Filtrar</button>
+                            <button type="button" className="btn btn-ghost btn-sm gap-1" onClick={clearFilters}><X size={14} /> Limpiar</button>
+                        </div>
+                    </div>
+                </form>
 
-                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, gap: 2, px: 2, py: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Total: {pacientes.meta.total} pacientes
-                            </Typography>
-                            <TablePagination
-                                component="div"
-                                count={pacientes.meta.total}
-                                page={Math.max((pacientes.meta.current_page ?? 1) - 1, 0)}
-                                rowsPerPage={pacientes.meta.per_page}
-                                rowsPerPageOptions={[pacientes.meta.per_page]}
-                                onPageChange={(_, nextPage) => applyFilters(nextPage + 1)}
-                                onRowsPerPageChange={() => undefined}
-                                labelRowsPerPage=""
-                                labelDisplayedRows={({ from, to, count }) => `${from} - ${to} de ${count}`}
-                            />
-                        </Box>
-                    </Paper>
-                </Stack>
-            </Box>
+                {/* Tabla */}
+                <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                            <thead>
+                                <tr className="border-base-300">
+                                    <th>Paciente</th>
+                                    <th>CI</th>
+                                    <th>Contacto</th>
+                                    <th>Nacimiento</th>
+                                    <th>Edad</th>
+                                    <th>Registro</th>
+                                    <th className="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pacientes.data.length === 0 ? (
+                                    <tr><td colSpan={7} className="text-center py-10 text-base-content/50">No se encontraron pacientes.</td></tr>
+                                ) : pacientes.data.map((p) => (
+                                    <tr key={p.id_paciente} className="hover border-base-300">
+                                        <td>
+                                            <p className="font-semibold">{p.nombre_completo ?? p.user?.name ?? 'Sin nombre'}</p>
+                                            <p className="text-xs text-base-content/50">{p.user?.email ?? 'Sin correo'}</p>
+                                        </td>
+                                        <td>{p.ci}</td>
+                                        <td>{p.telefono ?? '-'}</td>
+                                        <td>{p.fecha_nacimiento}</td>
+                                        <td>{p.edad ?? '-'}</td>
+                                        <td className="text-xs">{p.fecha_registro ?? '-'}</td>
+                                        <td>
+                                            <div className="flex gap-1 justify-end">
+                                                <Link href={route('admin.pacientes.show', { paciente: p.id_paciente })} className="btn btn-ghost btn-xs btn-square text-info" aria-label="Ver"><Eye size={14} /></Link>
+                                                <Link href={route('admin.pacientes.edit', { paciente: p.id_paciente })} className="btn btn-ghost btn-xs btn-square" aria-label="Editar"><Pencil size={14} /></Link>
+                                                <button className="btn btn-ghost btn-xs btn-square text-success" disabled={p.estado === 'activo'} onClick={() => cambiarEstado(p.id_paciente, 'activar')} aria-label="Activar"><CheckCircle size={14} /></button>
+                                                <button className="btn btn-ghost btn-xs btn-square text-warning" disabled={p.estado === 'inactivo'} onClick={() => cambiarEstado(p.id_paciente, 'inactivar')} aria-label="Inactivar"><Ban size={14} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 px-4 py-3 border-t border-base-300">
+                        <p className="text-xs text-base-content/50">Total: {pacientes.meta.total} pacientes</p>
+                        {pageCount > 1 ? (
+                            <div className="join">
+                                {pacientes.links.map((link, i) => {
+                                    const label = link.label.replace('&laquo; Previous', '«').replace('Next &raquo;', '»');
+                                    return (
+                                        <button key={`${label}-${i}`} className={`join-item btn btn-xs ${link.active ? 'btn-primary' : 'btn-ghost'}`} disabled={!link.url} onClick={() => link.url && (window.location.href = link.url)}>
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

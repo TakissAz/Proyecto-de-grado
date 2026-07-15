@@ -1,156 +1,81 @@
-import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    Stack,
-    Typography,
-} from '@mui/material';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
+import { FileText, Edit, Plus } from 'lucide-react';
+import Tarjeta from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
+import { Boton } from '@/Components/ui/boton';
 import type { ConsultaInicial } from '../tipos';
 
 interface Props {
-    /** Datos de la consulta inicial, null si no existe */
     consulta: ConsultaInicial | null;
-    /** ID del paciente para construir URLs */
     idPaciente: number;
-    /** Callback para abrir formulario de registro */
     onRegistrar: () => void;
-    /** Callback para abrir formulario de edición */
     onEditar: () => void;
 }
 
-/**
- * Tarjeta que muestra la consulta inicial del perfil clínico.
- * - Si no tiene datos: estado "Pendiente" + botón registrar.
- * - Si tiene datos: resumen + botón editar.
- */
-export default function TarjetaConsultaInicial({
-    consulta,
-    idPaciente,
-    onRegistrar,
-    onEditar,
-}: Props) {
+export default function TarjetaConsultaInicial({ consulta, idPaciente, onRegistrar, onEditar }: Props) {
     if (!consulta) {
         return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <AssignmentIcon color="disabled" />
-                            <Typography variant="subtitle1" fontWeight={700}>
-                                Consulta inicial
-                            </Typography>
-                            <Chip label="Pendiente" size="small" variant="outlined" />
-                        </Stack>
-
-                        <Typography variant="body2" color="text.secondary">
-                            No se ha registrado la consulta inicial de esta paciente.
-                            Registra el motivo de consulta y las sospechas clínicas iniciales.
-                        </Typography>
-
-                        <Box>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<AddIcon />}
-                                onClick={onRegistrar}
-                            >
-                                Registrar consulta inicial
-                            </Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Tarjeta>
+                <div className="flex items-center gap-2 mb-2">
+                    <FileText size={16} strokeWidth={1.8} className="text-ink-muted dark:text-ink-muted-dark" />
+                    <h3 className="text-[14px] font-semibold text-ink dark:text-ink-dark">Consulta inicial</h3>
+                    <Badge color="gray">Pendiente</Badge>
+                </div>
+                <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark mb-3">
+                    No se ha registrado la consulta inicial. Registra el motivo de consulta y las sospechas clínicas.
+                </p>
+                <Boton variante="primary" tamano="sm" onClick={onRegistrar}>
+                    <Plus size={14} strokeWidth={1.8} /> Registrar consulta inicial
+                </Boton>
+            </Tarjeta>
         );
     }
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <AssignmentIcon color="success" />
-                            <Typography variant="subtitle1" fontWeight={700}>
-                                Consulta inicial
-                            </Typography>
-                            <Chip label="Registrada" color="success" size="small" variant="outlined" />
-                        </Stack>
+        <Tarjeta>
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-green/10 text-brand-green-dark dark:bg-brand-green-dark/20 dark:text-brand-green">
+                        <FileText size={14} strokeWidth={1.8} />
+                    </div>
+                    <h3 className="text-[14px] font-semibold text-ink dark:text-ink-dark">Consulta inicial</h3>
+                    <Badge color="green">Registrada</Badge>
+                </div>
+                <Boton variante="outline" tamano="xs" onClick={onEditar}>
+                    <Edit size={12} strokeWidth={1.8} /> Editar
+                </Boton>
+            </div>
 
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<EditIcon />}
-                            onClick={onEditar}
-                        >
-                            Editar
-                        </Button>
-                    </Box>
+            <div className="border-b border-surface-border dark:border-surface-border-dark mb-3" />
 
-                    <Divider />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <Detalle etiqueta="Fecha de consulta" valor={consulta.fecha_consulta} />
+                <Detalle etiqueta="Profesional" valor={consulta.profesional?.nombre ?? 'No registrado'} />
+                <div className="sm:col-span-2">
+                    <Detalle etiqueta="Motivo de consulta" valor={consulta.motivo_consulta} />
+                </div>
+            </div>
 
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                            gap: 2,
-                        }}
-                    >
-                        <ItemDetalle etiqueta="Fecha de consulta" valor={consulta.fecha_consulta} />
-                        <ItemDetalle
-                            etiqueta="Profesional responsable"
-                            valor={consulta.profesional?.nombre ?? 'No registrado'}
-                        />
-                        <Box sx={{ gridColumn: { xs: 'auto', sm: '1 / -1' } }}>
-                            <ItemDetalle etiqueta="Motivo de consulta" valor={consulta.motivo_consulta} />
-                        </Box>
-                    </Box>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+                <Badge color={consulta.sospecha_pmos ? 'orange' : 'gray'}>
+                    {consulta.sospecha_pmos ? 'Sospecha PMOS' : 'Sin sospecha PMOS'}
+                </Badge>
+                <Badge color={consulta.sospecha_resistencia_insulina ? 'orange' : 'gray'}>
+                    {consulta.sospecha_resistencia_insulina ? 'Sospecha RI' : 'Sin sospecha RI'}
+                </Badge>
+            </div>
 
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                        <Chip
-                            label={consulta.sospecha_pmos ? 'Sospecha PMOS' : 'Sin sospecha PMOS'}
-                            color={consulta.sospecha_pmos ? 'warning' : 'default'}
-                            size="small"
-                            variant="outlined"
-                        />
-                        <Chip
-                            label={consulta.sospecha_resistencia_insulina ? 'Sospecha RI' : 'Sin sospecha RI'}
-                            color={consulta.sospecha_resistencia_insulina ? 'warning' : 'default'}
-                            size="small"
-                            variant="outlined"
-                        />
-                    </Stack>
-
-                    {consulta.observaciones_generales ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                                Observaciones clínicas
-                            </Typography>
-                            <Typography variant="body2">
-                                {consulta.observaciones_generales}
-                            </Typography>
-                        </Box>
-                    ) : null}
-                </Stack>
-            </CardContent>
-        </Card>
+            {consulta.observaciones_generales ? (
+                <Detalle etiqueta="Observaciones" valor={consulta.observaciones_generales} />
+            ) : null}
+        </Tarjeta>
     );
 }
 
-function ItemDetalle({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
+function Detalle({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
     return (
-        <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                {etiqueta}
-            </Typography>
-            <Typography variant="body2" fontWeight={500}>
-                {valor ?? '-'}
-            </Typography>
-        </Box>
+        <div>
+            <p className="text-[10.5px] uppercase tracking-wide font-semibold text-ink-muted dark:text-ink-muted-dark">{etiqueta}</p>
+            <p className="text-[13px] font-medium text-ink dark:text-ink-dark">{valor ?? '—'}</p>
+        </div>
     );
 }

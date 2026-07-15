@@ -1,6 +1,5 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Stack, TextField, Typography } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
 import { useForm } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import type { EvaluacionFisicaData } from '../tipos';
 
 interface Props {
@@ -60,76 +59,109 @@ export default function FormularioEvaluacionFisica({ abierto, idPaciente, idCons
 
     const handleCerrar = () => { reset(); onCerrar(); };
 
-    // Cálculo visual del IMC (solo para mostrar, el real se calcula en backend)
+    // Preview IMC e ICC
     const pesoNum = parseFloat(data.peso) || 0;
     const tallaNum = parseFloat(data.talla) || 0;
-    const imcPreview = (pesoNum > 0 && tallaNum > 0) ? (pesoNum / (tallaNum * tallaNum)).toFixed(2) : '-';
+    const imcPreview = pesoNum > 0 && tallaNum > 0 ? (pesoNum / (tallaNum * tallaNum)).toFixed(2) : '-';
+
+    const cinturaNum = parseFloat(data.circunferencia_cintura) || 0;
+    const caderaNum = parseFloat(data.circunferencia_cadera) || 0;
+    const iccPreview = cinturaNum > 0 && caderaNum > 0 ? (cinturaNum / caderaNum).toFixed(2) : '-';
+
+    if (!abierto) return null;
 
     return (
-        <Dialog open={abierto} onClose={handleCerrar} maxWidth="md" fullWidth key={existente?.id_evaluacion_fisica ?? 'new'}>
-            <DialogTitle>
-                <Typography variant="h6" fontWeight={700}>
+        <dialog className="modal modal-open" key={existente?.id_evaluacion_fisica ?? 'new'}>
+            <div className="modal-box max-w-2xl">
+                <h3 className="font-bold text-lg mb-4">
                     {esEdicion ? 'Editar evaluación física' : 'Registrar evaluación física'}
-                </Typography>
-            </DialogTitle>
+                </h3>
 
-            <Divider />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Antropometría */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Antropometría</p>
 
-            <Box component="form" onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Stack spacing={3}>
-                        <Typography variant="subtitle2" color="text.secondary">Antropometría</Typography>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <InputNum label="Peso (kg)" value={data.peso} onChange={(v) => setData('peso', v)} error={errors.peso} step="0.01" />
+                        <InputNum label="Talla (m)" value={data.talla} onChange={(v) => setData('talla', v)} error={errors.talla} step="0.01" placeholder="Ej: 1.65" />
+                        <div>
+                            <div className="label"><span className="label-text text-xs">IMC (calculado)</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full bg-base-200" value={imcPreview} disabled />
+                            <div className="label"><span className="label-text-alt text-base-content/40">Se calcula en backend</span></div>
+                        </div>
+                    </div>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
-                            <TextField label="Peso (kg)" type="number" value={data.peso} onChange={(e) => setData('peso', e.target.value)} error={Boolean(errors.peso)} helperText={errors.peso} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Talla (m)" type="number" value={data.talla} onChange={(e) => setData('talla', e.target.value)} error={Boolean(errors.talla)} helperText={errors.talla ?? 'Ej: 1.65'} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="IMC (calculado)" value={imcPreview} size="small" fullWidth disabled helperText="Se calcula automáticamente." />
-                        </Box>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <InputNum label="Cintura (cm)" value={data.circunferencia_cintura} onChange={(v) => setData('circunferencia_cintura', v)} error={errors.circunferencia_cintura} step="0.1" hint="Riesgo ≥ 80 cm" />
+                        <InputNum label="Cadera (cm)" value={data.circunferencia_cadera} onChange={(v) => setData('circunferencia_cadera', v)} error={errors.circunferencia_cadera} step="0.1" />
+                        <div>
+                            <div className="label"><span className="label-text text-xs">ICC (calculado)</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full bg-base-200" value={iccPreview} disabled />
+                        </div>
+                    </div>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                            <TextField label="Circunferencia cintura (cm)" type="number" value={data.circunferencia_cintura} onChange={(e) => setData('circunferencia_cintura', e.target.value)} error={Boolean(errors.circunferencia_cintura)} helperText={errors.circunferencia_cintura ?? 'Riesgo >= 80 cm en mujeres'} size="small" fullWidth slotProps={{ htmlInput: { step: '0.1' } }} />
-                            <TextField label="Circunferencia cadera (cm)" type="number" value={data.circunferencia_cadera} onChange={(e) => setData('circunferencia_cadera', e.target.value)} error={Boolean(errors.circunferencia_cadera)} helperText={errors.circunferencia_cadera} size="small" fullWidth slotProps={{ htmlInput: { step: '0.1' } }} />
-                        </Box>
+                    <div className="divider my-1" />
 
-                        <Divider />
+                    {/* Presión arterial */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Presión arterial</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputNum label="PA sistólica (mmHg)" value={data.presion_sistolica} onChange={(v) => setData('presion_sistolica', v)} error={errors.presion_sistolica} />
+                        <InputNum label="PA diastólica (mmHg)" value={data.presion_diastolica} onChange={(v) => setData('presion_diastolica', v)} error={errors.presion_diastolica} />
+                    </div>
 
-                        <Typography variant="subtitle2" color="text.secondary">Presión arterial</Typography>
+                    <div className="divider my-1" />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-                            <TextField label="PA sistólica (mmHg)" type="number" value={data.presion_sistolica} onChange={(e) => setData('presion_sistolica', e.target.value)} error={Boolean(errors.presion_sistolica)} helperText={errors.presion_sistolica} size="small" fullWidth />
-                            <TextField label="PA diastólica (mmHg)" type="number" value={data.presion_diastolica} onChange={(e) => setData('presion_diastolica', e.target.value)} error={Boolean(errors.presion_diastolica)} helperText={errors.presion_diastolica} size="small" fullWidth />
-                        </Box>
+                    {/* Hallazgos */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Hallazgos al examen físico</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Checkbox label="Acantosis nigricans" checked={data.acantosis_nigricans} onChange={(v) => setData('acantosis_nigricans', v)} />
+                        <Checkbox label="Acrocordones (skin tags)" checked={data.skin_tags} onChange={(v) => setData('skin_tags', v)} />
+                        <Checkbox label="Galactorrea" checked={data.galactorrea} onChange={(v) => setData('galactorrea', v)} />
+                        <Checkbox label="Hirsutismo visible" checked={data.hirsutismo_visible} onChange={(v) => setData('hirsutismo_visible', v)} />
+                        <Checkbox label="Acné visible" checked={data.acne_visible} onChange={(v) => setData('acne_visible', v)} />
+                        <Checkbox label="Alopecia visible" checked={data.alopecia_visible} onChange={(v) => setData('alopecia_visible', v)} />
+                    </div>
 
-                        <Divider />
+                    <InputNum label="Puntaje Ferriman-Gallwey (0-36)" value={data.puntaje_ferriman_gallwey} onChange={(v) => setData('puntaje_ferriman_gallwey', v)} error={errors.puntaje_ferriman_gallwey} className="max-w-xs" />
 
-                        <Typography variant="subtitle2" color="text.secondary">Hallazgos al examen físico</Typography>
+                    <div className="divider my-1" />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 0 }}>
-                            <FormControlLabel control={<Checkbox checked={data.acantosis_nigricans} onChange={(e) => setData('acantosis_nigricans', e.target.checked)} />} label="Acantosis nigricans" />
-                            <FormControlLabel control={<Checkbox checked={data.skin_tags} onChange={(e) => setData('skin_tags', e.target.checked)} />} label="Acrocordones (skin tags)" />
-                            <FormControlLabel control={<Checkbox checked={data.galactorrea} onChange={(e) => setData('galactorrea', e.target.checked)} />} label="Galactorrea" />
-                            <FormControlLabel control={<Checkbox checked={data.hirsutismo_visible} onChange={(e) => setData('hirsutismo_visible', e.target.checked)} />} label="Hirsutismo visible" />
-                            <FormControlLabel control={<Checkbox checked={data.acne_visible} onChange={(e) => setData('acne_visible', e.target.checked)} />} label="Acné visible" />
-                            <FormControlLabel control={<Checkbox checked={data.alopecia_visible} onChange={(e) => setData('alopecia_visible', e.target.checked)} />} label="Alopecia visible" />
-                        </Box>
+                    <label className="form-control w-full">
+                        <div className="label"><span className="label-text text-xs">Observaciones</span></div>
+                        <textarea className="textarea textarea-bordered text-sm" rows={3} value={data.observaciones} onChange={(e) => setData('observaciones', e.target.value)} />
+                    </label>
 
-                        <TextField label="Puntaje Ferriman-Gallwey (0-36)" type="number" value={data.puntaje_ferriman_gallwey} onChange={(e) => setData('puntaje_ferriman_gallwey', e.target.value)} error={Boolean(errors.puntaje_ferriman_gallwey)} helperText={errors.puntaje_ferriman_gallwey} size="small" sx={{ maxWidth: 300 }} />
+                    <div className="modal-action">
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={handleCerrar} disabled={processing}>Cancelar</button>
+                        <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
+                            <Save size={14} /> {processing ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Registrar'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button onClick={handleCerrar}>close</button></form>
+        </dialog>
+    );
+}
 
-                        <Divider />
+function InputNum({ label, value, onChange, error, step, placeholder, hint, className }: {
+    label: string; value: string; onChange: (v: string) => void; error?: string; step?: string; placeholder?: string; hint?: string; className?: string;
+}) {
+    return (
+        <label className={`form-control w-full ${className ?? ''}`}>
+            <div className="label"><span className="label-text text-xs">{label}</span></div>
+            <input type="number" step={step} placeholder={placeholder} className="input input-bordered input-sm w-full" value={value} onChange={(e) => onChange(e.target.value)} />
+            {error ? <div className="label"><span className="label-text-alt text-error text-xs">{error}</span></div> : null}
+            {hint && !error ? <div className="label"><span className="label-text-alt text-base-content/40">{hint}</span></div> : null}
+        </label>
+    );
+}
 
-                        <TextField label="Observaciones" value={data.observaciones} onChange={(e) => setData('observaciones', e.target.value)} error={Boolean(errors.observaciones)} helperText={errors.observaciones} fullWidth multiline rows={3} />
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-                    <Button variant="outlined" onClick={handleCerrar} disabled={processing}>Cancelar</Button>
-                    <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={processing}>
-                        {processing ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Registrar')}
-                    </Button>
-                </DialogActions>
-            </Box>
-        </Dialog>
+function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+    return (
+        <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" className="checkbox checkbox-sm checkbox-primary" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <span className="text-sm text-base-content/80">{label}</span>
+        </label>
     );
 }

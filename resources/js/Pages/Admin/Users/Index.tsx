@@ -3,35 +3,8 @@ declare const route: any;
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    FormControl,
-    IconButton,
-    InputLabel,
-    MenuItem,
-    Paper,
-    Select,
-    SelectChangeEvent,
-    Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    TextField,
-    Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import BlockIcon from '@mui/icons-material/Block';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
-import ClearIcon from '@mui/icons-material/Clear';
+import { Plus, Pencil, CheckCircle, Ban, XCircle, X } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 import { useEffect, useMemo, useState } from 'react';
 
 type EstadoUsuario = 'activo' | 'inactivo' | 'bloqueado';
@@ -56,11 +29,7 @@ interface UserRow {
 
 interface PaginatedUsers {
     data: UserRow[];
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
     meta: {
         current_page: number;
         last_page: number;
@@ -83,15 +52,9 @@ interface Props extends PageProps {
     filters: Filters;
 }
 
-function estadoColor(estado: EstadoUsuario): 'success' | 'warning' | 'error' {
-    if (estado === 'activo') {
-        return 'success';
-    }
-
-    if (estado === 'inactivo') {
-        return 'warning';
-    }
-
+function estadoVariante(estado: EstadoUsuario): 'success' | 'warning' | 'error' {
+    if (estado === 'activo') return 'success';
+    if (estado === 'inactivo') return 'warning';
     return 'error';
 }
 
@@ -117,467 +80,166 @@ export default function Index({ users, roles, filters, flash }: Props) {
     );
 
     const applyFilters = (page = 1) => {
-        router.get(
-            route('admin.users.index'),
-            {
-                buscar,
-                estado,
-                rol,
-                page,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
+        router.get(route('admin.users.index'), { buscar, estado, rol, page }, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const clearFilters = () => {
         setBuscar('');
         setEstado('');
         setRol('');
-
-        router.get(
-            route('admin.users.index'),
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
+        router.get(route('admin.users.index'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     const pageCount = users.meta?.last_page ?? 1;
     const currentPage = users.meta?.current_page ?? 1;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Usuarios
-                </h2>
-            }
-        >
+        <AuthenticatedLayout header={<h2>Usuarios</h2>}>
             <Head title="Usuarios" />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', md: 'row' },
-                            justifyContent: 'space-between',
-                            gap: 2,
-                            alignItems: { xs: 'stretch', md: 'center' },
-                        }}
-                    >
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                Gestión de usuarios
-                            </Typography>
-                            <Typography color="text.secondary">
-                                Busca, filtra y administra cuentas del sistema.
-                            </Typography>
-                        </Box>
+            <div className="space-y-5">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-base-content">Gestión de usuarios</h2>
+                        <p className="text-sm text-base-content/60">Busca, filtra y administra cuentas del sistema.</p>
+                    </div>
+                    <Link href={route('admin.users.create')} className="btn btn-primary btn-sm gap-1.5">
+                        <Plus size={15} /> Crear usuario
+                    </Link>
+                </div>
 
-                        <Button
-                            component={Link}
-                            href={route('admin.users.create')}
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            sx={{ alignSelf: { xs: 'flex-start', md: 'auto' } }}
-                        >
-                            Crear usuario
-                        </Button>
-                    </Box>
+                {/* Flash */}
+                {flash?.success ? <div className="alert alert-success text-sm">{flash.success}</div> : null}
+                {flash?.error ? <div className="alert alert-error text-sm">{flash.error}</div> : null}
 
-                    {flash?.success ? (
-                        <Alert severity="success">{flash.success}</Alert>
-                    ) : null}
+                {/* Filtros */}
+                <form
+                    className="bg-base-100 border border-base-300 rounded-2xl p-4"
+                    onSubmit={(e) => { e.preventDefault(); applyFilters(1); }}
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Buscar</span></div>
+                            <input type="text" className="input input-bordered input-sm w-full" placeholder="Nombre o correo" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Estado</span></div>
+                            <select className="select select-bordered select-sm w-full" value={estado} onChange={(e) => setEstado(e.target.value)}>
+                                {estadoOptions.map((o) => <option key={o.value || 'all'} value={o.value}>{o.label}</option>)}
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Rol</span></div>
+                            <select className="select select-bordered select-sm w-full" value={rol} onChange={(e) => setRol(e.target.value)}>
+                                <option value="">Todos los roles</option>
+                                {roles.map((r) => <option key={r.id_rol} value={String(r.id_rol)}>{r.nombre}</option>)}
+                            </select>
+                        </label>
+                        <div className="flex gap-2 items-end">
+                            <button type="submit" className="btn btn-primary btn-sm">Filtrar</button>
+                            <button type="button" className="btn btn-ghost btn-sm gap-1" onClick={clearFilters}>
+                                <X size={14} /> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </form>
 
-                    {flash?.error ? (
-                        <Alert severity="error">{flash.error}</Alert>
-                    ) : null}
+                {/* Tabla */}
+                <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                            <thead>
+                                <tr className="border-base-300">
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Último acceso</th>
+                                    <th className="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="text-center py-10 text-base-content/50">
+                                            No se encontraron usuarios con los filtros actuales.
+                                        </td>
+                                    </tr>
+                                ) : users.data.map((user) => (
+                                    <tr key={user.id} className="hover border-base-300">
+                                        <td className="font-semibold">{user.name}</td>
+                                        <td className="text-base-content/60">{user.email}</td>
+                                        <td>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {(user.roles ?? []).length > 0
+                                                    ? user.roles?.map((r) => <Badge key={`${user.id}-${r.id_rol}`} variante="ghost">{r.nombre}</Badge>)
+                                                    : <Badge variante="ghost">Sin rol</Badge>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td><Badge variante={estadoVariante(user.estado)}>{user.estado}</Badge></td>
+                                        <td className="text-xs text-base-content/50">{user.ultimo_acceso ?? 'Sin registro'}</td>
+                                        <td>
+                                            <div className="flex gap-1 justify-end">
+                                                <Link href={route('admin.users.edit', user.id)} className="btn btn-ghost btn-xs btn-square" aria-label="Editar">
+                                                    <Pencil size={14} />
+                                                </Link>
+                                                <button
+                                                    className="btn btn-ghost btn-xs btn-square text-success"
+                                                    disabled={user.estado === 'activo'}
+                                                    onClick={() => router.patch(route('admin.users.activar', user.id), {}, { preserveScroll: true })}
+                                                    aria-label="Activar"
+                                                >
+                                                    <CheckCircle size={14} />
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost btn-xs btn-square text-warning"
+                                                    disabled={user.estado === 'inactivo'}
+                                                    onClick={() => router.patch(route('admin.users.inactivar', user.id), {}, { preserveScroll: true })}
+                                                    aria-label="Inactivar"
+                                                >
+                                                    <Ban size={14} />
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost btn-xs btn-square text-error"
+                                                    disabled={user.estado === 'bloqueado'}
+                                                    onClick={() => router.patch(route('admin.users.bloquear', user.id), {}, { preserveScroll: true })}
+                                                    aria-label="Bloquear"
+                                                >
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <Paper elevation={1} sx={{ p: 2 }}>
-                        <Stack
-                            component="form"
-                            spacing={2}
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                applyFilters(1);
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: {
-                                        xs: '1fr',
-                                        md: '2fr 1fr 1fr auto',
-                                    },
-                                    gap: 2,
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <TextField
-                                    label="Buscar por nombre o correo"
-                                    value={buscar}
-                                    onChange={(event) =>
-                                        setBuscar(event.target.value)
-                                    }
-                                    fullWidth
-                                    size="small"
-                                />
-
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="estado-filter-label">
-                                        Estado
-                                    </InputLabel>
-                                    <Select
-                                        labelId="estado-filter-label"
-                                        label="Estado"
-                                        value={estado}
-                                        onChange={(
-                                            event: SelectChangeEvent<string>,
-                                        ) => setEstado(event.target.value)}
-                                    >
-                                        {estadoOptions.map((option) => (
-                                            <MenuItem
-                                                key={option.value || 'todos'}
-                                                value={option.value}
-                                            >
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="rol-filter-label">
-                                        Rol
-                                    </InputLabel>
-                                    <Select
-                                        labelId="rol-filter-label"
-                                        label="Rol"
-                                        value={rol}
-                                        onChange={(
-                                            event: SelectChangeEvent<string>,
-                                        ) => setRol(event.target.value)}
-                                    >
-                                        <MenuItem value="">Todos los roles</MenuItem>
-                                        {roles.map((role) => (
-                                            <MenuItem
-                                                key={role.id_rol}
-                                                value={String(role.id_rol)}
-                                            >
-                                                {role.nombre}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        gap: 1,
-                                        justifyContent: {
-                                            xs: 'flex-start',
-                                            md: 'flex-end',
-                                        },
-                                        flexWrap: 'wrap',
-                                    }}
-                                >
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                    >
-                                        Filtrar
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outlined"
-                                        startIcon={<ClearIcon />}
-                                        onClick={clearFilters}
-                                    >
-                                        Limpiar
-                                    </Button>
-                                </Box>
-                            </Box>
-                        </Stack>
-                    </Paper>
-
-                    <Paper elevation={1}>
-                        <TableContainer sx={{ overflowX: 'auto' }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Nombre</TableCell>
-                                        <TableCell>Correo</TableCell>
-                                        <TableCell>Rol</TableCell>
-                                        <TableCell>Estado</TableCell>
-                                        <TableCell>Ultimo acceso</TableCell>
-                                        <TableCell align="right">
-                                            Acciones
-                                        </TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {users.data.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell
-                                                colSpan={6}
-                                                align="center"
-                                                sx={{ py: 6 }}
-                                            >
-                                                No se encontraron usuarios con
-                                                los filtros actuales.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        users.data.map((user) => (
-                                            <TableRow key={user.id} hover>
-                                                <TableCell>
-                                                    <Typography
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                        }}
-                                                    >
-                                                        {user.name}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {user.email}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            gap: 1,
-                                                            flexWrap: 'wrap',
-                                                        }}
-                                                    >
-                                                        {(user.roles ?? [])
-                                                            .length > 0 ? (
-                                                            user.roles?.map(
-                                                                (role) => (
-                                                                    <Chip
-                                                                        key={`${user.id}-${role.id_rol}`}
-                                                                        size="small"
-                                                                        label={
-                                                                            role.nombre
-                                                                        }
-                                                                        variant="outlined"
-                                                                    />
-                                                                ),
-                                                            )
-                                                        ) : (
-                                                            <Chip
-                                                                size="small"
-                                                                label="Sin rol"
-                                                                variant="outlined"
-                                                            />
-                                                        )}
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={user.estado}
-                                                        color={estadoColor(
-                                                            user.estado,
-                                                        )}
-                                                        size="small"
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    {user.ultimo_acceso ??
-                                                        'Sin registro'}
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            gap: 1,
-                                                            justifyContent: 'flex-end',
-                                                            flexWrap: 'wrap',
-                                                        }}
-                                                    >
-                                                        <IconButton
-                                                            component={Link}
-                                                            href={route(
-                                                                'admin.users.edit',
-                                                                user.id,
-                                                            )}
-                                                            size="small"
-                                                            color="primary"
-                                                            aria-label="Editar usuario"
-                                                        >
-                                                            <EditIcon fontSize="small" />
-                                                        </IconButton>
-
-                                                        <IconButton
-                                                            component="button"
-                                                            size="small"
-                                                            color="success"
-                                                            onClick={() =>
-                                                                router.patch(
-                                                                    route(
-                                                                        'admin.users.activar',
-                                                                        user.id,
-                                                                    ),
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll:
-                                                                            true,
-                                                                    },
-                                                                )
-                                                            }
-                                                            aria-label="Activar usuario"
-                                                            disabled={
-                                                                user.estado ===
-                                                                'activo'
-                                                            }
-                                                        >
-                                                            <CheckCircleIcon fontSize="small" />
-                                                        </IconButton>
-
-                                                        <IconButton
-                                                            component="button"
-                                                            size="small"
-                                                            color="warning"
-                                                            onClick={() =>
-                                                                router.patch(
-                                                                    route(
-                                                                        'admin.users.inactivar',
-                                                                        user.id,
-                                                                    ),
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll:
-                                                                            true,
-                                                                    },
-                                                                )
-                                                            }
-                                                            aria-label="Inactivar usuario"
-                                                            disabled={
-                                                                user.estado ===
-                                                                'inactivo'
-                                                            }
-                                                        >
-                                                            <DoNotDisturbIcon fontSize="small" />
-                                                        </IconButton>
-
-                                                        <IconButton
-                                                            component="button"
-                                                            size="small"
-                                                            color="error"
-                                                            onClick={() =>
-                                                                router.patch(
-                                                                    route(
-                                                                        'admin.users.bloquear',
-                                                                        user.id,
-                                                                    ),
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll:
-                                                                            true,
-                                                                    },
-                                                                )
-                                                            }
-                                                            aria-label="Bloquear usuario"
-                                                            disabled={
-                                                                user.estado ===
-                                                                'bloqueado'
-                                                            }
-                                                        >
-                                                            <BlockIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: { xs: 'column', sm: 'row' },
-                                justifyContent: 'space-between',
-                                alignItems: { xs: 'stretch', sm: 'center' },
-                                gap: 2,
-                                px: 2,
-                                py: 1,
-                            }}
-                        >
-                            <Typography variant="body2" color="text.secondary">
-                                Total: {users.meta.total} usuarios
-                            </Typography>
-
-                            <TablePagination
-                                component="div"
-                                count={users.meta.total}
-                                page={Math.max(currentPage - 1, 0)}
-                                rowsPerPage={users.meta.per_page}
-                                rowsPerPageOptions={[users.meta.per_page]}
-                                onPageChange={(_, nextPage) =>
-                                    applyFilters(nextPage + 1)
-                                }
-                                onRowsPerPageChange={() => undefined}
-                                labelRowsPerPage=""
-                                labelDisplayedRows={({ from, to, count }) =>
-                                    `${from} - ${to} de ${count}`
-                                }
-                            />
-                        </Box>
-                    </Paper>
-
-                    {pageCount > 1 ? (
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {users.links.map((link, index) => {
-                                const label = link.label
-                                    .replace('&laquo; Previous', 'Anterior')
-                                    .replace('Next &raquo;', 'Siguiente');
-
-                                if (! link.url) {
+                    {/* Paginación */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 px-4 py-3 border-t border-base-300">
+                        <p className="text-xs text-base-content/50">Total: {users.meta.total} usuarios</p>
+                        {pageCount > 1 ? (
+                            <div className="join">
+                                {users.links.map((link, i) => {
+                                    const label = link.label.replace('&laquo; Previous', '«').replace('Next &raquo;', '»');
                                     return (
-                                        <Button
-                                            key={`${label}-${index}`}
-                                            variant="outlined"
-                                            disabled
+                                        <button
+                                            key={`${label}-${i}`}
+                                            className={`join-item btn btn-xs ${link.active ? 'btn-primary' : 'btn-ghost'}`}
+                                            disabled={!link.url}
+                                            onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true, preserveState: true, replace: true })}
                                         >
                                             {label}
-                                        </Button>
+                                        </button>
                                     );
-                                }
-
-                                return (
-                                    <Button
-                                        key={`${label}-${index}`}
-                                        variant={
-                                            link.active
-                                                ? 'contained'
-                                                : 'outlined'
-                                        }
-                                        onClick={() =>
-                                            router.get(link.url as string, {}, {
-                                                preserveScroll: true,
-                                                preserveState: true,
-                                                replace: true,
-                                            })
-                                        }
-                                    >
-                                        {label}
-                                    </Button>
-                                );
-                            })}
-                        </Box>
-                    ) : null}
-                </Stack>
-            </Box>
+                                })}
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }

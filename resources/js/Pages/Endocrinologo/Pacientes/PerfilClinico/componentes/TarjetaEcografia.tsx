@@ -1,37 +1,33 @@
-import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import ImageSearchIcon from '@mui/icons-material/ImageSearch';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
+import clsx from 'clsx';
+import { Link } from '@inertiajs/react';
+import { ScanSearch, Edit, Plus, History } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
 import type { EcografiaData } from '../tipos';
 
 interface Props {
     ecografia: EcografiaData | null;
+    idPaciente: number;
     onRegistrar: () => void;
     onEditar: () => void;
 }
 
-export default function TarjetaEcografia({ ecografia, onRegistrar, onEditar }: Props) {
+export default function TarjetaEcografia({ ecografia, idPaciente, onRegistrar, onEditar }: Props) {
     if (!ecografia) {
         return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <ImageSearchIcon color="disabled" />
-                            <Typography variant="subtitle1" fontWeight={700}>Evaluación ecográfica</Typography>
-                            <Chip label="Pendiente" size="small" variant="outlined" />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                            No se ha registrado evaluación ecográfica. Es necesaria para evaluar el criterio de morfología ovárica en el diagnóstico PMOS.
-                        </Typography>
-                        <Box>
-                            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={onRegistrar}>
-                                Registrar ecografía
-                            </Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Tarjeta>
+                <div className="flex items-center gap-2 mb-2">
+                    <ScanSearch size={18} className="text-base-content/30" />
+                    <h3 className="font-bold text-base-content text-sm">Evaluación ecográfica</h3>
+                    <Badge>Pendiente</Badge>
+                </div>
+                <p className="text-xs text-base-content/60 mb-3">
+                    No se ha registrado evaluación ecográfica. Es necesaria para evaluar el criterio de morfología ovárica en el diagnóstico PMOS.
+                </p>
+                <button onClick={onRegistrar} className="btn btn-primary btn-sm gap-1.5">
+                    <Plus size={14} /> Registrar ecografía
+                </button>
+            </Tarjeta>
         );
     }
 
@@ -44,61 +40,77 @@ export default function TarjetaEcografia({ ecografia, onRegistrar, onEditar }: P
     if (ecografia.distribucion_periferica) alertas.push('Distribución periférica');
 
     const tieneHallazgos = alertas.length > 0;
+    const interpretacion = ecografia.morfologia_compatible_pmos
+        ? 'Hallazgos ecográficos compatibles con morfología ovárica PMOS.'
+        : 'Sin hallazgos ecográficos compatibles registrados.';
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <ImageSearchIcon color={tieneHallazgos ? 'warning' : 'success'} />
-                            <Typography variant="subtitle1" fontWeight={700}>Evaluación ecográfica</Typography>
-                            <Chip
-                                label={tieneHallazgos ? 'Hallazgos compatibles' : 'Sin hallazgos relevantes'}
-                                color={tieneHallazgos ? 'warning' : 'success'}
-                                size="small"
-                                variant="outlined"
-                            />
-                        </Stack>
-                        <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={onEditar}>Editar</Button>
-                    </Box>
+        <Tarjeta>
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <ScanSearch size={18} className={ecografia.morfologia_compatible_pmos ? 'text-warning' : 'text-success'} />
+                    <h3 className="font-bold text-base-content text-sm">Evaluación ecográfica</h3>
+                    <Badge variante={ecografia.morfologia_compatible_pmos ? 'warning' : 'success'}>
+                        {ecografia.morfologia_compatible_pmos ? 'Morfología compatible PMOS' : 'Sin hallazgos compatibles'}
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Link href={`/endocrinologo/pacientes/${idPaciente}/ecografia/historial`} className="btn btn-ghost btn-xs gap-1 text-base-content/60">
+                        <History size={13} /> Historial
+                    </Link>
+                    <button onClick={onEditar} className="btn btn-outline btn-primary btn-xs gap-1">
+                        <Edit size={13} /> Editar
+                    </button>
+                </div>
+            </div>
 
-                    <Divider />
+            <div className="border-b border-base-300 mb-3" />
 
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-                        <ItemDetalle etiqueta="Fecha" valor={ecografia.fecha_ecografia} />
-                        <ItemDetalle etiqueta="Tipo" valor={ecografia.tipo_ecografia ?? '-'} />
-                        <ItemDetalle etiqueta="Vol. ovario derecho" valor={ecografia.volumen_ovario_derecho != null ? `${ecografia.volumen_ovario_derecho} mL` : '-'} />
-                        <ItemDetalle etiqueta="Vol. ovario izquierdo" valor={ecografia.volumen_ovario_izquierdo != null ? `${ecografia.volumen_ovario_izquierdo} mL` : '-'} />
-                        <ItemDetalle etiqueta="Folículos OD" valor={ecografia.foliculos_ovario_derecho?.toString() ?? '-'} />
-                        <ItemDetalle etiqueta="Folículos OI" valor={ecografia.foliculos_ovario_izquierdo?.toString() ?? '-'} />
-                    </Box>
+            {/* Datos */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                <Detalle etiqueta="Fecha" valor={ecografia.fecha_ecografia} />
+                <Detalle etiqueta="Tipo" valor={formatTipo(ecografia.tipo_ecografia)} />
+                <Detalle etiqueta="Vol. ovario derecho" valor={ecografia.volumen_ovario_derecho != null ? `${ecografia.volumen_ovario_derecho} mL` : null} />
+                <Detalle etiqueta="Vol. ovario izquierdo" valor={ecografia.volumen_ovario_izquierdo != null ? `${ecografia.volumen_ovario_izquierdo} mL` : null} />
+                <Detalle etiqueta="Folículos OD" valor={ecografia.foliculos_ovario_derecho?.toString()} />
+                <Detalle etiqueta="Folículos OI" valor={ecografia.foliculos_ovario_izquierdo?.toString()} />
+            </div>
 
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                        {tieneHallazgos ? (
-                            alertas.map(a => <Chip key={a} label={a} color="warning" size="small" variant="filled" />)
-                        ) : (
-                            <Chip label="Sin hallazgos ecográficos compatibles" color="success" size="small" variant="outlined" />
-                        )}
-                    </Stack>
+            {/* Chips */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+                {tieneHallazgos ? (
+                    alertas.map(a => <Badge key={a} variante="warning">{a}</Badge>)
+                ) : (
+                    <Badge variante="success">Sin hallazgos ecográficos compatibles</Badge>
+                )}
+            </div>
 
-                    {ecografia.observaciones ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Observaciones</Typography>
-                            <Typography variant="body2">{ecografia.observaciones}</Typography>
-                        </Box>
-                    ) : null}
-                </Stack>
-            </CardContent>
-        </Card>
+            {/* Interpretación */}
+            <p className={clsx('text-xs font-medium', ecografia.morfologia_compatible_pmos ? 'text-warning' : 'text-base-content/50')}>
+                {interpretacion}
+            </p>
+
+            {ecografia.observaciones ? (
+                <div className="mt-2">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">Observaciones</p>
+                    <p className="text-sm text-base-content">{ecografia.observaciones}</p>
+                </div>
+            ) : null}
+        </Tarjeta>
     );
 }
 
-function ItemDetalle({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+function Detalle({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
     return (
-        <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>{etiqueta}</Typography>
-            <Typography variant="body2" fontWeight={500}>{valor}</Typography>
-        </Box>
+        <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">{etiqueta}</p>
+            <p className="text-sm font-medium text-base-content">{valor ?? '-'}</p>
+        </div>
     );
+}
+
+function formatTipo(tipo?: string | null): string {
+    const map: Record<string, string> = { transvaginal: 'Transvaginal', abdominal: 'Abdominal', otra: 'Otra' };
+    return map[tipo ?? ''] ?? '-';
 }

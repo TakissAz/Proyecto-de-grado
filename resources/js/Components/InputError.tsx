@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react';
+﻿import { HTMLAttributes } from 'react';
 
 export default function InputError({
     message,
@@ -8,7 +8,7 @@ export default function InputError({
     return message ? (
         <p
             {...props}
-            className={'text-sm text-red-600 ' + className}
+            className={'text-sm font-medium text-error ' + className}
         >
             {message}
         </p>

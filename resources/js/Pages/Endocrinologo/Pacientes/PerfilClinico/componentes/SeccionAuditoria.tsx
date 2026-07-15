@@ -1,5 +1,5 @@
-import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
+import { Clock } from 'lucide-react';
+import Tarjeta from '@/Components/ui/tarjeta';
 import type { Auditoria } from '../tipos';
 
 interface Props {
@@ -8,44 +8,28 @@ interface Props {
 
 export default function SeccionAuditoria({ auditoria }: Props) {
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <HistoryIcon color="action" fontSize="small" />
-                        <Typography variant="subtitle1" fontWeight={700}>
-                            Auditoría
-                        </Typography>
-                    </Stack>
-
-                    <Divider />
-
-                    <Box
-                        sx={{
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-                            gap: 2,
-                        }}
-                    >
-                        <AuditoriaItem etiqueta="Creado" valor={auditoria.creado_en} />
-                        <AuditoriaItem etiqueta="Última actualización" valor={auditoria.actualizado_en} />
-                        <AuditoriaItem etiqueta="Fecha de registro clínico" valor={auditoria.fecha_registro} />
-                    </Box>
-                </Stack>
-            </CardContent>
-        </Card>
+        <Tarjeta>
+            <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/[0.04] text-ink-muted dark:bg-white/[0.06] dark:text-ink-muted-dark">
+                    <Clock size={14} strokeWidth={1.8} />
+                </div>
+                <h3 className="text-[14px] font-semibold text-ink dark:text-ink-dark">Auditoría</h3>
+            </div>
+            <div className="border-b border-surface-border dark:border-surface-border-dark mb-3" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Detalle etiqueta="Creado" valor={auditoria.creado_en} />
+                <Detalle etiqueta="Última actualización" valor={auditoria.actualizado_en} />
+                <Detalle etiqueta="Fecha registro clínico" valor={auditoria.fecha_registro} />
+            </div>
+        </Tarjeta>
     );
 }
 
-function AuditoriaItem({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
+function Detalle({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
     return (
-        <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>
-                {etiqueta}
-            </Typography>
-            <Typography variant="body2" fontWeight={500}>
-                {valor ?? '-'}
-            </Typography>
-        </Box>
+        <div>
+            <p className="text-[10.5px] uppercase tracking-wide font-semibold text-ink-muted dark:text-ink-muted-dark">{etiqueta}</p>
+            <p className="text-[13px] font-medium text-ink dark:text-ink-dark">{valor ?? '—'}</p>
+        </div>
     );
 }

@@ -1,19 +1,5 @@
-import {
-    Box,
-    Button,
-    Checkbox,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    FormControlLabel,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
 import { useForm } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import type { AntecedentesData } from '../tipos';
 
 interface Props {
@@ -41,13 +27,7 @@ interface FormData {
     observaciones: string;
 }
 
-export default function FormularioAntecedentes({
-    abierto,
-    idPaciente,
-    idConsulta,
-    existente,
-    onCerrar,
-}: Props) {
+export default function FormularioAntecedentes({ abierto, idPaciente, idConsulta, existente, onCerrar }: Props) {
     const esEdicion = Boolean(existente);
 
     const { data, setData, post, processing, errors, reset } = useForm<FormData>({
@@ -72,137 +52,81 @@ export default function FormularioAntecedentes({
         const url = esEdicion
             ? `/endocrinologo/pacientes/${idPaciente}/antecedentes/${existente!.id_antecedente}?_method=PUT`
             : `/endocrinologo/pacientes/${idPaciente}/antecedentes`;
-
-        post(url, {
-            preserveScroll: true,
-            onSuccess: () => { reset(); onCerrar(); },
-        });
+        post(url, { preserveScroll: true, onSuccess: () => { reset(); onCerrar(); } });
     };
 
     const handleCerrar = () => { reset(); onCerrar(); };
 
+    if (!abierto) return null;
+
     return (
-        <Dialog open={abierto} onClose={handleCerrar} maxWidth="md" fullWidth key={existente?.id_antecedente ?? 'new'}>
-            <DialogTitle>
-                <Typography variant="h6" fontWeight={700}>
+        <dialog className="modal modal-open" key={existente?.id_antecedente ?? 'new'}>
+            <div className="modal-box max-w-2xl">
+                <h3 className="font-bold text-lg mb-4">
                     {esEdicion ? 'Editar antecedentes endocrino-metabólicos' : 'Registrar antecedentes endocrino-metabólicos'}
-                </Typography>
-            </DialogTitle>
+                </h3>
 
-            <Divider />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Personales */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Antecedentes personales</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Checkbox label="Diabetes personal" checked={data.diabetes_personal} onChange={(v) => setData('diabetes_personal', v)} />
+                        <Checkbox label="Hipertensión personal" checked={data.hipertension_personal} onChange={(v) => setData('hipertension_personal', v)} />
+                        <Checkbox label="Dislipidemia personal" checked={data.dislipidemia_personal} onChange={(v) => setData('dislipidemia_personal', v)} />
+                        <Checkbox label="Enfermedad tiroidea" checked={data.enfermedad_tiroidea} onChange={(v) => setData('enfermedad_tiroidea', v)} />
+                        <Checkbox label="Hiperprolactinemia previa" checked={data.hiperprolactinemia_previa} onChange={(v) => setData('hiperprolactinemia_previa', v)} />
+                    </div>
 
-            <Box component="form" onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Stack spacing={3}>
-                        {/* Antecedentes personales */}
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Antecedentes personales
-                        </Typography>
+                    <div className="divider my-1" />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0 }}>
-                            <FormControlLabel
-                                control={<Checkbox checked={data.diabetes_personal} onChange={(e) => setData('diabetes_personal', e.target.checked)} />}
-                                label="Diabetes personal"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.hipertension_personal} onChange={(e) => setData('hipertension_personal', e.target.checked)} />}
-                                label="Hipertensión personal"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.dislipidemia_personal} onChange={(e) => setData('dislipidemia_personal', e.target.checked)} />}
-                                label="Dislipidemia personal"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.enfermedad_tiroidea} onChange={(e) => setData('enfermedad_tiroidea', e.target.checked)} />}
-                                label="Enfermedad tiroidea"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.hiperprolactinemia_previa} onChange={(e) => setData('hiperprolactinemia_previa', e.target.checked)} />}
-                                label="Hiperprolactinemia previa"
-                            />
-                        </Box>
+                    {/* Familiares */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Antecedentes familiares</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Checkbox label="Diabetes familiar" checked={data.diabetes_familiar} onChange={(v) => setData('diabetes_familiar', v)} />
+                        <Checkbox label="Hipertensión familiar" checked={data.hipertension_familiar} onChange={(v) => setData('hipertension_familiar', v)} />
+                        <Checkbox label="Dislipidemia familiar" checked={data.dislipidemia_familiar} onChange={(v) => setData('dislipidemia_familiar', v)} />
+                    </div>
 
-                        <Divider />
+                    <div className="divider my-1" />
 
-                        {/* Antecedentes familiares */}
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Antecedentes familiares
-                        </Typography>
+                    {/* Medicamentos */}
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Medicamentos en uso actual</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Checkbox label="Metformina" checked={data.uso_metformina} onChange={(v) => setData('uso_metformina', v)} />
+                        <Checkbox label="Anticonceptivos" checked={data.uso_anticonceptivos} onChange={(v) => setData('uso_anticonceptivos', v)} />
+                        <Checkbox label="Corticoides" checked={data.uso_corticoides} onChange={(v) => setData('uso_corticoides', v)} />
+                    </div>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0 }}>
-                            <FormControlLabel
-                                control={<Checkbox checked={data.diabetes_familiar} onChange={(e) => setData('diabetes_familiar', e.target.checked)} />}
-                                label="Diabetes familiar"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.hipertension_familiar} onChange={(e) => setData('hipertension_familiar', e.target.checked)} />}
-                                label="Hipertensión familiar"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.dislipidemia_familiar} onChange={(e) => setData('dislipidemia_familiar', e.target.checked)} />}
-                                label="Dislipidemia familiar"
-                            />
-                        </Box>
+                    <label className="form-control w-full">
+                        <div className="label"><span className="label-text text-xs">Otros medicamentos</span></div>
+                        <textarea className="textarea textarea-bordered text-sm" rows={2} placeholder="Listar otros medicamentos si aplica" value={data.otros_medicamentos} onChange={(e) => setData('otros_medicamentos', e.target.value)} />
+                    </label>
 
-                        <Divider />
+                    <div className="divider my-1" />
 
-                        {/* Medicamentos */}
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Medicamentos en uso actual
-                        </Typography>
+                    <label className="form-control w-full">
+                        <div className="label"><span className="label-text text-xs">Observaciones</span></div>
+                        <textarea className="textarea textarea-bordered text-sm" rows={3} value={data.observaciones} onChange={(e) => setData('observaciones', e.target.value)} />
+                    </label>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 0 }}>
-                            <FormControlLabel
-                                control={<Checkbox checked={data.uso_metformina} onChange={(e) => setData('uso_metformina', e.target.checked)} />}
-                                label="Metformina"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.uso_anticonceptivos} onChange={(e) => setData('uso_anticonceptivos', e.target.checked)} />}
-                                label="Anticonceptivos"
-                            />
-                            <FormControlLabel
-                                control={<Checkbox checked={data.uso_corticoides} onChange={(e) => setData('uso_corticoides', e.target.checked)} />}
-                                label="Corticoides"
-                            />
-                        </Box>
+                    <div className="modal-action">
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={handleCerrar} disabled={processing}>Cancelar</button>
+                        <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
+                            <Save size={14} /> {processing ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Registrar'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button onClick={handleCerrar}>close</button></form>
+        </dialog>
+    );
+}
 
-                        <TextField
-                            label="Otros medicamentos"
-                            value={data.otros_medicamentos}
-                            onChange={(e) => setData('otros_medicamentos', e.target.value)}
-                            error={Boolean(errors.otros_medicamentos)}
-                            helperText={errors.otros_medicamentos ?? 'Listar otros medicamentos en uso si aplica.'}
-                            fullWidth
-                            multiline
-                            rows={2}
-                        />
-
-                        <Divider />
-
-                        <TextField
-                            label="Observaciones"
-                            value={data.observaciones}
-                            onChange={(e) => setData('observaciones', e.target.value)}
-                            error={Boolean(errors.observaciones)}
-                            helperText={errors.observaciones}
-                            fullWidth
-                            multiline
-                            rows={3}
-                        />
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-                    <Button variant="outlined" onClick={handleCerrar} disabled={processing}>
-                        Cancelar
-                    </Button>
-                    <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={processing}>
-                        {processing ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Registrar')}
-                    </Button>
-                </DialogActions>
-            </Box>
-        </Dialog>
+function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+    return (
+        <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" className="checkbox checkbox-sm checkbox-primary" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <span className="text-sm text-base-content/80">{label}</span>
+        </label>
     );
 }

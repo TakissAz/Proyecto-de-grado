@@ -1,9 +1,8 @@
-import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import HistoryIcon from '@mui/icons-material/History';
+import clsx from 'clsx';
 import { Link } from '@inertiajs/react';
+import { Heart, Edit, Plus, History } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
 import type { HistoriaMenstrualData } from '../tipos';
 
 interface Props {
@@ -13,135 +12,113 @@ interface Props {
     onEditar: () => void;
 }
 
-/**
- * Tarjeta mejorada de Historia Menstrual.
- * Muestra interpretación clínica, chips de hallazgos y botón de historial.
- */
 export default function TarjetaHistoriaMenstrual({ historia, idPaciente, onRegistrar, onEditar }: Props) {
     if (!historia) {
         return (
-            <Card variant="outlined">
-                <CardContent>
-                    <Stack spacing={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <FavoriteIcon color="disabled" />
-                            <Typography variant="subtitle1" fontWeight={700}>Historia menstrual</Typography>
-                            <Chip label="Pendiente" size="small" variant="outlined" />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                            No se ha registrado la historia menstrual de esta paciente.
-                            Este dato es necesario para evaluar alteración ovulatoria en el diagnóstico PMOS.
-                        </Typography>
-                        <Box>
-                            <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={onRegistrar}>
-                                Registrar historia menstrual
-                            </Button>
-                        </Box>
-                    </Stack>
-                </CardContent>
-            </Card>
+            <Tarjeta>
+                <div className="flex items-center gap-2 mb-2">
+                    <Heart size={18} className="text-base-content/30" />
+                    <h3 className="font-bold text-base-content text-sm">Historia menstrual</h3>
+                    <Badge>Pendiente</Badge>
+                </div>
+                <p className="text-xs text-base-content/60 mb-3">
+                    No se ha registrado la historia menstrual de esta paciente. Este dato es necesario para evaluar alteración ovulatoria en el diagnóstico PMOS.
+                </p>
+                <button onClick={onRegistrar} className="btn btn-primary btn-sm gap-1.5">
+                    <Plus size={14} /> Registrar historia menstrual
+                </button>
+            </Tarjeta>
         );
     }
 
-    // Evaluación de alteración ovulatoria
-    const tieneAlteracionOvulatoria = historia.amenorrea
+    const tieneAlteracion = historia.amenorrea
         || historia.oligomenorrea
         || historia.sospecha_anovulacion
         || historia.confirma_anovulacion_por_progesterona
         || historia.regularidad_ciclo === 'irregular'
         || historia.regularidad_ciclo === 'ausente';
 
-    const badgeEstado = tieneAlteracionOvulatoria
-        ? { label: 'Alteración ovulatoria sugerida', color: 'warning' as const }
-        : { label: 'Registrada', color: 'success' as const };
-
-    const interpretacion = tieneAlteracionOvulatoria
+    const interpretacion = tieneAlteracion
         ? 'Datos compatibles con alteración ovulatoria.'
         : 'Sin alteración ovulatoria evidente registrada.';
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Stack spacing={2}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <FavoriteIcon color={tieneAlteracionOvulatoria ? 'warning' : 'success'} />
-                            <Typography variant="subtitle1" fontWeight={700}>Historia menstrual</Typography>
-                            <Chip label={badgeEstado.label} color={badgeEstado.color} size="small" variant="outlined" />
-                        </Stack>
+        <Tarjeta>
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                    <Heart size={18} className={tieneAlteracion ? 'text-warning' : 'text-success'} />
+                    <h3 className="font-bold text-base-content text-sm">Historia menstrual</h3>
+                    <Badge variante={tieneAlteracion ? 'warning' : 'success'}>
+                        {tieneAlteracion ? 'Alteración ovulatoria' : 'Registrada'}
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Link
+                        href={`/endocrinologo/pacientes/${idPaciente}/historia-menstrual/historial`}
+                        className="btn btn-ghost btn-xs gap-1 text-base-content/60"
+                    >
+                        <History size={13} /> Historial
+                    </Link>
+                    <button onClick={onEditar} className="btn btn-outline btn-primary btn-xs gap-1">
+                        <Edit size={13} /> Editar
+                    </button>
+                </div>
+            </div>
 
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                component={Link}
-                                href={`/endocrinologo/pacientes/${idPaciente}/historia-menstrual/historial`}
-                                variant="text"
-                                size="small"
-                                startIcon={<HistoryIcon />}
-                            >
-                                Historial
-                            </Button>
-                            <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={onEditar}>
-                                Editar
-                            </Button>
-                        </Stack>
-                    </Box>
+            <div className="border-b border-base-300 mb-3" />
 
-                    <Divider />
+            {/* Datos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                <Detalle etiqueta="Regularidad" valor={formatRegularidad(historia.regularidad_ciclo)} />
+                <Detalle etiqueta="Duración del ciclo" valor={historia.duracion_ciclo_dias ? `${historia.duracion_ciclo_dias} días` : null} />
+                <Detalle etiqueta="Intervalo entre ciclos" valor={historia.intervalo_entre_ciclos_dias ? `${historia.intervalo_entre_ciclos_dias} días` : null} />
+                <Detalle etiqueta="Edad menarquía" valor={historia.edad_menarquia ? `${historia.edad_menarquia} años` : null} />
+                <Detalle etiqueta="Última menstruación" valor={historia.fecha_ultima_menstruacion} />
+                <Detalle etiqueta="Progesterona lútea" valor={historia.progesterona_lutea ? `${historia.progesterona_lutea} ng/mL` : null} />
+            </div>
 
-                    {/* Datos principales */}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-                        <ItemDetalle etiqueta="Regularidad" valor={formatRegularidad(historia.regularidad_ciclo)} />
-                        <ItemDetalle etiqueta="Duración del ciclo" valor={historia.duracion_ciclo_dias ? `${historia.duracion_ciclo_dias} días` : '-'} />
-                        <ItemDetalle etiqueta="Intervalo entre ciclos" valor={historia.intervalo_entre_ciclos_dias ? `${historia.intervalo_entre_ciclos_dias} días` : '-'} />
-                        <ItemDetalle etiqueta="Edad menarquía" valor={historia.edad_menarquia ? `${historia.edad_menarquia} años` : '-'} />
-                        <ItemDetalle etiqueta="Última menstruación" valor={historia.fecha_ultima_menstruacion ?? '-'} />
-                        <ItemDetalle etiqueta="Progesterona lútea" valor={historia.progesterona_lutea ? `${historia.progesterona_lutea} ng/mL` : '-'} />
-                    </Box>
+            {/* Chips hallazgos */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+                <ChipHallazgo label="Amenorrea" activo={historia.amenorrea} />
+                <ChipHallazgo label="Oligomenorrea" activo={historia.oligomenorrea} />
+                <ChipHallazgo label="Sangrado abundante" activo={historia.sangrado_abundante} />
+                <ChipHallazgo label="Dolor menstrual" activo={historia.dolor_menstrual} />
+                <ChipHallazgo label="Sospecha anovulación" activo={historia.sospecha_anovulacion} />
+                <ChipHallazgo label="Anovulación confirmada" activo={historia.confirma_anovulacion_por_progesterona} />
+            </div>
 
-                    {/* Hallazgos clínicos como chips */}
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                        <ChipHallazgo label="Amenorrea" activo={historia.amenorrea} />
-                        <ChipHallazgo label="Oligomenorrea" activo={historia.oligomenorrea} />
-                        <ChipHallazgo label="Sangrado abundante" activo={historia.sangrado_abundante} />
-                        <ChipHallazgo label="Dolor menstrual" activo={historia.dolor_menstrual} />
-                        <ChipHallazgo label="Sospecha anovulación" activo={historia.sospecha_anovulacion} />
-                        <ChipHallazgo label="Anovulación confirmada" activo={historia.confirma_anovulacion_por_progesterona} />
-                    </Stack>
+            {/* Interpretación */}
+            <p className={clsx('text-xs font-medium', tieneAlteracion ? 'text-warning' : 'text-base-content/50')}>
+                {interpretacion}
+            </p>
 
-                    {/* Interpretación clínica */}
-                    <Typography variant="body2" color={tieneAlteracionOvulatoria ? 'warning.main' : 'text.secondary'} fontWeight={500}>
-                        {interpretacion}
-                    </Typography>
-
-                    {historia.observaciones ? (
-                        <Box>
-                            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>Observaciones</Typography>
-                            <Typography variant="body2">{historia.observaciones}</Typography>
-                        </Box>
-                    ) : null}
-                </Stack>
-            </CardContent>
-        </Card>
+            {historia.observaciones ? (
+                <div className="mt-2">
+                    <Detalle etiqueta="Observaciones" valor={historia.observaciones} />
+                </div>
+            ) : null}
+        </Tarjeta>
     );
 }
 
-function ItemDetalle({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+function Detalle({ etiqueta, valor }: { etiqueta: string; valor?: string | number | null }) {
     return (
-        <Box>
-            <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.2 }}>{etiqueta}</Typography>
-            <Typography variant="body2" fontWeight={500}>{valor}</Typography>
-        </Box>
+        <div>
+            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">{etiqueta}</p>
+            <p className="text-sm font-medium text-base-content">{valor ?? '-'}</p>
+        </div>
     );
 }
 
 function ChipHallazgo({ label, activo }: { label: string; activo: boolean }) {
     return (
-        <Chip
-            label={label}
-            size="small"
-            color={activo ? 'warning' : 'default'}
-            variant={activo ? 'filled' : 'outlined'}
-        />
+        <span className={clsx(
+            'badge badge-sm font-semibold',
+            activo ? 'badge-warning' : 'badge-ghost'
+        )}>
+            {label}
+        </span>
     );
 }
 

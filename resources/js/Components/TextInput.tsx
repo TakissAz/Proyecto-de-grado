@@ -1,4 +1,4 @@
-import {
+﻿import {
     forwardRef,
     InputHTMLAttributes,
     useEffect,
@@ -32,7 +32,7 @@ export default forwardRef(function TextInput(
             {...props}
             type={type}
             className={
-                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
+                'input input-bordered w-full rounded-xl bg-base-100 text-base-content border-base-300 focus:border-primary focus:ring-2 focus:ring-primary/10 ' +
                 className
             }
             ref={localRef}

@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Box, Button, Card, CardContent, Chip, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from 'lucide-react';
+import { Tarjeta } from '@/Components/ui/tarjeta';
+import { Badge } from '@/Components/ui/badge';
+import { EstadoVacio } from '@/Components/ui/estado-vacio';
 import type { PageProps } from '@/types';
 import type { AntecedentesData } from './tipos';
 
@@ -20,112 +22,98 @@ export default function HistorialAntecedentes({ paciente, registros }: Props) {
     const id = paciente.id_paciente;
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Historial de antecedentes</h2>}>
+        <AuthenticatedLayout header={<h2>Historial de antecedentes</h2>}>
             <Head title={`Historial antecedentes: ${paciente.nombre_completo}`} />
 
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack spacing={3}>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button component={Link} href={`/endocrinologo/pacientes/${id}/perfil-clinico`} variant="text" startIcon={<ArrowBackIcon />} size="small">
-                            Volver al perfil clínico
-                        </Button>
-                    </Box>
+            <div className="space-y-5">
+                <Link href={`/endocrinologo/pacientes/${id}/perfil-clinico`} className="btn btn-ghost btn-xs gap-1">
+                    <ArrowLeft size={14} /> Volver al perfil clínico
+                </Link>
 
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                        <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: 'wrap' }}>
-                            <Box>
-                                <Typography variant="h5" fontWeight={700}>{paciente.nombre_completo}</Typography>
-                                <Typography variant="body2" color="text.secondary">CI: {paciente.ci}</Typography>
-                            </Box>
-                            <Chip label={`${registros.length} registro(s)`} size="small" variant="outlined" />
-                        </Stack>
-                    </Paper>
+                <div className="bg-base-100 border border-base-300 rounded-2xl p-4 flex items-center gap-3 flex-wrap">
+                    <div>
+                        <h2 className="text-lg font-extrabold text-base-content">{paciente.nombre_completo}</h2>
+                        <p className="text-xs text-base-content/50">CI: {paciente.ci}</p>
+                    </div>
+                    <Badge>{registros.length} registro(s)</Badge>
+                </div>
 
-                    <Typography variant="h6" fontWeight={600}>Historial de antecedentes endocrino-metabólicos</Typography>
+                <h3 className="text-base font-bold text-base-content">Historial de antecedentes endocrino-metabólicos</h3>
 
-                    {registros.length === 0 ? (
-                        <Card variant="outlined">
-                            <CardContent>
-                                <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                                    No existen registros de antecedentes endocrino-metabólicos para esta paciente.
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Paper variant="outlined">
-                            <TableContainer sx={{ overflowX: 'auto' }}>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Fecha registro</TableCell>
-                                            <TableCell>Personales</TableCell>
-                                            <TableCell>Familiares</TableCell>
-                                            <TableCell>Medicamentos</TableCell>
-                                            <TableCell>Otros med.</TableCell>
-                                            <TableCell>Observaciones</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {registros.map((r) => {
-                                            const personales = [
-                                                r.diabetes_personal && 'DM',
-                                                r.hipertension_personal && 'HTA',
-                                                r.dislipidemia_personal && 'Dislip.',
-                                                r.enfermedad_tiroidea && 'Tiroides',
-                                                r.hiperprolactinemia_previa && 'Hiperprol.',
-                                            ].filter(Boolean) as string[];
+                {registros.length === 0 ? (
+                    <Tarjeta>
+                        <EstadoVacio mensaje="No existen registros de antecedentes endocrino-metabólicos para esta paciente." />
+                    </Tarjeta>
+                ) : (
+                    <div className="bg-base-100 border border-base-300 rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="table table-sm">
+                                <thead>
+                                    <tr className="text-base-content/50">
+                                        <th>Fecha</th>
+                                        <th>Personales</th>
+                                        <th>Familiares</th>
+                                        <th>Medicamentos</th>
+                                        <th>Otros med.</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {registros.map((r) => {
+                                        const personales = [
+                                            r.diabetes_personal && 'DM',
+                                            r.hipertension_personal && 'HTA',
+                                            r.dislipidemia_personal && 'Dislip.',
+                                            r.enfermedad_tiroidea && 'Tiroides',
+                                            r.hiperprolactinemia_previa && 'Hiperprol.',
+                                        ].filter(Boolean) as string[];
 
-                                            const familiares = [
-                                                r.diabetes_familiar && 'DM fam.',
-                                                r.hipertension_familiar && 'HTA fam.',
-                                                r.dislipidemia_familiar && 'Dislip. fam.',
-                                            ].filter(Boolean) as string[];
+                                        const familiares = [
+                                            r.diabetes_familiar && 'DM fam.',
+                                            r.hipertension_familiar && 'HTA fam.',
+                                            r.dislipidemia_familiar && 'Dislip. fam.',
+                                        ].filter(Boolean) as string[];
 
-                                            const meds = [
-                                                r.uso_metformina && 'Metformina',
-                                                r.uso_anticonceptivos && 'ACOs',
-                                                r.uso_corticoides && 'Corticoides',
-                                            ].filter(Boolean) as string[];
+                                        const meds = [
+                                            r.uso_metformina && 'Metformina',
+                                            r.uso_anticonceptivos && 'ACOs',
+                                            r.uso_corticoides && 'Corticoides',
+                                        ].filter(Boolean) as string[];
 
-                                            return (
-                                                <TableRow key={r.id_antecedente} hover>
-                                                    <TableCell>
-                                                        <Typography variant="body2" fontWeight={500}>{r.created_at ?? '-'}</Typography>
-                                                        {r.updated_at && r.updated_at !== r.created_at ? (
-                                                            <Typography variant="caption" color="text.secondary">Act: {r.updated_at}</Typography>
-                                                        ) : null}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
-                                                            {personales.length > 0 ? personales.map(p => <Chip key={p} label={p} size="small" color="warning" />) : <Typography variant="caption" color="text.secondary">Ninguno</Typography>}
-                                                        </Stack>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
-                                                            {familiares.length > 0 ? familiares.map(f => <Chip key={f} label={f} size="small" variant="outlined" />) : <Typography variant="caption" color="text.secondary">Ninguno</Typography>}
-                                                        </Stack>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap' }}>
-                                                            {meds.length > 0 ? meds.map(m => <Chip key={m} label={m} size="small" color="primary" variant="outlined" />) : <Typography variant="caption" color="text.secondary">Ninguno</Typography>}
-                                                        </Stack>
-                                                    </TableCell>
-                                                    <TableCell sx={{ maxWidth: 150 }}>
-                                                        <Typography variant="caption" noWrap>{r.otros_medicamentos ?? '-'}</Typography>
-                                                    </TableCell>
-                                                    <TableCell sx={{ maxWidth: 200 }}>
-                                                        <Typography variant="caption" noWrap>{r.observaciones ?? '-'}</Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Paper>
-                    )}
-                </Stack>
-            </Box>
+                                        return (
+                                            <tr key={r.id_antecedente} className="hover">
+                                                <td>
+                                                    <p className="font-medium text-xs">{r.created_at ?? '-'}</p>
+                                                    {r.updated_at && r.updated_at !== r.created_at ? (
+                                                        <p className="text-[10px] text-base-content/40">Act: {r.updated_at}</p>
+                                                    ) : null}
+                                                </td>
+                                                <td>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {personales.length > 0 ? personales.map(p => <Badge key={p} variante="warning">{p}</Badge>) : <span className="text-[10px] text-base-content/40">Ninguno</span>}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {familiares.length > 0 ? familiares.map(f => <Badge key={f}>{f}</Badge>) : <span className="text-[10px] text-base-content/40">Ninguno</span>}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {meds.length > 0 ? meds.map(m => <Badge key={m} variante="info">{m}</Badge>) : <span className="text-[10px] text-base-content/40">Ninguno</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="text-xs max-w-[120px] truncate">{r.otros_medicamentos ?? '-'}</td>
+                                                <td className="text-xs max-w-[150px] truncate">{r.observaciones ?? '-'}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
         </AuthenticatedLayout>
     );
 }

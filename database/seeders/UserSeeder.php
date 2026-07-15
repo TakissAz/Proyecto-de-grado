@@ -30,6 +30,15 @@ class UserSeeder extends Seeder
             ]
         );
 
+        $nutricionista = User::firstOrCreate(
+            ['email' => 'nutri@pmos.test'],
+            [
+                'name' => 'Lic. Camila Rios',
+                'password' => Hash::make('password'),
+                'estado' => 'activo',
+            ]
+        );
+
         $rolAdmin = Role::query()
             ->where('nombre', '=', 'administrador', 'and')
             ->first();
@@ -38,12 +47,20 @@ class UserSeeder extends Seeder
             ->where('nombre', '=', 'endocrinologo', 'and')
             ->first();
 
+        $rolNutricionista = Role::query()
+            ->where('nombre', '=', 'nutricionista', 'and')
+            ->first();
+
         if ($rolAdmin !== null) {
             $this->asignarRol((int) $admin->id, (int) $rolAdmin->id_rol);
         }
 
         if ($rolEndocrino !== null) {
             $this->asignarRol((int) $endocrinologo->id, (int) $rolEndocrino->id_rol);
+        }
+
+        if ($rolNutricionista !== null) {
+            $this->asignarRol((int) $nutricionista->id, (int) $rolNutricionista->id_rol);
         }
     }
 

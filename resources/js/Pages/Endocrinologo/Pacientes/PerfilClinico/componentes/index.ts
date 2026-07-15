@@ -21,7 +21,6 @@ export { default as IndicadorEstadoFlujo } from './IndicadorEstadoFlujo';
 export { default as SeccionAuditoria } from './SeccionAuditoria';
 export { default as TarjetaAntecedentes } from './TarjetaAntecedentes';
 export { default as TarjetaConsultaInicial } from './TarjetaConsultaInicial';
-export { default as TarjetaEstadoSeccion } from './TarjetaEstadoSeccion';
 export { default as TarjetaEvaluacionFisica } from './TarjetaEvaluacionFisica';
 export { default as TarjetaEcografia } from './TarjetaEcografia';
 export { default as TarjetaDiagnosticoPmos } from './TarjetaDiagnosticoPmos';

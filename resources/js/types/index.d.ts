@@ -16,6 +16,7 @@ export interface User {
 export interface FlashProps {
     success?: string;
     error?: string;
+    nueva_consulta_paciente_id?: number;
 }
 
 export type PageProps<
@@ -25,4 +26,5 @@ export type PageProps<
         user: User | null;
     };
     flash: FlashProps;
+    [key: string]: unknown;
 };

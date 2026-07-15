@@ -1,6 +1,5 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
 import { useForm } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import type { DiagnosticoRiData, EvaluacionRiData } from '../tipos';
 
 interface Props {
@@ -12,30 +11,12 @@ interface Props {
     onCerrar: () => void;
 }
 
-interface FormData {
-    id_consulta_endocrinologica: number | string;
-    fecha_diagnostico: string;
-    homa_ir: string;
-    glucosa_ayunas: string;
-    insulina_ayunas: string;
-    hemoglobina_glicosilada: string;
-    resistencia_confirmada: boolean;
-    grado_resistencia: string;
-    riesgo_diabetes: string;
-    riesgo_cardiometabolico: string;
-    conclusion_medica: string;
-    recomendaciones_medicas: string;
-    id_glucosa_insulina: number | string;
-    id_perfil_lipidico: number | string;
-    id_evaluacion_fisica: number | string;
-}
-
 export default function FormularioDiagnosticoRi({ abierto, idPaciente, idConsulta, evaluacion, existente, onCerrar }: Props) {
     const esEdicion = Boolean(existente);
     const hoy = new Date().toISOString().split('T')[0];
 
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
-        id_consulta_endocrinologica: existente?.id_consulta_endocrinologica ?? idConsulta ?? '',
+    const { data, setData, post, processing, reset } = useForm({
+        id_consulta_endocrinologica: existente?.id_consulta_endocrinologica ?? idConsulta ?? '' as number | string,
         fecha_diagnostico: existente?.fecha_diagnostico ?? hoy,
         homa_ir: existente?.homa_ir?.toString() ?? evaluacion.homa_ir?.toString() ?? '',
         glucosa_ayunas: existente?.glucosa_ayunas?.toString() ?? evaluacion.glucosa_ayunas?.toString() ?? '',
@@ -47,100 +28,94 @@ export default function FormularioDiagnosticoRi({ abierto, idPaciente, idConsult
         riesgo_cardiometabolico: existente?.riesgo_cardiometabolico ?? evaluacion.riesgo_sugerido ?? 'no_evaluado',
         conclusion_medica: existente?.conclusion_medica ?? '',
         recomendaciones_medicas: existente?.recomendaciones_medicas ?? '',
-        id_glucosa_insulina: evaluacion.id_glucosa_insulina ?? '',
-        id_perfil_lipidico: evaluacion.id_perfil_lipidico ?? '',
-        id_evaluacion_fisica: evaluacion.id_evaluacion_fisica ?? '',
+        id_glucosa_insulina: evaluacion.id_glucosa_insulina ?? '' as number | string,
+        id_perfil_lipidico: evaluacion.id_perfil_lipidico ?? '' as number | string,
+        id_evaluacion_fisica: evaluacion.id_evaluacion_fisica ?? '' as number | string,
     });
 
-    const handleSubmit = (event: React.FormEvent) => {
-        event.preventDefault();
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
         const url = esEdicion
             ? `/endocrinologo/pacientes/${idPaciente}/diagnostico-ri/${existente!.id_diagnostico_ri}?_method=PUT`
             : `/endocrinologo/pacientes/${idPaciente}/diagnostico-ri`;
         post(url, { preserveScroll: true, onSuccess: () => { reset(); onCerrar(); } });
     };
 
-    const handleCerrar = () => { reset(); onCerrar(); };
+    if (!abierto) return null;
 
     return (
-        <Dialog open={abierto} onClose={handleCerrar} maxWidth="md" fullWidth>
-            <DialogTitle>
-                <Typography variant="h6" fontWeight={700}>
-                    {esEdicion ? 'Editar diagnóstico RI' : 'Registrar diagnóstico de resistencia a la insulina'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                    Valores pre-llenados desde los laboratorios registrados. El especialista confirma.
-                </Typography>
-            </DialogTitle>
+        <dialog className="modal modal-open" key={existente?.id_diagnostico_ri ?? 'new'}>
+            <div className="modal-box max-w-2xl">
+                <h3 className="font-bold text-lg">{esEdicion ? 'Editar diagnóstico RI' : 'Registrar diagnóstico de resistencia a la insulina'}</h3>
+                <p className="text-xs text-base-content/50 mb-4">Valores pre-llenados desde laboratorios registrados. El especialista confirma.</p>
 
-            <Divider />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Inp label="Fecha del diagnóstico" type="date" value={data.fecha_diagnostico} onChange={v => setData('fecha_diagnostico', v)} required className="max-w-xs" />
 
-            <Box component="form" onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Stack spacing={3}>
-                        <TextField label="Fecha del diagnóstico" type="date" value={data.fecha_diagnostico} onChange={(e) => setData('fecha_diagnostico', e.target.value)} error={Boolean(errors.fecha_diagnostico)} helperText={errors.fecha_diagnostico} size="small" required fullWidth slotProps={{ inputLabel: { shrink: true } }} sx={{ maxWidth: 250 }} />
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Valores metabólicos</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <Inp label="HOMA-IR" value={data.homa_ir} onChange={v => setData('homa_ir', v)} step="0.01" hint="≥ 2.5 = RI" />
+                        <Inp label="Glucosa ayunas" value={data.glucosa_ayunas} onChange={v => setData('glucosa_ayunas', v)} step="0.01" />
+                        <Inp label="Insulina ayunas" value={data.insulina_ayunas} onChange={v => setData('insulina_ayunas', v)} step="0.01" />
+                        <Inp label="HbA1c (%)" value={data.hemoglobina_glicosilada} onChange={v => setData('hemoglobina_glicosilada', v)} step="0.01" />
+                    </div>
 
-                        <Typography variant="subtitle2" color="text.secondary">Valores metabólicos</Typography>
+                    <div className="divider my-1" />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
-                            <TextField label="HOMA-IR" type="number" value={data.homa_ir} onChange={(e) => setData('homa_ir', e.target.value)} error={Boolean(errors.homa_ir)} helperText={errors.homa_ir ?? '>= 2.5 = RI'} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Glucosa ayunas" type="number" value={data.glucosa_ayunas} onChange={(e) => setData('glucosa_ayunas', e.target.value)} error={Boolean(errors.glucosa_ayunas)} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Insulina ayunas" type="number" value={data.insulina_ayunas} onChange={(e) => setData('insulina_ayunas', e.target.value)} error={Boolean(errors.insulina_ayunas)} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="HbA1c (%)" type="number" value={data.hemoglobina_glicosilada} onChange={(e) => setData('hemoglobina_glicosilada', e.target.value)} error={Boolean(errors.hemoglobina_glicosilada)} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                        </Box>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="checkbox checkbox-sm checkbox-error" checked={data.resistencia_confirmada} onChange={e => setData('resistencia_confirmada', e.target.checked)} />
+                        <span className="text-sm font-semibold text-base-content">Resistencia a la insulina confirmada</span>
+                    </label>
 
-                        <Divider />
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Clasificación</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Grado de resistencia</span></div>
+                            <select className="select select-bordered select-sm w-full" value={data.grado_resistencia} onChange={e => setData('grado_resistencia', e.target.value)}>
+                                <option value="no_aplica">No aplica</option>
+                                <option value="leve">Leve</option>
+                                <option value="moderada">Moderada</option>
+                                <option value="severa">Severa</option>
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Riesgo diabetes</span></div>
+                            <select className="select select-bordered select-sm w-full" value={data.riesgo_diabetes} onChange={e => setData('riesgo_diabetes', e.target.value)}>
+                                <option value="no_evaluado">No evaluado</option>
+                                <option value="bajo">Bajo</option>
+                                <option value="moderado">Moderado</option>
+                                <option value="alto">Alto</option>
+                            </select>
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label"><span className="label-text text-xs">Riesgo cardiometabólico</span></div>
+                            <select className="select select-bordered select-sm w-full" value={data.riesgo_cardiometabolico} onChange={e => setData('riesgo_cardiometabolico', e.target.value)}>
+                                <option value="no_evaluado">No evaluado</option>
+                                <option value="bajo">Bajo</option>
+                                <option value="moderado">Moderado</option>
+                                <option value="alto">Alto</option>
+                            </select>
+                        </label>
+                    </div>
 
-                        <FormControlLabel control={<Checkbox checked={data.resistencia_confirmada} onChange={(e) => setData('resistencia_confirmada', e.target.checked)} />} label="Resistencia a la insulina confirmada" />
+                    <div className="divider my-1" />
 
-                        <Typography variant="subtitle2" color="text.secondary">Clasificación</Typography>
+                    <label className="form-control w-full"><div className="label"><span className="label-text text-xs">Conclusión médica</span></div><textarea className="textarea textarea-bordered text-sm" rows={3} value={data.conclusion_medica} onChange={e => setData('conclusion_medica', e.target.value)} /></label>
+                    <label className="form-control w-full"><div className="label"><span className="label-text text-xs">Recomendaciones médicas</span></div><textarea className="textarea textarea-bordered text-sm" rows={3} value={data.recomendaciones_medicas} onChange={e => setData('recomendaciones_medicas', e.target.value)} /></label>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Grado de resistencia</InputLabel>
-                                <Select value={data.grado_resistencia} label="Grado de resistencia" onChange={(e) => setData('grado_resistencia', e.target.value)}>
-                                    <MenuItem value="no_aplica">No aplica</MenuItem>
-                                    <MenuItem value="leve">Leve</MenuItem>
-                                    <MenuItem value="moderada">Moderada</MenuItem>
-                                    <MenuItem value="severa">Severa</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Riesgo diabetes</InputLabel>
-                                <Select value={data.riesgo_diabetes} label="Riesgo diabetes" onChange={(e) => setData('riesgo_diabetes', e.target.value)}>
-                                    <MenuItem value="no_evaluado">No evaluado</MenuItem>
-                                    <MenuItem value="bajo">Bajo</MenuItem>
-                                    <MenuItem value="moderado">Moderado</MenuItem>
-                                    <MenuItem value="alto">Alto</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <FormControl fullWidth size="small">
-                                <InputLabel>Riesgo cardiometabólico</InputLabel>
-                                <Select value={data.riesgo_cardiometabolico} label="Riesgo cardiometabólico" onChange={(e) => setData('riesgo_cardiometabolico', e.target.value)}>
-                                    <MenuItem value="no_evaluado">No evaluado</MenuItem>
-                                    <MenuItem value="bajo">Bajo</MenuItem>
-                                    <MenuItem value="moderado">Moderado</MenuItem>
-                                    <MenuItem value="alto">Alto</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Box>
-
-                        <Divider />
-
-                        <TextField label="Conclusión médica" value={data.conclusion_medica} onChange={(e) => setData('conclusion_medica', e.target.value)} error={Boolean(errors.conclusion_medica)} fullWidth multiline rows={3} />
-                        <TextField label="Recomendaciones médicas" value={data.recomendaciones_medicas} onChange={(e) => setData('recomendaciones_medicas', e.target.value)} error={Boolean(errors.recomendaciones_medicas)} fullWidth multiline rows={3} />
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-                    <Button variant="outlined" onClick={handleCerrar} disabled={processing}>Cancelar</Button>
-                    <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={processing}>
-                        {processing ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Confirmar diagnóstico')}
-                    </Button>
-                </DialogActions>
-            </Box>
-        </Dialog>
+                    <div className="modal-action">
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => { reset(); onCerrar(); }} disabled={processing}>Cancelar</button>
+                        <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
+                            <Save size={14} /> {processing ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Confirmar diagnóstico'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button onClick={() => { reset(); onCerrar(); }}>close</button></form>
+        </dialog>
     );
+}
+
+function Inp({ label, value, onChange, type = 'number', step, hint, required, className }: { label: string; value: string; onChange: (v: string) => void; type?: string; step?: string; hint?: string; required?: boolean; className?: string }) {
+    return (<label className={`form-control w-full ${className ?? ''}`}><div className="label"><span className="label-text text-xs">{label}</span></div><input type={type} step={step} required={required} className="input input-bordered input-sm w-full" value={value} onChange={e => onChange(e.target.value)} />{hint ? <div className="label"><span className="label-text-alt text-base-content/40">{hint}</span></div> : null}</label>);
 }

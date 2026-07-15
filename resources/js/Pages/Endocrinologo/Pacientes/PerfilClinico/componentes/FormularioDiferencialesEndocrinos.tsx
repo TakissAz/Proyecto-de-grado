@@ -1,38 +1,14 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Stack, TextField, Typography } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
 import { useForm } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import type { DiferencialEndocrinoData } from '../tipos';
 
-interface Props {
-    abierto: boolean;
-    idPaciente: number;
-    idConsulta: number | null;
-    existente?: DiferencialEndocrinoData | null;
-    onCerrar: () => void;
-}
-
-interface FormData {
-    id_consulta_endocrinologica: number | string;
-    fecha_resultado: string;
-    tsh: string;
-    t3_libre: string;
-    t4_libre: string;
-    prolactina: string;
-    diecisiete_oh_progesterona: string;
-    cortisol: string;
-    alteracion_tiroidea_descartada: boolean;
-    hiperprolactinemia_descartada: boolean;
-    hiperplasia_suprarrenal_descartada: boolean;
-    cushing_descartado: boolean;
-    interpretacion: string;
-}
+interface Props { abierto: boolean; idPaciente: number; idConsulta: number | null; existente?: DiferencialEndocrinoData | null; onCerrar: () => void; }
 
 export default function FormularioDiferencialesEndocrinos({ abierto, idPaciente, idConsulta, existente, onCerrar }: Props) {
     const esEdicion = Boolean(existente);
     const hoy = new Date().toISOString().split('T')[0];
-
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
-        id_consulta_endocrinologica: existente?.id_consulta_endocrinologica ?? idConsulta ?? '',
+    const { data, setData, post, processing, reset } = useForm({
+        id_consulta_endocrinologica: existente?.id_consulta_endocrinologica ?? idConsulta ?? '' as number | string,
         fecha_resultado: existente?.fecha_resultado ?? hoy,
         tsh: existente?.tsh?.toString() ?? '',
         t3_libre: existente?.t3_libre?.toString() ?? '',
@@ -47,73 +23,45 @@ export default function FormularioDiferencialesEndocrinos({ abierto, idPaciente,
         interpretacion: existente?.interpretacion ?? '',
     });
 
-    const handleSubmit = (event: React.FormEvent) => {
-        event.preventDefault();
-        const url = esEdicion
-            ? `/endocrinologo/pacientes/${idPaciente}/laboratorios/diferenciales/${existente!.id_diferencial_endocrino}?_method=PUT`
-            : `/endocrinologo/pacientes/${idPaciente}/laboratorios/diferenciales`;
-        post(url, { preserveScroll: true, onSuccess: () => { reset(); onCerrar(); } });
-    };
-
-    const handleCerrar = () => { reset(); onCerrar(); };
+    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); const url = esEdicion ? `/endocrinologo/pacientes/${idPaciente}/laboratorios/diferenciales/${existente!.id_diferencial_endocrino}?_method=PUT` : `/endocrinologo/pacientes/${idPaciente}/laboratorios/diferenciales`; post(url, { preserveScroll: true, onSuccess: () => { reset(); onCerrar(); } }); };
+    if (!abierto) return null;
 
     return (
-        <Dialog open={abierto} onClose={handleCerrar} maxWidth="md" fullWidth key={existente?.id_diferencial_endocrino ?? 'new'}>
-            <DialogTitle>
-                <Typography variant="h6" fontWeight={700}>
-                    {esEdicion ? 'Editar diferenciales endocrinos' : 'Registrar diferenciales endocrinos'}
-                </Typography>
-            </DialogTitle>
-
-            <Divider />
-
-            <Box component="form" onSubmit={handleSubmit}>
-                <DialogContent>
-                    <Stack spacing={3}>
-                        <TextField label="Fecha del resultado" type="date" value={data.fecha_resultado} onChange={(e) => setData('fecha_resultado', e.target.value)} error={Boolean(errors.fecha_resultado)} helperText={errors.fecha_resultado} size="small" required fullWidth slotProps={{ inputLabel: { shrink: true } }} sx={{ maxWidth: 250 }} />
-
-                        <Typography variant="subtitle2" color="text.secondary">Valores de laboratorio</Typography>
-
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2 }}>
-                            <TextField label="TSH (mUI/L)" type="number" value={data.tsh} onChange={(e) => setData('tsh', e.target.value)} error={Boolean(errors.tsh)} helperText={errors.tsh} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="T3 libre (pg/mL)" type="number" value={data.t3_libre} onChange={(e) => setData('t3_libre', e.target.value)} error={Boolean(errors.t3_libre)} helperText={errors.t3_libre} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="T4 libre (ng/dL)" type="number" value={data.t4_libre} onChange={(e) => setData('t4_libre', e.target.value)} error={Boolean(errors.t4_libre)} helperText={errors.t4_libre} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Prolactina (ng/mL)" type="number" value={data.prolactina} onChange={(e) => setData('prolactina', e.target.value)} error={Boolean(errors.prolactina)} helperText={errors.prolactina} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="17-OH Progesterona (ng/mL)" type="number" value={data.diecisiete_oh_progesterona} onChange={(e) => setData('diecisiete_oh_progesterona', e.target.value)} error={Boolean(errors.diecisiete_oh_progesterona)} helperText={errors.diecisiete_oh_progesterona} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                            <TextField label="Cortisol (μg/dL)" type="number" value={data.cortisol} onChange={(e) => setData('cortisol', e.target.value)} error={Boolean(errors.cortisol)} helperText={errors.cortisol} size="small" fullWidth slotProps={{ htmlInput: { step: '0.01' } }} />
-                        </Box>
-
-                        <Divider />
-
-                        <Typography variant="subtitle2" color="text.secondary">
-                            Diagnósticos diferenciales descartados
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            Marcar los diagnósticos que fueron descartados por estos resultados.
-                        </Typography>
-
-                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0 }}>
-                            <FormControlLabel control={<Checkbox checked={data.alteracion_tiroidea_descartada} onChange={(e) => setData('alteracion_tiroidea_descartada', e.target.checked)} />} label="Alteración tiroidea descartada" />
-                            <FormControlLabel control={<Checkbox checked={data.hiperprolactinemia_descartada} onChange={(e) => setData('hiperprolactinemia_descartada', e.target.checked)} />} label="Hiperprolactinemia descartada" />
-                            <FormControlLabel control={<Checkbox checked={data.hiperplasia_suprarrenal_descartada} onChange={(e) => setData('hiperplasia_suprarrenal_descartada', e.target.checked)} />} label="Hiperplasia suprarrenal descartada" />
-                            <FormControlLabel control={<Checkbox checked={data.cushing_descartado} onChange={(e) => setData('cushing_descartado', e.target.checked)} />} label="Síndrome de Cushing descartado" />
-                        </Box>
-
-                        <Divider />
-
-                        <TextField label="Interpretación clínica" value={data.interpretacion} onChange={(e) => setData('interpretacion', e.target.value)} error={Boolean(errors.interpretacion)} helperText={errors.interpretacion} fullWidth multiline rows={3} />
-                    </Stack>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-                    <Button variant="outlined" onClick={handleCerrar} disabled={processing}>Cancelar</Button>
-                    <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={processing}>
-                        {processing ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Registrar')}
-                    </Button>
-                </DialogActions>
-            </Box>
-        </Dialog>
+        <dialog className="modal modal-open" key={existente?.id_diferencial_endocrino ?? 'new'}>
+            <div className="modal-box max-w-2xl">
+                <h3 className="font-bold text-lg mb-4">{esEdicion ? 'Editar diferenciales endocrinos' : 'Registrar diferenciales endocrinos'}</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Inp label="Fecha del resultado" type="date" value={data.fecha_resultado} onChange={v => setData('fecha_resultado', v)} required className="max-w-xs" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Valores</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Inp label="TSH (mUI/L)" value={data.tsh} onChange={v => setData('tsh', v)} step="0.01" />
+                        <Inp label="T3 libre (pg/mL)" value={data.t3_libre} onChange={v => setData('t3_libre', v)} step="0.01" />
+                        <Inp label="T4 libre (ng/dL)" value={data.t4_libre} onChange={v => setData('t4_libre', v)} step="0.01" />
+                        <Inp label="Prolactina (ng/mL)" value={data.prolactina} onChange={v => setData('prolactina', v)} step="0.01" />
+                        <Inp label="17-OH Progesterona (ng/mL)" value={data.diecisiete_oh_progesterona} onChange={v => setData('diecisiete_oh_progesterona', v)} step="0.01" />
+                        <Inp label="Cortisol (μg/dL)" value={data.cortisol} onChange={v => setData('cortisol', v)} step="0.01" />
+                    </div>
+                    <div className="divider my-1" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-base-content/50">Diagnósticos diferenciales descartados</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Chk label="Alteración tiroidea descartada" checked={data.alteracion_tiroidea_descartada} onChange={v => setData('alteracion_tiroidea_descartada', v)} />
+                        <Chk label="Hiperprolactinemia descartada" checked={data.hiperprolactinemia_descartada} onChange={v => setData('hiperprolactinemia_descartada', v)} />
+                        <Chk label="Hiperplasia suprarrenal descartada" checked={data.hiperplasia_suprarrenal_descartada} onChange={v => setData('hiperplasia_suprarrenal_descartada', v)} />
+                        <Chk label="Síndrome de Cushing descartado" checked={data.cushing_descartado} onChange={v => setData('cushing_descartado', v)} />
+                    </div>
+                    <div className="divider my-1" />
+                    <label className="form-control w-full"><div className="label"><span className="label-text text-xs">Interpretación</span></div><textarea className="textarea textarea-bordered text-sm" rows={3} value={data.interpretacion} onChange={e => setData('interpretacion', e.target.value)} /></label>
+                    <div className="modal-action"><button type="button" className="btn btn-ghost btn-sm" onClick={() => { reset(); onCerrar(); }} disabled={processing}>Cancelar</button><button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}><Save size={14} />{processing ? 'Guardando...' : esEdicion ? 'Guardar' : 'Registrar'}</button></div>
+                </form>
+            </div>
+            <form method="dialog" className="modal-backdrop"><button onClick={() => { reset(); onCerrar(); }}>close</button></form>
+        </dialog>
     );
+}
+
+function Inp({ label, value, onChange, type = 'number', step, hint, required, className }: { label: string; value: string; onChange: (v: string) => void; type?: string; step?: string; hint?: string; required?: boolean; className?: string }) {
+    return (<label className={`form-control w-full ${className ?? ''}`}><div className="label"><span className="label-text text-xs">{label}</span></div><input type={type} step={step} required={required} className="input input-bordered input-sm w-full" value={value} onChange={e => onChange(e.target.value)} />{hint ? <div className="label"><span className="label-text-alt text-base-content/40">{hint}</span></div> : null}</label>);
+}
+function Chk({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+    return (<label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="checkbox checkbox-sm checkbox-primary" checked={checked} onChange={e => onChange(e.target.checked)} /><span className="text-sm text-base-content/80">{label}</span></label>);
 }
