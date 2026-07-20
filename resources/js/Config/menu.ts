@@ -7,6 +7,8 @@ import {
   TrendingUp,
   Dumbbell,
   HeartPulse,
+  Users,
+  CookingPot,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -23,7 +25,8 @@ export interface MenuItem {
   children?: MenuChild[];
 }
 
-export const menuItems: MenuItem[] = [
+/* ═══ Menú Endocrinólogo ═══ */
+export const menuEndocrinologo: MenuItem[] = [
   {
     label: 'Dashboard',
     href: '/endocrinologo/dashboard',
@@ -70,3 +73,42 @@ export const menuItems: MenuItem[] = [
     icon: HeartPulse,
   },
 ];
+
+/* ═══ Menú Nutricionista ═══ */
+export const menuNutricionista: MenuItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/nutricionista/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'Pacientes',
+    href: '/nutricionista/pacientes',
+    icon: Users,
+  },
+  {
+    label: 'Recetas',
+    href: '/nutricionista/recetas',
+    icon: CookingPot,
+  },
+  {
+    label: 'Calendario',
+    href: '/nutricionista/calendario',
+    icon: Calendar,
+  },
+  {
+    label: 'Progreso',
+    href: '/nutricionista/progreso',
+    icon: TrendingUp,
+  },
+];
+
+/* ═══ Default (fallback) ═══ */
+export const menuItems = menuEndocrinologo;
+
+/* ═══ Selector por rol ═══ */
+export function getMenuPorRol(rol: string): MenuItem[] {
+  if (rol === 'nutricionista') return menuNutricionista;
+  if (rol === 'endocrinologo') return menuEndocrinologo;
+  return menuEndocrinologo;
+}

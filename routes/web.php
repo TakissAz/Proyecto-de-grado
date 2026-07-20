@@ -14,7 +14,10 @@ use App\Http\Controllers\Endocrinologo\HistoriaMenstrualController;
 use App\Http\Controllers\Endocrinologo\LaboratoriosController;
 use App\Http\Controllers\Endocrinologo\PacienteController as EndocrinologoPacienteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Nutricionista\AlimentoBusquedaController;
+use App\Http\Controllers\Nutricionista\AlimentoController as NutricionistaAlimentoController;
 use App\Http\Controllers\Nutricionista\PacienteController as NutricionistaPacienteController;
+use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -134,6 +137,44 @@ Route::middleware(['auth', 'role:nutricionista'])
             ->name('pacientes.activar');
         Route::patch('pacientes/{paciente}/inactivar', [NutricionistaPacienteController::class, 'inactivar'])
             ->name('pacientes.inactivar');
+
+        // Alimentos
+        Route::get('alimentos', [NutricionistaAlimentoController::class, 'index'])
+            ->name('alimentos.index');
+        Route::get('alimentos/create', [NutricionistaAlimentoController::class, 'create'])
+            ->name('alimentos.create');
+        Route::post('alimentos', [NutricionistaAlimentoController::class, 'store'])
+            ->name('alimentos.store');
+        Route::get('alimentos/{alimento}/edit', [NutricionistaAlimentoController::class, 'edit'])
+            ->name('alimentos.edit');
+        Route::match(['put', 'patch'], 'alimentos/{alimento}', [NutricionistaAlimentoController::class, 'update'])
+            ->name('alimentos.update');
+        Route::patch('alimentos/{alimento}/activar', [NutricionistaAlimentoController::class, 'activar'])
+            ->name('alimentos.activar');
+        Route::patch('alimentos/{alimento}/inactivar', [NutricionistaAlimentoController::class, 'inactivar'])
+            ->name('alimentos.inactivar');
+
+        // Recetas
+        Route::get('recetas', [NutricionistaRecetaController::class, 'index'])
+            ->name('recetas.index');
+        Route::get('recetas/create', [NutricionistaRecetaController::class, 'create'])
+            ->name('recetas.create');
+        Route::post('recetas', [NutricionistaRecetaController::class, 'store'])
+            ->name('recetas.store');
+        Route::get('recetas/{receta}', [NutricionistaRecetaController::class, 'show'])
+            ->name('recetas.show');
+        Route::get('recetas/{receta}/edit', [NutricionistaRecetaController::class, 'edit'])
+            ->name('recetas.edit');
+        Route::match(['put', 'patch'], 'recetas/{receta}', [NutricionistaRecetaController::class, 'update'])
+            ->name('recetas.update');
+        Route::patch('recetas/{receta}/activar', [NutricionistaRecetaController::class, 'activar'])
+            ->name('recetas.activar');
+        Route::patch('recetas/{receta}/inactivar', [NutricionistaRecetaController::class, 'inactivar'])
+            ->name('recetas.inactivar');
+
+        // Búsqueda de alimentos (API para autocomplete)
+        Route::get('api/alimentos/buscar', AlimentoBusquedaController::class)
+            ->name('api.alimentos.buscar');
     });
 
 Route::middleware(['auth', 'role:endocrinologo'])
