@@ -1,0 +1,13 @@
+import { Filter, Search, X } from 'lucide-react';
+import type { EstadoFlujoPaciente, EstadoPaciente } from './types';
+interface Props { total: number; buscar: string; estado: string; flujo: string; origen: string; estados: EstadoPaciente[]; flujos: EstadoFlujoPaciente[]; origenes: string[]; onBuscar: (v:string)=>void; onEstado:(v:string)=>void; onFlujo:(v:string)=>void; onOrigen:(v:string)=>void; onFiltrar:()=>void; onLimpiar:()=>void; }
+const control='rounded-lg border border-surface-border bg-[#FAF9F6] py-1.5 text-xs text-ink outline-none focus:border-brand-green/50 focus:ring-0 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark';
+export default function AuditoriaFiltros(p: Props) { const activos=Boolean(p.buscar||p.estado||p.flujo||p.origen); return <div className="px-5 pb-4 pt-5">
+    <div className="mb-4"><h3 className="text-[15px] font-semibold text-ink dark:text-ink-dark">Expedientes auditados</h3><p className="mt-0.5 text-[11.5px] text-ink-muted dark:text-ink-muted-dark">{p.total} paciente{p.total!==1?'s':''} en seguimiento</p></div>
+    <form onSubmit={e=>{e.preventDefault();p.onFiltrar();}} className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-[minmax(230px,2fr)_1fr_1.2fr_1.1fr_auto]">
+        <div className="relative"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"/><input value={p.buscar} onChange={e=>p.onBuscar(e.target.value)} placeholder="Paciente, CI o responsable..." className={`${control} w-full pl-8 pr-3`}/></div>
+        <select value={p.estado} onChange={e=>p.onEstado(e.target.value)} className={`${control} px-3`}><option value="">Todos los estados</option>{p.estados.map(x=><option key={x}>{x}</option>)}</select>
+        <select value={p.flujo} onChange={e=>p.onFlujo(e.target.value)} className={`${control} px-3`}><option value="">Todos los flujos</option>{p.flujos.map(x=><option key={x}>{x.replaceAll('_',' ')}</option>)}</select>
+        <select value={p.origen} onChange={e=>p.onOrigen(e.target.value)} className={`${control} px-3`}><option value="">Todos los orígenes</option>{p.origenes.map(x=><option key={x}>{x}</option>)}</select>
+        <div className="flex gap-1"><button type="submit" className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-xs font-semibold text-ink hover:border-brand-green/40 dark:border-surface-border-dark dark:text-ink-dark"><Filter size={12}/> Filtrar</button>{activos&&<button type="button" onClick={p.onLimpiar} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-ink-muted dark:text-ink-muted-dark"><X size={12}/> Limpiar</button>}</div>
+    </form></div>; }

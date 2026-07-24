@@ -106,6 +106,8 @@ export interface HistoriaMenstrualData {
     progesterona_lutea?: number | null;
     confirma_anovulacion_por_progesterona: boolean;
     observaciones?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface HiperandrogenismoData {
@@ -139,6 +141,8 @@ export interface AntecedentesData {
     uso_corticoides: boolean;
     otros_medicamentos?: string | null;
     observaciones?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface EvaluacionFisicaData {
@@ -160,6 +164,8 @@ export interface EvaluacionFisicaData {
     acne_visible: boolean;
     alopecia_visible: boolean;
     observaciones?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface PerfilAndrogenicoData {

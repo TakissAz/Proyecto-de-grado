@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -115,6 +116,44 @@ class Paciente extends Model
         return $this->hasMany(DiagnosticoResistenciaInsulina::class, 'id_paciente', 'id_paciente');
     }
 
+    public function citas(): HasMany
+    {
+        return $this->hasMany(Cita::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function consultasNutricionales(): HasMany
+    {
+        return $this->hasMany(ConsultaNutricional::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function evaluacionesNutricionales(): HasMany
+    {
+        return $this->hasMany(EvaluacionNutricional::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function habitosAlimentarios(): HasMany
+    {
+        return $this->hasMany(HabitoAlimentario::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function preferenciasAlimentarias(): HasMany
+    {
+        return $this->hasMany(PreferenciaAlimentaria::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function restriccionesAlimentarias(): HasMany
+    {
+        return $this->hasMany(RestriccionAlimentaria::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function objetivosNutricionales(): HasMany
+    {
+        return $this->hasMany(ObjetivoNutricional::class, 'id_paciente', 'id_paciente');
+    }
+    public function requerimientosNutricionales(): HasMany
+    {
+        return $this->hasMany(RequerimientoNutricional::class, 'id_paciente', 'id_paciente');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

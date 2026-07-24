@@ -1,0 +1,2 @@
+import { Clock3 } from 'lucide-react'; import TarjetaBase from './TarjetaBase'; import type { Registro } from '../tipos';
+export default function TarjetaHabitosAlimentarios(p:{registro:Registro|null;abrir:()=>void;bloqueada:boolean}) { return <TarjetaBase titulo="Hábitos alimentarios" descripcion="Rutinas, frecuencias y señales de riesgo" icono={Clock3} registro={p.registro} abrir={p.abrir} bloqueada={p.bloqueada} campos={[['comidas_por_dia','Comidas/día'],['consumo_agua_litros','Agua litros'],['consume_desayuno','Desayuno'],['horarios_regulares','Horarios regulares']]}/>; }

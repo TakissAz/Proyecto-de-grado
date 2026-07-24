@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -106,6 +107,49 @@ class User extends Authenticatable
         return $this->hasMany(DiagnosticoResistenciaInsulina::class, 'id_endocrinologo');
     }
 
+    public function citasComoProfesional(): HasMany
+    {
+        return $this->hasMany(Cita::class, 'id_profesional');
+    }
+
+    public function citasRegistradas(): HasMany
+    {
+        return $this->hasMany(Cita::class, 'registrada_por');
+    }
+
+    public function consultasNutricionalesComoNutricionista(): HasMany
+    {
+        return $this->hasMany(ConsultaNutricional::class, 'id_nutricionista');
+    }
+
+    public function evaluacionesNutricionalesComoNutricionista(): HasMany
+    {
+        return $this->hasMany(EvaluacionNutricional::class, 'id_nutricionista');
+    }
+
+    public function habitosAlimentariosComoNutricionista(): HasMany
+    {
+        return $this->hasMany(HabitoAlimentario::class, 'id_nutricionista');
+    }
+
+    public function preferenciasAlimentariasComoNutricionista(): HasMany
+    {
+        return $this->hasMany(PreferenciaAlimentaria::class, 'id_nutricionista');
+    }
+
+    public function restriccionesAlimentariasComoNutricionista(): HasMany
+    {
+        return $this->hasMany(RestriccionAlimentaria::class, 'id_nutricionista');
+    }
+
+    public function objetivosNutricionalesComoNutricionista(): HasMany
+    {
+        return $this->hasMany(ObjetivoNutricional::class, 'id_nutricionista');
+    }
+    public function requerimientosNutricionalesComoNutricionista(): HasMany
+    {
+        return $this->hasMany(RequerimientoNutricional::class, 'id_nutricionista');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

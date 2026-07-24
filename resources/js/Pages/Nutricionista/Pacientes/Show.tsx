@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, CheckCircle, XCircle, Salad } from 'lucide-react';
 import PacienteResumen from '@/Components/Pacientes/PacienteResumen';
 import type { PageProps } from '@/types';
 
@@ -23,6 +23,7 @@ export default function Show({ paciente, flash }: Props) {
                 {flash?.success ? <div className="alert alert-success text-xs py-2">{flash.success}</div> : null}
                 <PacienteResumen paciente={paciente} actions={
                     <>
+                        <Link href={`/nutricionista/pacientes/${id}/perfil-nutricional`} className="btn btn-primary btn-sm gap-1"><Salad size={14} /> Perfil nutricional</Link>
                         <Link href={`/nutricionista/pacientes/${id}/edit`} className="btn btn-outline btn-sm gap-1"><Edit size={14} /> Editar</Link>
                         <button className="btn btn-outline btn-success btn-sm gap-1" disabled={paciente.estado === 'activo'} onClick={() => enviarEstado('activar')}><CheckCircle size={14} /> Activar</button>
                         <button className="btn btn-outline btn-warning btn-sm gap-1" disabled={paciente.estado === 'inactivo'} onClick={() => enviarEstado('inactivar')}><XCircle size={14} /> Inactivar</button>

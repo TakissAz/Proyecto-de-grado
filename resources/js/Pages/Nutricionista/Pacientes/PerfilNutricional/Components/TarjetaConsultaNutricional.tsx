@@ -1,0 +1,2 @@
+import { Stethoscope } from 'lucide-react'; import TarjetaBase from './TarjetaBase'; import type { Registro } from '../tipos';
+export default function TarjetaConsultaNutricional(p:{registro:Registro|null;abrir:()=>void}) { return <TarjetaBase titulo="Consulta nutricional" descripcion="Motivo y estado de atención" icono={Stethoscope} registro={p.registro} abrir={p.abrir} campos={[['fecha_consulta','Fecha'],['estado_consulta','Estado'],['motivo_consulta','Motivo']]}/>; }

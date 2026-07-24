@@ -1,4 +1,4 @@
-﻿import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+﻿   import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { Activity, Heart, Shield } from 'lucide-react';
 import { Tarjeta } from '@/Components/ui/tarjeta';

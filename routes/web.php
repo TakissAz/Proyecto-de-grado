@@ -17,7 +17,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Nutricionista\AlimentoBusquedaController;
 use App\Http\Controllers\Nutricionista\AlimentoController as NutricionistaAlimentoController;
 use App\Http\Controllers\Nutricionista\PacienteController as NutricionistaPacienteController;
+use App\Http\Controllers\Nutricionista\PerfilNutricionalController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
+use App\Http\Controllers\Endocrinologo\CitaController as EndocrinologoCitaController;
+use App\Http\Controllers\Nutricionista\CitaController as NutricionistaCitaController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +141,29 @@ Route::middleware(['auth', 'role:nutricionista'])
         Route::patch('pacientes/{paciente}/inactivar', [NutricionistaPacienteController::class, 'inactivar'])
             ->name('pacientes.inactivar');
 
+        // Perfil nutricional
+        Route::get('pacientes/{paciente}/perfil-nutricional', [PerfilNutricionalController::class, 'index'])->name('pacientes.perfil-nutricional');
+        Route::post('pacientes/{paciente}/perfil-nutricional/consulta', [PerfilNutricionalController::class, 'storeConsulta'])->name('pacientes.perfil-nutricional.consulta.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/consulta/{consulta}', [PerfilNutricionalController::class, 'updateConsulta'])->name('pacientes.perfil-nutricional.consulta.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/evaluacion', [PerfilNutricionalController::class, 'storeEvaluacion'])->name('pacientes.perfil-nutricional.evaluacion.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/evaluacion/{evaluacion}', [PerfilNutricionalController::class, 'updateEvaluacion'])->name('pacientes.perfil-nutricional.evaluacion.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/habitos', [PerfilNutricionalController::class, 'storeHabitos'])->name('pacientes.perfil-nutricional.habitos.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/habitos/{habito}', [PerfilNutricionalController::class, 'updateHabitos'])->name('pacientes.perfil-nutricional.habitos.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/preferencias', [PerfilNutricionalController::class, 'storePreferencias'])->name('pacientes.perfil-nutricional.preferencias.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/preferencias/{preferencia}', [PerfilNutricionalController::class, 'updatePreferencias'])->name('pacientes.perfil-nutricional.preferencias.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/restricciones', [PerfilNutricionalController::class, 'storeRestricciones'])->name('pacientes.perfil-nutricional.restricciones.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/restricciones/{restriccion}', [PerfilNutricionalController::class, 'updateRestricciones'])->name('pacientes.perfil-nutricional.restricciones.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/objetivos', [PerfilNutricionalController::class, 'storeObjetivo'])->name('pacientes.perfil-nutricional.objetivos.store');
+        Route::put('pacientes/{paciente}/perfil-nutricional/objetivos/{objetivo}', [PerfilNutricionalController::class, 'updateObjetivo'])->name('pacientes.perfil-nutricional.objetivos.update');
+        Route::post('pacientes/{paciente}/perfil-nutricional/requerimientos/calcular', [PerfilNutricionalController::class, 'calcularRequerimientos'])->name('pacientes.perfil-nutricional.requerimientos.calcular');
+
+        // Historiales nutricionales
+        Route::get('pacientes/{paciente}/perfil-nutricional/evaluaciones/historial', [PerfilNutricionalController::class, 'historialEvaluaciones'])->name('pacientes.perfil-nutricional.evaluaciones.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/habitos/historial', [PerfilNutricionalController::class, 'historialHabitos'])->name('pacientes.perfil-nutricional.habitos.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/preferencias/historial', [PerfilNutricionalController::class, 'historialPreferencias'])->name('pacientes.perfil-nutricional.preferencias.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/restricciones/historial', [PerfilNutricionalController::class, 'historialRestricciones'])->name('pacientes.perfil-nutricional.restricciones.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/objetivos/historial', [PerfilNutricionalController::class, 'historialObjetivos'])->name('pacientes.perfil-nutricional.objetivos.historial');
+
         // Alimentos
         Route::get('alimentos', [NutricionistaAlimentoController::class, 'index'])
             ->name('alimentos.index');
@@ -175,6 +201,18 @@ Route::middleware(['auth', 'role:nutricionista'])
         // Búsqueda de alimentos (API para autocomplete)
         Route::get('api/alimentos/buscar', AlimentoBusquedaController::class)
             ->name('api.alimentos.buscar');
+
+        // Citas
+        Route::get('citas', [NutricionistaCitaController::class, 'index'])->name('citas.index');
+        Route::get('citas/create', [NutricionistaCitaController::class, 'create'])->name('citas.create');
+        Route::post('citas', [NutricionistaCitaController::class, 'store'])->name('citas.store');
+        Route::get('citas/{cita}/edit', [NutricionistaCitaController::class, 'edit'])->name('citas.edit');
+        Route::match(['put', 'patch'], 'citas/{cita}', [NutricionistaCitaController::class, 'update'])->name('citas.update');
+        Route::post('citas/{cita}/confirmar', [NutricionistaCitaController::class, 'confirmar'])->name('citas.confirmar');
+        Route::post('citas/{cita}/atendida', [NutricionistaCitaController::class, 'marcarAtendida'])->name('citas.marcarAtendida');
+        Route::post('citas/{cita}/no-asistio', [NutricionistaCitaController::class, 'marcarNoAsistio'])->name('citas.marcarNoAsistio');
+        Route::post('citas/{cita}/cancelar', [NutricionistaCitaController::class, 'cancelar'])->name('citas.cancelar');
+        Route::get('citas/bloques', [NutricionistaCitaController::class, 'bloques'])->name('citas.bloques');
     });
 
 Route::middleware(['auth', 'role:endocrinologo'])
@@ -295,6 +333,18 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.diagnostico-ri.store');
         Route::match(['put', 'patch'], 'pacientes/{paciente}/diagnostico-ri/{diagnosticoRi}', [DiagnosticoResistenciaInsulinaController::class, 'update'])
             ->name('pacientes.diagnostico-ri.update');
+
+        // Citas
+        Route::get('citas', [EndocrinologoCitaController::class, 'index'])->name('citas.index');
+        Route::get('citas/create', [EndocrinologoCitaController::class, 'create'])->name('citas.create');
+        Route::post('citas', [EndocrinologoCitaController::class, 'store'])->name('citas.store');
+        Route::get('citas/{cita}/edit', [EndocrinologoCitaController::class, 'edit'])->name('citas.edit');
+        Route::match(['put', 'patch'], 'citas/{cita}', [EndocrinologoCitaController::class, 'update'])->name('citas.update');
+        Route::post('citas/{cita}/confirmar', [EndocrinologoCitaController::class, 'confirmar'])->name('citas.confirmar');
+        Route::post('citas/{cita}/atendida', [EndocrinologoCitaController::class, 'marcarAtendida'])->name('citas.marcarAtendida');
+        Route::post('citas/{cita}/no-asistio', [EndocrinologoCitaController::class, 'marcarNoAsistio'])->name('citas.marcarNoAsistio');
+        Route::post('citas/{cita}/cancelar', [EndocrinologoCitaController::class, 'cancelar'])->name('citas.cancelar');
+        Route::get('citas/bloques', [EndocrinologoCitaController::class, 'bloques'])->name('citas.bloques');
     });
 
 Route::middleware(['auth', 'role:paciente'])

@@ -31,11 +31,11 @@ class PerfilClinicoService
             'historiaHiperandrogenica' => fn ($q) => $q->latest('id_historia_hiperandrogenica'),
             'antecedentesEndocrinoMetabolicos' => fn ($q) => $q->latest('id_antecedente'),
             'evaluacionesFisicasEndocrinas' => fn ($q) => $q->latest('id_evaluacion_fisica'),
-            'resultadosPerfilAndrogenico',
-            'resultadosPerfilGonadotropo',
-            'resultadosDiferencialesEndocrinos',
-            'resultadosGlucosaInsulina',
-            'resultadosPerfilLipidico',
+            'resultadosPerfilAndrogenico' => fn ($q) => $q->latest('id_perfil_androgenico'),
+            'resultadosPerfilGonadotropo' => fn ($q) => $q->latest('id_perfil_gonadotropo'),
+            'resultadosDiferencialesEndocrinos' => fn ($q) => $q->latest('id_diferencial_endocrino'),
+            'resultadosGlucosaInsulina' => fn ($q) => $q->latest('id_glucosa_insulina'),
+            'resultadosPerfilLipidico' => fn ($q) => $q->latest('id_perfil_lipidico'),
             'evaluacionesEcograficas' => fn ($q) => $q->latest('id_ecografia'),
             'diagnosticosPmos' => fn ($q) => $q->latest('fecha_diagnostico'),
             'diagnosticosResistenciaInsulina' => fn ($q) => $q->latest('created_at'),
@@ -309,6 +309,8 @@ class PerfilClinicoService
             'progesterona_lutea' => $historia->progesterona_lutea,
             'confirma_anovulacion_por_progesterona' => $historia->confirma_anovulacion_por_progesterona,
             'observaciones' => $historia->observaciones,
+            'created_at' => $historia->created_at?->format('Y-m-d'),
+            'updated_at' => $historia->updated_at?->format('Y-m-d'),
         ];
     }
 
@@ -366,6 +368,8 @@ class PerfilClinicoService
             'uso_corticoides'             => $registro->uso_corticoides,
             'otros_medicamentos'          => $registro->otros_medicamentos,
             'observaciones'               => $registro->observaciones,
+            'created_at'                  => $registro->created_at?->format('Y-m-d'),
+            'updated_at'                  => $registro->updated_at?->format('Y-m-d'),
         ];
     }
 
@@ -399,6 +403,8 @@ class PerfilClinicoService
             'acne_visible'                => $registro->acne_visible,
             'alopecia_visible'            => $registro->alopecia_visible,
             'observaciones'               => $registro->observaciones,
+            'created_at'                  => $registro->created_at?->format('Y-m-d'),
+            'updated_at'                  => $registro->updated_at?->format('Y-m-d'),
         ];
     }
 

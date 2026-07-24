@@ -1,0 +1,2 @@
+import { Scale } from 'lucide-react'; import TarjetaBase from './TarjetaBase'; import type { Registro } from '../tipos';
+export default function TarjetaEvaluacionNutricional(p:{registro:Registro|null;abrir:()=>void;bloqueada:boolean}) { return <TarjetaBase titulo="Evaluación nutricional" descripcion="Antropometría y composición corporal" icono={Scale} registro={p.registro} abrir={p.abrir} bloqueada={p.bloqueada} campos={[['fecha_evaluacion','Fecha'],['peso','Peso kg'],['imc','IMC'],['indice_cintura_cadera','ICC']]}/>; }

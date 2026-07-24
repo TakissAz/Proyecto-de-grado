@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Calendar,
+  CalendarClock,
   MessageSquare,
   Salad,
   ClipboardList,
@@ -31,6 +32,11 @@ export const menuEndocrinologo: MenuItem[] = [
     label: 'Dashboard',
     href: '/endocrinologo/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'Citas',
+    href: '/endocrinologo/citas',
+    icon: CalendarClock,
   },
   {
     label: 'Calendario',
@@ -90,6 +96,11 @@ export const menuNutricionista: MenuItem[] = [
     label: 'Recetas',
     href: '/nutricionista/recetas',
     icon: CookingPot,
+  },
+  {
+    label: 'Citas',
+    href: '/nutricionista/citas',
+    icon: CalendarClock,
   },
   {
     label: 'Calendario',

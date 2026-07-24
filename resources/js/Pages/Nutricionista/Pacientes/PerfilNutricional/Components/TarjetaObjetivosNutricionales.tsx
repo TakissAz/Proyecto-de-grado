@@ -1,0 +1,2 @@
+import { Target } from 'lucide-react'; import TarjetaBase from './TarjetaBase'; import type { Registro } from '../tipos';
+export default function TarjetaObjetivosNutricionales(p:{registro:Registro|null;abrir:()=>void;bloqueada:boolean}) { return <TarjetaBase titulo="Objetivos nutricionales" descripcion="Metas, enfoque y horizonte clínico" icono={Target} registro={p.registro} abrir={p.abrir} bloqueada={p.bloqueada} campos={[['objetivo_principal','Objetivo'],['prioridad','Prioridad'],['meta_peso','Meta de peso'],['plazo_semanas','Plazo semanas']]}/>; }
