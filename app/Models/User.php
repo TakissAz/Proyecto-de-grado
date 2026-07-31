@@ -107,6 +107,16 @@ class User extends Authenticatable
         return $this->hasMany(DiagnosticoResistenciaInsulina::class, 'id_endocrinologo');
     }
 
+    public function diagnosticosPmosValidadosComoExperto()
+    {
+        return $this->hasMany(DiagnosticoPmos::class, 'validado_por');
+    }
+
+    public function diagnosticosRiValidadosComoExperto()
+    {
+        return $this->hasMany(DiagnosticoResistenciaInsulina::class, 'validado_por');
+    }
+
     public function citasComoProfesional(): HasMany
     {
         return $this->hasMany(Cita::class, 'id_profesional');

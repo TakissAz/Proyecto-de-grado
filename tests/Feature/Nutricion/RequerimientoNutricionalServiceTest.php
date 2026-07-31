@@ -9,6 +9,7 @@ use App\Models\Paciente;
 use App\Models\User;
 use App\Services\Nutricion\RequerimientoNutricionalService;
 use Carbon\Carbon;
+use Database\Seeders\ReglasNutricionalesSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -28,6 +29,7 @@ class RequerimientoNutricionalServiceTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-07-23 10:00:00');
+        $this->seed(ReglasNutricionalesSeeder::class);
 
         $this->service = app(RequerimientoNutricionalService::class);
         $this->nutricionista = User::factory()->create();
@@ -76,6 +78,8 @@ class RequerimientoNutricionalServiceTest extends TestCase
         $this->assertEqualsWithDelta(174.00, (float) $requerimiento->carbohidratos_diarios, 0.01);
         $this->assertEqualsWithDelta(77.33, (float) $requerimiento->grasas_diarias, 0.01);
         $this->assertEqualsWithDelta(25, (float) $requerimiento->fibra_diaria, 0.01);
+        $this->assertContains('RN-001', collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all());
+        $this->assertContains('RN-008', collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all());
     }
 
     public function test_usa_factor_sedentario_si_nivel_actividad_es_null(): void
@@ -132,8 +136,40 @@ class RequerimientoNutricionalServiceTest extends TestCase
         $this->assertNull($requerimiento->id_objetivo_nutricional);
         $this->assertEqualsWithDelta(0, (float) $requerimiento->ajuste_calorico, 0.01);
         $this->assertEqualsWithDelta((float) $requerimiento->get, (float) $requerimiento->calorias_objetivo, 0.01);
+        $codigos = collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all();
+        $this->assertContains('RN-007', $codigos);
+        $this->assertContains('RN-010', $codigos);
     }
 
+    public function test_mantenimiento_aplica_sus_reglas_y_distribucion(): void
+    {
+        $this->crearEvaluacion(70, 1.70, 'moderado');
+        $this->crearObjetivo('mantenimiento');
+
+        $requerimiento = $this->service->calcularYCrear($this->paciente, $this->nutricionista->id);
+        $codigos = collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all();
+
+        $this->assertContains('RN-005', $codigos);
+        $this->assertContains('RN-009', $codigos);
+        $this->assertEqualsWithDelta(25, (float) $requerimiento->porcentaje_proteinas, 0.01);
+        $this->assertEqualsWithDelta(40, (float) $requerimiento->porcentaje_carbohidratos, 0.01);
+    }
+
+    public function test_aplica_y_guarda_limite_minimo_calorico(): void
+    {
+        $this->crearEvaluacion(35, 1.40, 'sedentario');
+        $this->crearObjetivo('perdida_peso');
+
+        $requerimiento = $this->service->calcularYCrear($this->paciente, $this->nutricionista->id);
+        $codigos = collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all();
+
+        $this->assertEqualsWithDelta(1200, (float) $requerimiento->calorias_objetivo, 0.01);
+        $this->assertContains('RN-011', $codigos);
+        $this->assertStringContainsString('límite mínimo calórico', $requerimiento->observaciones);
+        $this->assertDatabaseHas('requerimientos_nutricionales', [
+            'id_requerimiento_nutricional' => $requerimiento->id_requerimiento_nutricional,
+        ]);
+    }
     public function test_recalcular_crea_un_registro_nuevo_y_conserva_el_anterior(): void
     {
         $this->crearEvaluacion(70, 1.70, 'moderado');

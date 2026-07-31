@@ -22,9 +22,8 @@ const NIVELES_ACTIVIDAD: Record<string, string> = {
 
 export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId, opciones }: Props) {
     const id = registro?.id_evaluacion_nutricional;
-    const url = `/nutricionista/pacientes/${pacienteId}/perfil-nutricional/evaluacion${id ? `/${id}` : ''}`;
 
-    const { data, setData, post, put, processing, errors, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, clearErrors } = useForm({
         fecha_evaluacion: normalizarFechaInput(registro?.fecha_evaluacion) || new Date().toISOString().split('T')[0],
         nivel_actividad: String(registro?.nivel_actividad ?? ''),
         peso: String(registro?.peso ?? ''),
@@ -46,7 +45,14 @@ export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId,
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
         const opciones = { preserveScroll: true, onSuccess: cerrar };
-        registro ? put(url, opciones) : post(url, opciones);
+        const endpoint = `/nutricionista/pacientes/${pacienteId}/perfil-nutricional/evaluacion`;
+
+        if (id) {
+            post(`${endpoint}/${id}?_method=PUT`, opciones);
+            return;
+        }
+
+        post(endpoint, opciones);
     };
 
     return (
@@ -71,7 +77,7 @@ export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId,
                 </div>
 
                 {/* Form */}
-                <form onSubmit={enviar} className="px-5 py-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <form id="form-evaluacion-nutricional" onSubmit={enviar} className="px-5 py-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                     {/* Fecha + Actividad */}
                     <div className="grid grid-cols-2 gap-3">
                         <Campo label="Fecha" error={errors.fecha_evaluacion}>
@@ -137,8 +143,8 @@ export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId,
 
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-surface-border dark:border-surface-border-dark bg-black/[0.01] dark:bg-white/[0.01]">
-                    <Boton variante="ghost" tamano="sm" onClick={cerrar}>Cancelar</Boton>
-                    <Boton variante="primary" tamano="sm" onClick={(e: any) => enviar(e)} disabled={processing}>
+                    <Boton type="button" variante="ghost" tamano="sm" onClick={cerrar}>Cancelar</Boton>
+                    <Boton type="submit" form="form-evaluacion-nutricional" variante="primary" tamano="sm" disabled={processing}>
                         {processing ? 'Guardando...' : (id ? 'Actualizar' : 'Registrar')}
                     </Boton>
                 </div>

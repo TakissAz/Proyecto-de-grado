@@ -27,13 +27,13 @@ export default function Index(props: PerfilProps) {
     const registros = [props.consulta, props.evaluacion, props.habitos, props.preferencias, props.restricciones, props.objetivo];
     const bloqueada = !props.consulta;
     const comunes = { cerrar:()=>setModal(null), pacienteId:props.paciente.id_paciente };
-    return <AuthenticatedLayout header={<h2 className="font-semibold">Perfil nutricional</h2>}>
+    return <AuthenticatedLayout title="Perfil nutricional">
         <Head title={`Perfil nutricional - ${props.paciente.nombres}`}/>
         <main className="mx-auto max-w-7xl space-y-5">
             <EncabezadoPacienteNutricional paciente={props.paciente}/>
-            {flash?.success && <div className="alert alert-success text-sm">{flash.success}</div>}
-            {flash?.error && <div className="alert alert-error text-sm">{flash.error}</div>}
-            {bloqueada && <div className="alert border border-info/20 bg-info/10 text-sm"><Info size={18}/><span>Registra primero la consulta nutricional para habilitar las demás secciones.</span></div>}
+            {flash?.success && <div className="rounded-xl bg-brand-green/10 border border-brand-green/20 px-4 py-2.5 text-[12px] font-medium text-brand-green-dark dark:bg-brand-green/[0.06] dark:text-brand-green">{flash.success}</div>}
+            {flash?.error && <div className="rounded-xl bg-category-fruits/10 border border-category-fruits/20 px-4 py-2.5 text-[12px] font-medium text-category-fruits">{flash.error}</div>}
+            {bloqueada && <div className="rounded-xl bg-category-others/10 border border-category-others/20 px-4 py-2.5 text-[12px] font-medium text-category-others flex items-center gap-2"><Info size={15}/><span>Registra primero la consulta nutricional para habilitar las demás secciones.</span></div>}
             <TarjetaResumenNutricional evaluacion={props.evaluacion} completadas={registros.filter(Boolean).length}/>
             <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <TarjetaConsultaNutricional registro={props.consulta} abrir={()=>setModal('consulta')}/>

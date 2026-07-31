@@ -4,6 +4,7 @@ import { BotonLink } from '@/Components/ui/boton';
 interface PacientesToolbarProps {
   total: number;
   buscar: string;
+  basePath?: string;
   onBuscarChange: (value: string) => void;
   onSubmit: () => void;
   onLimpiar: () => void;
@@ -14,6 +15,7 @@ const TABS = ['Todos', 'Activos', 'Inactivos'] as const;
 export default function PacientesToolbar({
   total,
   buscar,
+  basePath = '/endocrinologo/pacientes',
   onBuscarChange,
   onSubmit,
   onLimpiar,
@@ -30,7 +32,7 @@ export default function PacientesToolbar({
           </p>
         </div>
 
-        <BotonLink href="/endocrinologo/pacientes/create" variante="primary" tamano="md">
+        <BotonLink href={`${basePath}/create`} variante="primary" tamano="md">
           <Plus size={14} strokeWidth={1.8} /> Nuevo paciente
         </BotonLink>
       </div>
@@ -56,9 +58,9 @@ export default function PacientesToolbar({
             e.preventDefault();
             onSubmit();
           }}
-          className="flex items-center gap-2.5"
+          className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto"
         >
-          <div className="relative">
+          <div className="relative min-w-[180px] flex-1 sm:flex-none">
             <Search
               size={14}
               strokeWidth={1.8}
@@ -68,7 +70,7 @@ export default function PacientesToolbar({
               placeholder="Buscar paciente..."
               value={buscar}
               onChange={(e) => onBuscarChange(e.target.value)}
-              className="w-[200px] rounded-lg border border-surface-border bg-[#FAF9F6] py-1.5 pl-8 pr-3
+              className="w-full rounded-lg sm:w-[200px] border border-surface-border bg-[#FAF9F6] py-1.5 pl-8 pr-3
                 text-xs text-ink outline-none focus:border-brand-green/40
                 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark"
             />

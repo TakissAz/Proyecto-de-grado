@@ -1,0 +1,1 @@
+"""Microservicio experto PMOS/RI."""

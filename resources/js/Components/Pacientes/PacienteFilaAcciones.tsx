@@ -4,18 +4,20 @@ import { CheckCircle2, Eye, SquarePen, X } from 'lucide-react';
 interface PacienteFilaAccionesProps {
   idPaciente: number;
   estado: 'activo' | 'inactivo';
+  basePath?: string;
   onCambiarEstado: (idPaciente: number, accion: 'activar' | 'inactivar') => void;
 }
 
 export default function PacienteFilaAcciones({
   idPaciente,
   estado,
+  basePath = '/endocrinologo/pacientes',
   onCambiarEstado,
 }: PacienteFilaAccionesProps) {
   return (
     <div className="flex items-center justify-end gap-1">
       <Link
-        href={`/endocrinologo/pacientes/${idPaciente}`}
+        href={`${basePath}/${idPaciente}`}
         title="Ver perfil"
         className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-muted transition-colors
           hover:bg-brand-green-soft hover:text-brand-green-dark
@@ -25,7 +27,7 @@ export default function PacienteFilaAcciones({
       </Link>
 
       <Link
-        href={`/endocrinologo/pacientes/${idPaciente}/edit`}
+        href={`${basePath}/${idPaciente}/edit`}
         title="Editar"
         className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-muted transition-colors
           hover:bg-brand-orange/10 hover:text-brand-orange dark:text-ink-muted-dark"

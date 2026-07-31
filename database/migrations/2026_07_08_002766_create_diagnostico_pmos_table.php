@@ -83,6 +83,26 @@ return new class extends Migration
             $table->text('conclusion_medica')->nullable();
             $table->text('recomendaciones_medicas')->nullable();
 
+            $table->boolean('generado_por_motor_experto')->default(false);
+            $table->json('criterios_rotterdam_cumplidos')->nullable();
+            $table->json('hechos_utilizados')->nullable();
+            $table->json('reglas_activadas')->nullable();
+            $table->text('explicacion_experta')->nullable();
+            $table->json('recomendaciones_expertas')->nullable();
+            $table->decimal('confianza_experta', 5, 2)->nullable();
+            $table->string('version_motor_experto', 30)->nullable();
+            $table->timestamp('evaluado_por_motor_experto_en')->nullable();
+            $table->string('estado_validacion_experta', 30)->default('pendiente');
+            $table->unsignedBigInteger('validado_por')->nullable();
+            $table->timestamp('fecha_validacion')->nullable();
+            $table->text('observacion_validacion')->nullable();
+
+            $table->foreign('validado_por')
+                ->references('id')
+                ->on('users')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+
             $table->string('estado')->default('en_estudio');
 
             $table->timestamps();

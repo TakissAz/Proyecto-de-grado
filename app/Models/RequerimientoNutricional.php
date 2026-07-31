@@ -23,7 +23,7 @@ class RequerimientoNutricional extends Model
         'factor_actividad', 'tmb', 'get', 'ajuste_calorico', 'calorias_objetivo',
         'proteinas_diarias', 'carbohidratos_diarios', 'grasas_diarias', 'fibra_diaria',
         'porcentaje_proteinas', 'porcentaje_carbohidratos', 'porcentaje_grasas',
-        'metodo_calculo', 'observaciones', 'estado',
+        'metodo_calculo', 'observaciones', 'reglas_aplicadas', 'estado',
     ];
 
     protected $casts = [
@@ -43,6 +43,7 @@ class RequerimientoNutricional extends Model
         'porcentaje_proteinas' => 'decimal:2',
         'porcentaje_carbohidratos' => 'decimal:2',
         'porcentaje_grasas' => 'decimal:2',
+        'reglas_aplicadas' => 'array',
         'estado' => 'boolean',
     ];
 
@@ -83,7 +84,7 @@ class RequerimientoNutricional extends Model
                 'ajuste_calorico', 'calorias_objetivo', 'proteinas_diarias',
                 'carbohidratos_diarios', 'grasas_diarias', 'fibra_diaria',
                 'porcentaje_proteinas', 'porcentaje_carbohidratos',
-                'porcentaje_grasas', 'metodo_calculo', 'estado',
+                'porcentaje_grasas', 'metodo_calculo', 'reglas_aplicadas', 'estado',
             ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();

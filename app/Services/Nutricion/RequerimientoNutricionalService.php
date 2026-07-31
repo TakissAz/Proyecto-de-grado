@@ -19,15 +19,9 @@ class RequerimientoNutricionalService
         'muy_activo' => 1.90,
     ];
 
-    private const AJUSTES_CALORICOS = [
-        'perdida_peso' => -300,
-        'mejora_resistencia_insulina' => -200,
-        'control_glucemico' => -200,
-        'mejora_composicion_corporal' => -100,
-        'mantenimiento' => 0,
-        'educacion_nutricional' => 0,
-        'otro' => 0,
-    ];
+    public function __construct(
+        private readonly MotorReglasNutricionalesService $motorReglas,
+    ) {}
 
     public function calcularYCrear(
         Paciente $paciente,
@@ -45,15 +39,42 @@ class RequerimientoNutricionalService
         $factorActividad = self::FACTORES_ACTIVIDAD[$evaluacion->nivel_actividad] ?? 1.20;
         $tmb = $this->calcularTmb($peso, $tallaCentimetros, $edad);
         $get = round($tmb * $factorActividad, 2);
-        $ajusteCalorico = self::AJUSTES_CALORICOS[$objetivo?->objetivo_principal] ?? 0;
-        $caloriasObjetivo = round($get + $ajusteCalorico, 2);
+
+        $hechos = [
+            'objetivo_principal' => $objetivo?->objetivo_principal,
+            'peso' => $peso,
+            'talla' => $tallaMetros,
+            'edad' => $edad,
+            'nivel_actividad' => $evaluacion->nivel_actividad,
+        ];
+
+        $reglasIniciales = $this->motorReglas->evaluar($hechos);
+        $ajusteCalorico = (float) $reglasIniciales['ajuste_calorico'];
+        $caloriasPreliminares = round($get + $ajusteCalorico, 2);
+        $reglas = $this->motorReglas->evaluar([
+            ...$hechos,
+            'calorias_objetivo' => $caloriasPreliminares,
+        ]);
+
+        $caloriasMinimas = $reglas['calorias_minimas'];
+        $caloriasObjetivo = $caloriasMinimas === null
+            ? $caloriasPreliminares
+            : round(max($caloriasPreliminares, (float) $caloriasMinimas), 2);
+        $porcentajeProteinas = (float) $reglas['porcentaje_proteinas'];
+        $porcentajeCarbohidratos = (float) $reglas['porcentaje_carbohidratos'];
+        $porcentajeGrasas = (float) $reglas['porcentaje_grasas'];
+        $fibraDiaria = (float) $reglas['fibra_diaria'];
+        $observacionesReglas = implode(' ', $reglas['observaciones']);
+        $observacionesFinales = trim(implode(' ', array_filter([
+            $observaciones,
+            $observacionesReglas,
+        ]))) ?: null;
 
         return DB::transaction(function () use (
             $paciente,
             $nutricionistaId,
             $evaluacion,
             $objetivo,
-            $observaciones,
             $peso,
             $tallaMetros,
             $edad,
@@ -61,7 +82,13 @@ class RequerimientoNutricionalService
             $tmb,
             $get,
             $ajusteCalorico,
-            $caloriasObjetivo
+            $caloriasObjetivo,
+            $porcentajeProteinas,
+            $porcentajeCarbohidratos,
+            $porcentajeGrasas,
+            $fibraDiaria,
+            $observacionesFinales,
+            $reglas,
         ) {
             return RequerimientoNutricional::create([
                 'id_paciente' => $paciente->id_paciente,
@@ -79,15 +106,16 @@ class RequerimientoNutricionalService
                 'get' => $get,
                 'ajuste_calorico' => $ajusteCalorico,
                 'calorias_objetivo' => $caloriasObjetivo,
-                'proteinas_diarias' => round(($caloriasObjetivo * 0.30) / 4, 2),
-                'carbohidratos_diarios' => round(($caloriasObjetivo * 0.35) / 4, 2),
-                'grasas_diarias' => round(($caloriasObjetivo * 0.35) / 9, 2),
-                'fibra_diaria' => 25,
-                'porcentaje_proteinas' => 30,
-                'porcentaje_carbohidratos' => 35,
-                'porcentaje_grasas' => 35,
+                'proteinas_diarias' => round(($caloriasObjetivo * ($porcentajeProteinas / 100)) / 4, 2),
+                'carbohidratos_diarios' => round(($caloriasObjetivo * ($porcentajeCarbohidratos / 100)) / 4, 2),
+                'grasas_diarias' => round(($caloriasObjetivo * ($porcentajeGrasas / 100)) / 9, 2),
+                'fibra_diaria' => $fibraDiaria,
+                'porcentaje_proteinas' => $porcentajeProteinas,
+                'porcentaje_carbohidratos' => $porcentajeCarbohidratos,
+                'porcentaje_grasas' => $porcentajeGrasas,
                 'metodo_calculo' => 'mifflin_st_jeor',
-                'observaciones' => $observaciones,
+                'observaciones' => $observacionesFinales,
+                'reglas_aplicadas' => $reglas['reglas_aplicadas'],
                 'estado' => true,
             ]);
         });

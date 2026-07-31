@@ -33,6 +33,12 @@ export interface RequerimientoNutricional {
     porcentaje_grasas: number;
     metodo_calculo: string;
     observaciones: string | null;
+    reglas_aplicadas?: {
+        codigo: string;
+        nombre: string;
+        tipo_regla: string;
+        prioridad: number;
+    }[] | null;
     estado: boolean;
 }
 export interface PerfilProps {

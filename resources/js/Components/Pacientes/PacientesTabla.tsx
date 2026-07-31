@@ -23,12 +23,17 @@ export interface PacienteRow {
 
 interface PacientesTablaProps {
   pacientes: PacienteRow[];
+  basePath?: string;
   onCambiarEstado: (idPaciente: number, accion: 'activar' | 'inactivar') => void;
 }
 
 const COLUMNAS = ['Paciente', 'CI', 'Contacto', 'Edad', 'Registro', 'Estado', ''] as const;
 
-export default function PacientesTabla({ pacientes, onCambiarEstado }: PacientesTablaProps) {
+export default function PacientesTabla({
+  pacientes,
+  basePath = '/endocrinologo/pacientes',
+  onCambiarEstado,
+}: PacientesTablaProps) {
   if (pacientes.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 px-5 py-16 text-center">
@@ -93,6 +98,7 @@ export default function PacientesTabla({ pacientes, onCambiarEstado }: Pacientes
                 <PacienteFilaAcciones
                   idPaciente={p.id_paciente}
                   estado={p.estado}
+                  basePath={basePath}
                   onCambiarEstado={onCambiarEstado}
                 />
               </td>

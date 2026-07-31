@@ -46,6 +46,19 @@ class DiagnosticoPmos extends Model
         'riesgo_metabolico',
         'conclusion_medica',
         'recomendaciones_medicas',
+        'generado_por_motor_experto',
+        'criterios_rotterdam_cumplidos',
+        'hechos_utilizados',
+        'reglas_activadas',
+        'explicacion_experta',
+        'recomendaciones_expertas',
+        'confianza_experta',
+        'version_motor_experto',
+        'evaluado_por_motor_experto_en',
+        'estado_validacion_experta',
+        'validado_por',
+        'fecha_validacion',
+        'observacion_validacion',
         'estado',
     ];
 
@@ -58,6 +71,14 @@ class DiagnosticoPmos extends Model
         'cumple_morfologia_ovarica' => 'boolean',
         'diagnostico_confirmado' => 'boolean',
         'diagnosticos_diferenciales_descartados' => 'boolean',
+        'generado_por_motor_experto' => 'boolean',
+        'criterios_rotterdam_cumplidos' => 'array',
+        'hechos_utilizados' => 'array',
+        'reglas_activadas' => 'array',
+        'recomendaciones_expertas' => 'array',
+        'confianza_experta' => 'decimal:2',
+        'evaluado_por_motor_experto_en' => 'datetime',
+        'fecha_validacion' => 'datetime',
     ];
 
     public function consultaEndocrinologica()
@@ -103,6 +124,26 @@ class DiagnosticoPmos extends Model
     public function ecografia()
     {
         return $this->belongsTo(EvaluacionEcografica::class, 'id_ecografia', 'id_ecografia');
+    }
+
+    public function validadorExperto()
+    {
+        return $this->belongsTo(User::class, 'validado_por');
+    }
+
+    public function esPendienteValidacionExperta(): bool
+    {
+        return $this->estado_validacion_experta === 'pendiente';
+    }
+
+    public function estaValidadoPorExperto(): bool
+    {
+        return $this->estado_validacion_experta === 'validado';
+    }
+
+    public function estaRechazadoPorExperto(): bool
+    {
+        return $this->estado_validacion_experta === 'rechazado';
     }
 
     public function calcularCriteriosRotterdam(): int
