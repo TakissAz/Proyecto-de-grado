@@ -11,6 +11,11 @@ import { TarjetaPreferencias, ModalPreferencias } from './Components/preferencia
 import { TarjetaRestricciones, ModalRestricciones } from './Components/restricciones';
 import { TarjetaObjetivos, ModalObjetivos } from './Components/objetivos';
 import TarjetaRequerimientoNutricional from './Components/TarjetaRequerimientoNutricional';
+import TarjetaRecomendacionExperta from './Components/TarjetaRecomendacionExperta';
+import PlanAlimentarioCard from '@/Components/planes/PlanAlimentarioCard';
+import SeguimientoPacientePanel from '@/Components/nutricionista/seguimiento/SeguimientoPacientePanel';
+import RetroalimentacionPacientePanel from '@/Components/nutricionista/seguimiento/RetroalimentacionPacientePanel';
+import ResumenAjustePlanCard from '@/Components/nutricionista/seguimiento/ResumenAjustePlanCard';
 import FormularioConsultaNutricional from './Components/FormularioConsultaNutricional';
 import type { PerfilProps } from './tipos';
 import type { PageProps } from '@/types';
@@ -64,6 +69,26 @@ export default function Index(props: PerfilProps) {
                     evaluacion={props.evaluacion}
                     objetivo={props.objetivo}
                 />
+            </section>
+            <section className="space-y-3">
+                <div>
+                    <h2 className="text-lg font-bold">Orientación nutricional asistida</h2>
+                    <p className="text-sm text-base-content/60">Recomendación profesional base; todavía no genera un plan semanal.</p>
+                </div>
+                <TarjetaRecomendacionExperta
+                    pacienteId={props.paciente.id_paciente}
+                    recomendacion={props.recomendacionExperta}
+                />
+            </section>
+            <section className="space-y-3">
+                <div><h2 className="text-lg font-bold">Planificación nutricional</h2><p className="text-sm text-base-content/60">Organización semanal editable y validada por la nutricionista.</p></div>
+                <PlanAlimentarioCard plan={props.planAlimentarioPrincipal} recomendacion={props.recomendacionExpertaAprobada} puedeGenerar={props.puedeGenerarPlanSemanal} alimentos={props.alimentosPlan} recetas={props.recetasPlan}/>
+            </section>
+            <section className="space-y-3">
+                <div><h2 className="text-lg font-bold">Adherencia y evolución</h2><p className="text-sm text-base-content/60">Cumplimiento, aceptación y síntomas reportados por el paciente.</p></div>
+                <SeguimientoPacientePanel seguimiento={props.seguimientoPaciente}/>
+                <RetroalimentacionPacientePanel pacienteId={props.paciente.id_paciente} planId={props.seguimientoPaciente.plan?.id_plan_alimentario} historial={props.retroalimentacionesPaciente}/>
+                <ResumenAjustePlanCard contexto={props.contextoAjustePlan}/>
             </section>
         </main>
         <FormularioConsultaNutricional {...comunes} abierto={modal==='consulta'} registro={props.consulta} opciones={props.opciones}/>

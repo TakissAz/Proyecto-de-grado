@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "id": "input",
+      "type": "inputNode",
+      "name": "Hechos clínicos PMOS",
+      "position": { "x": 0, "y": 100 },
+      "content": { "schema": "" }
+    },
+    {
+      "id": "rotterdam",
+      "type": "functionNode",
+      "name": "Criterios Rotterdam",
+      "position": { "x": 250, "y": 100 },
+      "content": {
+        "source": "/** @type {Handler} */\nexport const handler = async (input) => {\n  const alteracion = input.cumple_alteracion_ovulatoria === true;\n  const hiperandrogenismo = input.cumple_hiperandrogenismo_clinico === true || input.cumple_hiperandrogenismo_bioquimico === true;\n  const morfologia = input.cumple_morfologia_ovarica === true;\n  const diferencialesDescartados = input.diagnosticos_diferenciales_descartados === true;\n\n  const criteriosCumplidos = [];\n  if (alteracion) criteriosCumplidos.push('alteracion_ovulatoria');\n  if (hiperandrogenismo) criteriosCumplidos.push('hiperandrogenismo');\n  if (morfologia) criteriosCumplidos.push('morfologia_ovarica');\n\n  const total = criteriosCumplidos.length;\n  const diagnosticoConfirmado = total >= 2 && diferencialesDescartados;\n\n  let fenotipo = null;\n  if (diagnosticoConfirmado) {\n    if (alteracion && hiperandrogenismo && morfologia) fenotipo = 'A';\n    else if (alteracion && hiperandrogenismo) fenotipo = 'B';\n    else if (hiperandrogenismo && morfologia) fenotipo = 'C';\n    else if (alteracion && morfologia) fenotipo = 'D';\n  }\n\n  let conclusion = 'No cumple criterios diagnósticos de PMOS';\n  if (diagnosticoConfirmado) {\n    conclusion = `Compatible con PMOS fenotipo ${fenotipo}`;\n  } else if (total >= 2 && !diferencialesDescartados) {\n    conclusion = 'PMOS en estudio: pendiente de descarte diferencial';\n  }\n\n  return {\n    cumple_hiperandrogenismo: hiperandrogenismo,\n    total_criterios_rotterdam: total,\n    diagnostico_confirmado: diagnosticoConfirmado,\n    fenotipo_pmos: fenotipo,\n    conclusion,\n    criterios_cumplidos: criteriosCumplidos,\n    diagnosticos_diferenciales_descartados: diferencialesDescartados\n  };\n};"
+      }
+    },
+    {
+      "id": "output",
+      "type": "outputNode",
+      "name": "Diagnóstico PMOS",
+      "position": { "x": 500, "y": 100 },
+      "content": { "schema": "" }
+    }
+  ],
+  "edges": [
+    {
+      "id": "input-rotterdam",
+      "sourceId": "input",
+      "targetId": "rotterdam",
+      "sourceHandle": "output",
+      "targetHandle": "input",
+      "type": "edge"
+    },
+    {
+      "id": "rotterdam-output",
+      "sourceId": "rotterdam",
+      "targetId": "output",
+      "sourceHandle": "output",
+      "targetHandle": "input",
+      "type": "edge"
+    }
+  ]
+}

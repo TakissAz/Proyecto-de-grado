@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
+            PacienteDiagnosticoClinicoSeeder::class,
+            PerfilNutricionalPacienteSeeder::class,
+            OtrosPerfilesNutricionalesSeeder::class,
+            RecetasSeeder::class,
         ]);
     }
 }

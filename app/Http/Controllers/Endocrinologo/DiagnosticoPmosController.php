@@ -7,6 +7,7 @@ use App\Models\DiagnosticoPmos;
 use App\Models\Paciente;
 use App\Services\Pacientes\DiagnosticoPmosService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -59,5 +60,35 @@ class DiagnosticoPmosController extends Controller
         $this->service->actualizar($diagnostico, $validated);
 
         return back()->with('success', 'Diagnóstico PMOS actualizado correctamente.');
+    }
+
+    public function actualizarClinico(Request $request, DiagnosticoPmos $diagnostico): JsonResponse
+    {
+        $datos = $request->validate([
+            'diagnostico_confirmado' => ['required', 'boolean'],
+            'fenotipo_pmos' => ['nullable', 'string', Rule::in(['A', 'B', 'C', 'D', 'no_clasificado', 'no_aplica'])],
+            'severidad_clinica' => ['nullable', 'string', Rule::in(['no_clasificada', 'leve', 'moderada', 'severa'])],
+            'riesgo_metabolico' => ['nullable', 'string', Rule::in(['no_evaluado', 'bajo', 'moderado', 'alto'])],
+            'tipo_hiperandrogenismo' => ['required', 'string', Rule::in(['clinico', 'bioquimico', 'mixto', 'ninguno'])],
+            'conclusion_medica' => ['nullable', 'string', 'max:3000'],
+            'recomendaciones_medicas' => ['nullable', 'string', 'max:3000'],
+            'estado' => ['required', 'string', Rule::in(['en_estudio', 'registrado'])],
+        ]);
+
+        $datos['fenotipo_pmos'] ??= 'no_aplica';
+        $datos['severidad_clinica'] ??= 'no_clasificada';
+        $datos['riesgo_metabolico'] ??= 'no_evaluado';
+
+        $diagnostico->fill($datos);
+        $diagnostico->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Diagnóstico clínico PMOS actualizado correctamente.',
+            'data' => $diagnostico->only(array_merge(
+                ['id_diagnostico_pmos'],
+                array_keys($datos)
+            )),
+        ]);
     }
 }

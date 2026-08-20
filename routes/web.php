@@ -13,13 +13,24 @@ use App\Http\Controllers\Endocrinologo\HiperandrogenismoController;
 use App\Http\Controllers\Endocrinologo\HistoriaMenstrualController;
 use App\Http\Controllers\Endocrinologo\LaboratoriosController;
 use App\Http\Controllers\Endocrinologo\PacienteController as EndocrinologoPacienteController;
+use App\Http\Controllers\Endocrinologo\ReporteDiagnosticoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Paciente\DashboardController as PacienteDashboardController;
+use App\Http\Controllers\Paciente\SeguimientoComidaController;
+use App\Http\Controllers\Paciente\SeguimientoSintomasController;
+use App\Http\Controllers\Paciente\RetroalimentacionPacienteController as PacienteRetroalimentacionController;
 use App\Http\Controllers\Nutricionista\AlimentoBusquedaController;
 use App\Http\Controllers\Nutricionista\AlimentoController as NutricionistaAlimentoController;
 use App\Http\Controllers\Nutricionista\PacienteController as NutricionistaPacienteController;
 use App\Http\Controllers\Nutricionista\PerfilNutricionalController;
+use App\Http\Controllers\Nutricionista\PlanAlimentarioController;
+use App\Http\Controllers\Nutricionista\RecomendacionNutricionalExpertaController;
+use App\Http\Controllers\Nutricionista\ReportePlanAlimentarioPdfController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
+use App\Http\Controllers\Nutricionista\RetroalimentacionPacienteController as NutricionistaRetroalimentacionController;
 use App\Http\Controllers\Endocrinologo\CitaController as EndocrinologoCitaController;
+use App\Http\Controllers\SistemaExperto\EjecutarSistemaExpertoController;
+use App\Http\Controllers\SistemaExperto\ValidarResultadoExpertoController;
 use App\Http\Controllers\Nutricionista\CitaController as NutricionistaCitaController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -156,6 +167,26 @@ Route::middleware(['auth', 'role:nutricionista'])
         Route::post('pacientes/{paciente}/perfil-nutricional/objetivos', [PerfilNutricionalController::class, 'storeObjetivo'])->name('pacientes.perfil-nutricional.objetivos.store');
         Route::put('pacientes/{paciente}/perfil-nutricional/objetivos/{objetivo}', [PerfilNutricionalController::class, 'updateObjetivo'])->name('pacientes.perfil-nutricional.objetivos.update');
         Route::post('pacientes/{paciente}/perfil-nutricional/requerimientos/calcular', [PerfilNutricionalController::class, 'calcularRequerimientos'])->name('pacientes.perfil-nutricional.requerimientos.calcular');
+        Route::post('pacientes/{paciente}/recomendacion-experta/generar', [RecomendacionNutricionalExpertaController::class, 'generar'])
+            ->middleware('verified')
+            ->name('recomendacion-experta.generar');
+        Route::post('recomendaciones-expertas/{recomendacion}/validar', [RecomendacionNutricionalExpertaController::class, 'validar'])
+            ->middleware('verified')
+            ->name('recomendacion-experta.validar');
+        Route::middleware('verified')->group(function () {
+            Route::post('pacientes/{paciente}/retroalimentaciones', [NutricionistaRetroalimentacionController::class, 'store'])
+                ->name('pacientes.retroalimentaciones.store');
+            Route::get('pacientes/{paciente}/planes-alimentarios', [PlanAlimentarioController::class, 'index'])->name('planes.index');
+            Route::post('recomendaciones-expertas/{recomendacion}/generar-plan', [PlanAlimentarioController::class, 'generarDesdeRecomendacion'])->name('planes.generar-desde-recomendacion');
+            Route::get('planes-alimentarios/{plan}', [PlanAlimentarioController::class, 'show'])->name('planes.show');
+            Route::get('planes-alimentarios/{plan}/reporte-pdf', ReportePlanAlimentarioPdfController::class)
+                ->name('planes.reporte-pdf');
+            Route::patch('planes-alimentarios/{plan}/estado', [PlanAlimentarioController::class, 'actualizarEstado'])->name('planes.estado');
+            Route::patch('comidas-plan/{comida}', [PlanAlimentarioController::class, 'actualizarComida'])->name('planes.comidas.update');
+            Route::post('comidas-plan/{comida}/componentes', [PlanAlimentarioController::class, 'crearComponente'])->name('planes.componentes.store');
+            Route::patch('componentes-plan/{componente}', [PlanAlimentarioController::class, 'actualizarComponente'])->name('planes.componentes.update');
+            Route::delete('componentes-plan/{componente}', [PlanAlimentarioController::class, 'eliminarComponente'])->name('planes.componentes.destroy');
+        });
 
         // Historiales nutricionales
         Route::get('pacientes/{paciente}/perfil-nutricional/evaluaciones/historial', [PerfilNutricionalController::class, 'historialEvaluaciones'])->name('pacientes.perfil-nutricional.evaluaciones.historial');
@@ -334,6 +365,35 @@ Route::middleware(['auth', 'role:endocrinologo'])
         Route::match(['put', 'patch'], 'pacientes/{paciente}/diagnostico-ri/{diagnosticoRi}', [DiagnosticoResistenciaInsulinaController::class, 'update'])
             ->name('pacientes.diagnostico-ri.update');
 
+        Route::middleware('verified')->group(function () {
+            Route::post('sistema-experto/pmos/{diagnostico}/ejecutar', [EjecutarSistemaExpertoController::class, 'ejecutarPmos'])
+                ->name('sistema-experto.pmos.ejecutar');
+
+            Route::post('sistema-experto/resistencia-insulina/{diagnostico}/ejecutar', [EjecutarSistemaExpertoController::class, 'ejecutarResistenciaInsulina'])
+                ->name('sistema-experto.ri.ejecutar');
+
+            Route::post('sistema-experto/pmos/{diagnostico}/validar', [ValidarResultadoExpertoController::class, 'validarPmos'])
+                ->name('sistema-experto.pmos.validar');
+
+            Route::post('sistema-experto/resistencia-insulina/{diagnostico}/validar', [ValidarResultadoExpertoController::class, 'validarResistenciaInsulina'])
+                ->name('sistema-experto.ri.validar');
+
+            Route::put('diagnosticos/pmos/{diagnostico}', [DiagnosticoPmosController::class, 'actualizarClinico'])
+                ->name('diagnosticos.pmos.update');
+
+            Route::put('diagnosticos/resistencia-insulina/{diagnostico}', [DiagnosticoResistenciaInsulinaController::class, 'actualizarClinico'])
+                ->name('diagnosticos.ri.update');
+
+            Route::get('pacientes/{paciente}/diagnostico/reporte-pdf', [ReporteDiagnosticoController::class, 'generar'])
+                ->name('pacientes.diagnostico.reporte-pdf');
+
+            Route::get('pacientes/{paciente}/diagnostico/pmos/reporte-pdf', [ReporteDiagnosticoController::class, 'generarPmos'])
+                ->name('pacientes.diagnostico.pmos.reporte-pdf');
+
+            Route::get('pacientes/{paciente}/diagnostico/resistencia-insulina/reporte-pdf', [ReporteDiagnosticoController::class, 'generarResistenciaInsulina'])
+                ->name('pacientes.diagnostico.ri.reporte-pdf');
+        });
+
         // Citas
         Route::get('citas', [EndocrinologoCitaController::class, 'index'])->name('citas.index');
         Route::get('citas/create', [EndocrinologoCitaController::class, 'create'])->name('citas.create');
@@ -351,9 +411,13 @@ Route::middleware(['auth', 'role:paciente'])
     ->prefix('paciente')
     ->name('paciente.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Paciente/Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
+        Route::post('/comidas-plan/{comida}/seguimiento', [SeguimientoComidaController::class, 'guardar'])
+            ->middleware('verified')->name('comidas.seguimiento.guardar');
+        Route::post('/seguimiento-sintomas', [SeguimientoSintomasController::class, 'store'])
+            ->middleware('verified')->name('seguimiento-sintomas.guardar');
+        Route::post('/retroalimentaciones/{retroalimentacion}/marcar-leida', [PacienteRetroalimentacionController::class, 'marcarLeida'])
+            ->middleware('verified')->name('retroalimentaciones.marcar-leida');
     });
 
 require __DIR__.'/auth.php';

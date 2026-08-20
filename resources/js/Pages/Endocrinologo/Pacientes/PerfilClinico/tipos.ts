@@ -297,10 +297,22 @@ export interface DiagnosticoPmosData {
     fenotipo_pmos?: string | null;
     diagnostico_confirmado: boolean;
     diagnosticos_diferenciales_descartados: boolean;
-    severidad_clinica?: 'leve' | 'moderada' | 'severa' | null;
-    riesgo_metabolico?: 'bajo' | 'moderado' | 'alto' | null;
+    severidad_clinica?: 'no_clasificada' | 'leve' | 'moderada' | 'severa' | null;
+    riesgo_metabolico?: 'no_evaluado' | 'bajo' | 'moderado' | 'alto' | null;
     conclusion_medica?: string | null;
     recomendaciones_medicas?: string | null;
+    estado: 'en_estudio' | 'registrado';
+    criterios_rotterdam_cumplidos?: string[] | null;
+    generado_por_motor_experto?: boolean;
+    confianza_experta?: number | string | null;
+    estado_validacion_experta?: string | null;
+    version_motor_experto?: string | null;
+    reglas_activadas?: string[] | null;
+    explicacion_experta?: string | string[] | null;
+    recomendaciones_expertas?: string[] | null;
+    validado_por?: number | null;
+    fecha_validacion?: string | null;
+    observacion_validacion?: string | null;
 }
 
 export interface EvaluacionRiData {
@@ -327,15 +339,29 @@ export interface DiagnosticoRiData {
     id_consulta_endocrinologica: number;
     fecha_diagnostico: string;
     homa_ir?: number | null;
+    quicki?: number | string | null;
     glucosa_ayunas?: number | null;
     insulina_ayunas?: number | null;
     hemoglobina_glicosilada?: number | null;
+    trigliceridos?: number | string | null;
+    hdl?: number | string | null;
     resistencia_confirmada: boolean;
     grado_resistencia: string;
     riesgo_diabetes: string;
     riesgo_cardiometabolico: string;
     conclusion_medica?: string | null;
     recomendaciones_medicas?: string | null;
+    estado: 'en_estudio' | 'registrado';
+    generado_por_motor_experto?: boolean;
+    confianza_experta?: number | string | null;
+    estado_validacion_experta?: string | null;
+    version_motor_experto?: string | null;
+    reglas_activadas?: string[] | null;
+    explicacion_experta?: string | string[] | null;
+    recomendaciones_expertas?: string[] | null;
+    validado_por?: number | null;
+    fecha_validacion?: string | null;
+    observacion_validacion?: string | null;
 }
 
 export interface PerfilClinicoData {

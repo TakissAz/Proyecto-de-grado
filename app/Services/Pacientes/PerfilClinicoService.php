@@ -547,6 +547,18 @@ class PerfilClinicoService
             'riesgo_metabolico'                     => $registro->riesgo_metabolico,
             'conclusion_medica'                     => $registro->conclusion_medica,
             'recomendaciones_medicas'               => $registro->recomendaciones_medicas,
+            'estado'                                => $registro->estado,
+            'criterios_rotterdam_cumplidos'         => $registro->criterios_rotterdam_cumplidos,
+            'generado_por_motor_experto'            => $registro->generado_por_motor_experto,
+            'confianza_experta'                     => $registro->confianza_experta,
+            'estado_validacion_experta'             => $registro->estado_validacion_experta,
+            'version_motor_experto'                 => $registro->version_motor_experto,
+            'reglas_activadas'                      => $registro->reglas_activadas,
+            'explicacion_experta'                   => $registro->explicacion_experta,
+            'recomendaciones_expertas'              => $registro->recomendaciones_expertas,
+            'validado_por'                          => $registro->validado_por,
+            'fecha_validacion'                      => $registro->fecha_validacion?->toISOString(),
+            'observacion_validacion'                => $registro->observacion_validacion,
         ];
     }
 
@@ -561,20 +573,36 @@ class PerfilClinicoService
             return null;
         }
 
+        $perfilLipidico = $paciente->resultadosPerfilLipidico->first();
+
         return [
             'id_diagnostico_ri'           => $registro->id_diagnostico_ri,
             'id_consulta_endocrinologica' => $registro->id_consulta_endocrinologica,
             'fecha_diagnostico'           => $registro->fecha_diagnostico?->format('Y-m-d'),
             'homa_ir'                     => $registro->homa_ir,
+            'quicki'                      => $registro->quicki,
             'glucosa_ayunas'              => $registro->glucosa_ayunas,
             'insulina_ayunas'             => $registro->insulina_ayunas,
             'hemoglobina_glicosilada'     => $registro->hemoglobina_glicosilada,
+            'trigliceridos'               => $perfilLipidico?->trigliceridos,
+            'hdl'                         => $perfilLipidico?->hdl,
             'resistencia_confirmada'      => $registro->resistencia_confirmada,
             'grado_resistencia'           => $registro->grado_resistencia,
             'riesgo_diabetes'             => $registro->riesgo_diabetes,
             'riesgo_cardiometabolico'     => $registro->riesgo_cardiometabolico,
             'conclusion_medica'           => $registro->conclusion_medica,
             'recomendaciones_medicas'     => $registro->recomendaciones_medicas,
+            'estado'                      => $registro->estado,
+            'generado_por_motor_experto'  => $registro->generado_por_motor_experto,
+            'confianza_experta'           => $registro->confianza_experta,
+            'estado_validacion_experta'   => $registro->estado_validacion_experta,
+            'version_motor_experto'       => $registro->version_motor_experto,
+            'reglas_activadas'            => $registro->reglas_activadas,
+            'explicacion_experta'         => $registro->explicacion_experta,
+            'recomendaciones_expertas'    => $registro->recomendaciones_expertas,
+            'validado_por'                => $registro->validado_por,
+            'fecha_validacion'            => $registro->fecha_validacion?->toISOString(),
+            'observacion_validacion'      => $registro->observacion_validacion,
         ];
     }
 }

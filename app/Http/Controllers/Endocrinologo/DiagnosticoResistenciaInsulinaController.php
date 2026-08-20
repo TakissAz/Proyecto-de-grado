@@ -7,6 +7,7 @@ use App\Models\DiagnosticoResistenciaInsulina;
 use App\Models\Paciente;
 use App\Services\Pacientes\DiagnosticoResistenciaInsulinaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -51,5 +52,32 @@ class DiagnosticoResistenciaInsulinaController extends Controller
         $this->service->actualizar($diagnosticoRi, $validated);
 
         return back()->with('success', 'Diagnóstico de resistencia a la insulina actualizado correctamente.');
+    }
+
+    public function actualizarClinico(
+        Request $request,
+        DiagnosticoResistenciaInsulina $diagnostico
+    ): JsonResponse {
+        $datos = $request->validate([
+            'resistencia_confirmada' => ['required', 'boolean'],
+            'grado_resistencia' => ['nullable', 'string', Rule::in(['leve', 'moderada', 'severa', 'no_confirmada'])],
+            'riesgo_diabetes' => ['nullable', 'string', Rule::in(['no_evaluado', 'bajo', 'moderado', 'alto'])],
+            'riesgo_cardiometabolico' => ['nullable', 'string', Rule::in(['no_evaluado', 'bajo', 'moderado', 'alto'])],
+            'conclusion_medica' => ['nullable', 'string', 'max:3000'],
+            'recomendaciones_medicas' => ['nullable', 'string', 'max:3000'],
+            'estado' => ['required', 'string', Rule::in(['en_estudio', 'registrado'])],
+        ]);
+
+        $diagnostico->fill($datos);
+        $diagnostico->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Diagnóstico clínico de resistencia a la insulina actualizado correctamente.',
+            'data' => $diagnostico->only(array_merge(
+                ['id_diagnostico_ri'],
+                array_keys($datos)
+            )),
+        ]);
     }
 }

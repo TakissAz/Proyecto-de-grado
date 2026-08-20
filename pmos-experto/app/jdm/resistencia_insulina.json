@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "id": "input",
+      "type": "inputNode",
+      "name": "Indicadores metabólicos",
+      "position": { "x": 0, "y": 100 },
+      "content": { "schema": "" }
+    },
+    {
+      "id": "evaluacion-ri",
+      "type": "functionNode",
+      "name": "Evaluación HOMA-IR y QUICKI",
+      "position": { "x": 250, "y": 100 },
+      "content": {
+        "source": "/** @type {Handler} */\nexport const handler = async (input) => {\n  const glucosaValida = typeof input.glucosa_ayunas === 'number' && input.glucosa_ayunas > 0;\n  const insulinaValida = typeof input.insulina_ayunas === 'number' && input.insulina_ayunas > 0;\n\n  let homaIr = typeof input.homa_ir === 'number' ? input.homa_ir : null;\n  if (homaIr === null && glucosaValida && insulinaValida) {\n    homaIr = (input.glucosa_ayunas * input.insulina_ayunas) / 405;\n  }\n\n  let quicki = typeof input.quicki === 'number' ? input.quicki : null;\n  if (quicki === null && glucosaValida && insulinaValida) {\n    const denominador = Math.log10(input.glucosa_ayunas) + Math.log10(input.insulina_ayunas);\n    if (denominador > 0) quicki = 1 / denominador;\n  }\n\n  const resistenciaConfirmada = homaIr !== null && homaIr >= 2.5;\n  let gradoResistencia = 'no_confirmada';\n  if (homaIr !== null && homaIr >= 5.0) gradoResistencia = 'severa';\n  else if (homaIr !== null && homaIr >= 3.0) gradoResistencia = 'moderada';\n  else if (homaIr !== null && homaIr >= 2.5) gradoResistencia = 'leve';\n\n  const hba1cAlta = typeof input.hemoglobina_glicosilada === 'number' && input.hemoglobina_glicosilada >= 5.7;\n  const glucosaAlta = glucosaValida && input.glucosa_ayunas >= 100;\n  let riesgoDiabetes = 'bajo';\n  if (hba1cAlta || glucosaAlta) riesgoDiabetes = 'alto';\n  else if (resistenciaConfirmada) riesgoDiabetes = 'moderado';\n\n  const trigliceridosAltos = typeof input.trigliceridos === 'number' && input.trigliceridos >= 150;\n  const hdlBajo = typeof input.hdl === 'number' && input.hdl < 50;\n  let riesgoCardiometabolico = 'bajo';\n  if (trigliceridosAltos && hdlBajo) riesgoCardiometabolico = 'alto';\n  else if (trigliceridosAltos || hdlBajo) riesgoCardiometabolico = 'moderado';\n\n  const conclusion = resistenciaConfirmada\n    ? `Compatible con resistencia a la insulina ${gradoResistencia}`\n    : 'No compatible con resistencia a la insulina';\n\n  return {\n    homa_ir: homaIr,\n    quicki,\n    resistencia_confirmada: resistenciaConfirmada,\n    grado_resistencia: gradoResistencia,\n    riesgo_diabetes: riesgoDiabetes,\n    riesgo_cardiometabolico: riesgoCardiometabolico,\n    conclusion,\n    acantosis_nigricans: input.acantosis_nigricans === true,\n    obesidad_abdominal: input.obesidad_abdominal === true\n  };\n};"
+      }
+    },
+    {
+      "id": "output",
+      "type": "outputNode",
+      "name": "Diagnóstico de resistencia a la insulina",
+      "position": { "x": 500, "y": 100 },
+      "content": { "schema": "" }
+    }
+  ],
+  "edges": [
+    {
+      "id": "input-evaluacion",
+      "sourceId": "input",
+      "targetId": "evaluacion-ri",
+      "sourceHandle": "output",
+      "targetHandle": "input",
+      "type": "edge"
+    },
+    {
+      "id": "evaluacion-output",
+      "sourceId": "evaluacion-ri",
+      "targetId": "output",
+      "sourceHandle": "output",
+      "targetHandle": "input",
+      "type": "edge"
+    }
+  ]
+}

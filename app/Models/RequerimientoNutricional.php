@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -70,6 +71,15 @@ class RequerimientoNutricional extends Model
     public function objetivoNutricional(): BelongsTo
     {
         return $this->belongsTo(ObjetivoNutricional::class, 'id_objetivo_nutricional', 'id_objetivo_nutricional');
+    }
+
+    public function planesAlimentarios(): HasMany
+    {
+        return $this->hasMany(
+            PlanAlimentario::class,
+            'id_requerimiento_nutricional',
+            'id_requerimiento_nutricional'
+        );
     }
 
     public function getActivitylogOptions(): LogOptions

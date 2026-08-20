@@ -22,6 +22,8 @@ use App\Models\ObjetivoNutricional;
 use App\Models\Paciente;
 use App\Models\PreferenciaAlimentaria;
 use App\Models\RestriccionAlimentaria;
+use App\Models\Alimento;
+use App\Models\Receta;
 use App\Services\Nutricion\PerfilNutricionalService;
 use App\Services\Nutricion\RequerimientoNutricionalService;
 use Illuminate\Http\RedirectResponse;
@@ -57,6 +59,20 @@ class PerfilNutricionalController extends Controller
                 ->latest('fecha_calculo')
                 ->latest('created_at')
                 ->first(),
+            'recomendacionExperta' => $this->service
+                ->recomendacionExpertaPrincipal($paciente),
+            'planAlimentarioPrincipal' => $this->service->planAlimentarioPrincipal($paciente),
+            'seguimientoPaciente' => $this->service->seguimientoPaciente($paciente),
+            'retroalimentacionesPaciente' => $this->service->historialRetroalimentaciones($paciente),
+            'contextoAjustePlan' => $this->service->contextoAjustePlan($paciente),
+            'recomendacionExpertaAprobada' => $this->service->recomendacionExpertaAprobada($paciente),
+            'puedeGenerarPlanSemanal' => $this->service->recomendacionExpertaAprobada($paciente) !== null,
+            'alimentosPlan' => Alimento::query()->where('estado', 'activo')->orderBy('nombre')->limit(200)->get([
+                'id_alimento', 'nombre', 'grupo_alimentario', 'unidad_base', 'cantidad_base', 'calorias', 'proteinas', 'carbohidratos', 'grasas', 'fibra',
+            ]),
+            'recetasPlan' => Receta::query()->where('estado', 'activo')->orderBy('nombre')->limit(200)->get([
+                'id_receta', 'nombre', 'tipo_comida', 'porciones', 'calorias_totales', 'proteinas_totales', 'carbohidratos_totales', 'grasas_totales', 'fibra_total',
+            ]),
             'opciones' => [
                 'nivel_actividad' => ['sedentario', 'ligero', 'moderado', 'activo', 'muy_activo'],
                 'estado_consulta' => ['abierta', 'en_seguimiento', 'cerrada', 'anulada'],

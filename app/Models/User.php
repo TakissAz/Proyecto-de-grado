@@ -160,6 +160,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(RequerimientoNutricional::class, 'id_nutricionista');
     }
+
+    public function recomendacionesNutricionalesExpertasComoNutricionista(): HasMany
+    {
+        return $this->hasMany(RecomendacionNutricionalExperta::class, 'id_nutricionista');
+    }
+
+    public function recomendacionesNutricionalesExpertasValidadas(): HasMany
+    {
+        return $this->hasMany(RecomendacionNutricionalExperta::class, 'validado_por');
+    }
+
+    public function planesAlimentariosComoNutricionista(): HasMany
+    {
+        return $this->hasMany(PlanAlimentario::class, 'id_nutricionista');
+    }
+
+    public function planesAlimentariosAprobados(): HasMany
+    {
+        return $this->hasMany(PlanAlimentario::class, 'aprobado_por');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

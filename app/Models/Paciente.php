@@ -131,6 +131,11 @@ class Paciente extends Model
         return $this->hasMany(EvaluacionNutricional::class, 'id_paciente', 'id_paciente');
     }
 
+    public function seguimientosSintomas(): HasMany
+    {
+        return $this->hasMany(SeguimientoSintomaPaciente::class, 'id_paciente', 'id_paciente');
+    }
+
     public function habitosAlimentarios(): HasMany
     {
         return $this->hasMany(HabitoAlimentario::class, 'id_paciente', 'id_paciente');
@@ -153,6 +158,28 @@ class Paciente extends Model
     public function requerimientosNutricionales(): HasMany
     {
         return $this->hasMany(RequerimientoNutricional::class, 'id_paciente', 'id_paciente');
+    }
+
+    public function recomendacionesNutricionalesExpertas(): HasMany
+    {
+        return $this->hasMany(
+            RecomendacionNutricionalExperta::class,
+            'id_paciente',
+            'id_paciente'
+        );
+    }
+
+    public function planesAlimentarios(): HasMany
+    {
+        return $this->hasMany(PlanAlimentario::class, 'id_paciente', 'id_paciente');
+    }
+    public function seguimientosComidas(): HasMany
+    {
+        return $this->hasMany(SeguimientoComida::class, 'id_paciente', 'id_paciente');
+    }
+    public function retroalimentacionesPaciente(): HasMany
+    {
+        return $this->hasMany(RetroalimentacionPaciente::class, 'id_paciente', 'id_paciente');
     }
     public function getActivitylogOptions(): LogOptions
     {

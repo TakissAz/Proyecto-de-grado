@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'pmos_experto' => [
+        'url' => env('PMOS_EXPERTO_URL', 'http://127.0.0.1:8001'),
+        'timeout' => env('PMOS_EXPERTO_TIMEOUT', 10),
+    ],
 ];

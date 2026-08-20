@@ -1,0 +1,31 @@
+{
+  "nodes": [
+    {
+      "id": "input",
+      "type": "inputNode",
+      "name": "Hechos nutricionales integrados",
+      "position": { "x": 0, "y": 100 },
+      "content": { "schema": "" }
+    },
+    {
+      "id": "recomendacion-nutricional",
+      "type": "functionNode",
+      "name": "Recomendacion nutricional base",
+      "position": { "x": 250, "y": 100 },
+      "content": {
+        "source": "/** @type {Handler} */\nexport const handler = async (input) => {\n  const ri = input.resistencia_insulina_confirmada === true;\n  const riSevera = String(input.grado_resistencia || '').toLowerCase() === 'severa';\n  const pmos = input.diagnostico_pmos_confirmado === true;\n  const perdidaPeso = String(input.objetivo_principal || '').toLowerCase() === 'perdida_peso';\n  const imcObesidad = typeof input.imc === 'number' && input.imc >= 30;\n  const esAlto = (valor) => ['alto', 'alta', 'frecuente', 'muy_alto', 'muy_alta'].includes(String(valor || '').toLowerCase());\n  const azucarAlta = esAlto(input.consumo_azucar) || esAlto(input.consumo_bebidas_azucaradas);\n  const ultraprocesadosAltos = esAlto(input.consumo_ultraprocesados);\n\n  let enfoque = 'alimentacion_equilibrada';\n  let prioridad = 'mantenimiento_salud';\n  let proteinas = 25;\n  let carbohidratos = 45;\n  let grasas = 30;\n  let fibra = typeof input.fibra_diaria === 'number' ? input.fibra_diaria : 25;\n  let calorias = typeof input.calorias_objetivo === 'number' ? input.calorias_objetivo : 0;\n  const recomendaciones = [];\n  const restricciones = [];\n  const alertas = [];\n\n  if (ri) {\n    enfoque = 'bajo_indice_glucemico_alto_fibra';\n    proteinas = 30; carbohidratos = 35; grasas = 35; fibra = Math.max(fibra, 30);\n    recomendaciones.push('Reducir azucares simples y harinas refinadas.');\n  }\n  if (riSevera) {\n    prioridad = 'control_glucemico';\n    proteinas = 30; carbohidratos = 30; grasas = 40; fibra = Math.max(fibra, 30);\n    alertas.push('Requiere control estricto de carbohidratos.');\n  }\n  if (pmos) {\n    enfoque = 'antiinflamatorio_bajo_indice_glucemico';\n    recomendaciones.push('Priorizar alimentos antiinflamatorios, fibra y una ingesta adecuada de proteina.');\n  }\n  if (perdidaPeso) {\n    prioridad = 'deficit_calorico_moderado';\n    calorias = calorias > 0 ? Math.max(calorias, 1200) : 1200;\n    recomendaciones.push('Aplicar un deficit calorico moderado con seguimiento profesional.');\n  }\n  if (imcObesidad) prioridad = 'reduccion_peso_y_riesgo_metabolico';\n  if (azucarAlta) restricciones.push('Azucares simples y bebidas azucaradas.');\n  if (ultraprocesadosAltos) recomendaciones.push('Reducir el consumo de alimentos ultraprocesados.');\n  if (input.ansiedad_por_comida === true) recomendaciones.push('Fraccionar las comidas y priorizar alimentos de alta saciedad.');\n  if (input.cena_tardia === true) recomendaciones.push('Adelantar el horario de la cena.');\n\n  const listas = ['alergias', 'intolerancias', 'alimentos_restringidos', 'alimentos_no_tolerados', 'alimentos_rechazados'];\n  for (const campo of listas) {\n    if (Array.isArray(input[campo])) {\n      for (const alimento of input[campo]) {\n        if (alimento !== null && alimento !== '' && !restricciones.includes(String(alimento))) restricciones.push(String(alimento));\n      }\n    }\n  }\n\n  const condicion = riSevera ? 'resistencia a la insulina severa' : ri ? 'resistencia a la insulina' : pmos ? 'PMOS' : 'los datos nutricionales disponibles';\n  return {\n    enfoque_nutricional_experto: enfoque,\n    prioridad_nutricional: prioridad,\n    calorias_sugeridas: calorias,\n    proteinas_porcentaje: proteinas,\n    carbohidratos_porcentaje: carbohidratos,\n    grasas_porcentaje: grasas,\n    fibra_sugerida: fibra,\n    recomendaciones,\n    restricciones,\n    alertas,\n    conclusion: `Recomendacion nutricional base orientada por ${condicion}.`\n  };\n};"
+      }
+    },
+    {
+      "id": "output",
+      "type": "outputNode",
+      "name": "Recomendacion nutricional",
+      "position": { "x": 500, "y": 100 },
+      "content": { "schema": "" }
+    }
+  ],
+  "edges": [
+    { "id": "input-recomendacion", "sourceId": "input", "targetId": "recomendacion-nutricional", "sourceHandle": "output", "targetHandle": "input", "type": "edge" },
+    { "id": "recomendacion-output", "sourceId": "recomendacion-nutricional", "targetId": "output", "sourceHandle": "output", "targetHandle": "input", "type": "edge" }
+  ]
+}

@@ -1,92 +1,42 @@
-﻿import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
-import { User, Info, Calendar, Phone } from 'lucide-react';
-import { Tarjeta } from '@/Components/ui/tarjeta';
-import { Badge } from '@/Components/ui/badge';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, router } from '@inertiajs/react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Info, Salad, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import ModalSeguimientoComida, { type SeguimientoComida } from '@/Components/paciente/ModalSeguimientoComida';
+import ListaComprasPacienteCard, { type ListaCompras } from '@/Components/paciente/ListaComprasPacienteCard';
+import ProgresoPacienteCard, { type Progreso } from '@/Components/paciente/ProgresoPacienteCard';
+import SeguimientoSintomasCard, { type SeguimientoSintomas } from '@/Components/paciente/SeguimientoSintomasCard';
+import CitasPacienteCard, { type CitasPaciente } from '@/Components/paciente/CitasPacienteCard';
+import RetroalimentacionesNutricionistaCard, { type RetroalimentacionesPaciente } from '@/Components/paciente/RetroalimentacionesNutricionistaCard';
 
-interface DatosPaciente {
-    nombre_completo?: string | null;
-    ci?: string | null;
-    fecha_nacimiento?: string | null;
-    telefono?: string | null;
-    estado?: string | null;
+type Nutrientes={calorias:number;proteinas:number;carbohidratos:number;grasas:number;fibra:number};
+interface Componente{tipo_componente:'receta'|'alimento'|'manual';nombre:string|null;cantidad:number;unidad:string|null;nutrientes:Nutrientes;receta:{descripcion:string|null;preparacion:string|null}|null}
+interface Comida{id_comida_plan_alimentario:number;tipo_comida:string;hora_sugerida:string|null;nombre_comida:string;nutrientes:Nutrientes;componentes:Componente[];seguimiento:SeguimientoComida}
+interface Dia{numero_dia:number;nombre_dia:string;fecha:string|null;nutrientes:Nutrientes;comidas:Comida[]}
+interface Plan{nombre_plan:string;estado_plan:string;fecha_inicio:string|null;fecha_fin:string|null;objetivos:Nutrientes;planificados:Nutrientes;dias:Dia[];recomendacionOrigen:{enfoque_nutricional_experto:string|null;prioridad_nutricional:string|null;recomendaciones:string[];restricciones:string[];alertas:string[];conclusion:string|null}|null}
+interface ResumenAdherencia{comidas_totales:number;completadas:number;parciales:number;no_realizadas:number;reemplazadas:number;pendientes:number;registradas:number;porcentaje_adherencia:number}
+let resumenAdherenciaGlobal:ResumenAdherencia|null=null;
+let listaComprasGlobal:ListaCompras|null=null;
+interface Props{paciente:{nombre:string;ci:string|null;fecha_nacimiento:string|null;edad:number|null;telefono:string|null;estado:string|null}|null;planAlimentario:Plan|null;resumenAdherencia:ResumenAdherencia|null;listaCompras:ListaCompras|null;progresoPaciente:Progreso|null;seguimientoSintomas:SeguimientoSintomas|null;citasPaciente:CitasPaciente|null;retroalimentaciones:RetroalimentacionesPaciente|null}
+const n=(v:number)=>Number(v??0).toLocaleString('es-BO',{maximumFractionDigits:1});const etiqueta=(v:string|null)=>v?.replaceAll('_',' ')??'No definido';
+
+export default function Dashboard({paciente,planAlimentario:plan,resumenAdherencia,listaCompras,progresoPaciente,seguimientoSintomas,citasPaciente,retroalimentaciones}:Props){
+ resumenAdherenciaGlobal=resumenAdherencia;
+ listaComprasGlobal=listaCompras;
+ const [seleccion,setSeleccion]=useState(0);const dia=plan?.dias[seleccion];
+ return <AuthenticatedLayout header={<h2>Mi plan alimentario</h2>}><Head title="Mi plan alimentario"/><main className="mx-auto max-w-7xl space-y-6">
+  <header className="rounded-3xl bg-gradient-to-br from-primary/15 via-base-100 to-success/10 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-primary">Portal del paciente</p><h1 className="mt-2 text-3xl font-extrabold">{paciente?`Hola, ${paciente.nombre.split(' ')[0]}`:'Mi plan alimentario'}</h1><p className="mt-2 text-sm text-base-content/60">Tu planificación semanal, preparada y validada por el equipo de nutrición.</p>{plan&&<div className="mt-5 flex flex-wrap gap-2"><span className="badge badge-success gap-1 capitalize"><CheckCircle2 size={12}/>{etiqueta(plan.estado_plan)}</span><span className="badge badge-outline gap-1"><CalendarDays size={12}/>{plan.fecha_inicio??'—'} al {plan.fecha_fin??'—'}</span></div>}</header>
+  {!paciente&&<div className="alert alert-warning"><AlertTriangle size={18}/>No se encontró un perfil de paciente vinculado a tu cuenta.</div>}
+  {paciente&&<ProgresoPacienteCard progreso={progresoPaciente}/>} 
+  {paciente&&<SeguimientoSintomasCard seguimiento={seguimientoSintomas}/>} 
+  {paciente&&<CitasPacienteCard citas={citasPaciente}/>} 
+  {paciente&&<RetroalimentacionesNutricionistaCard retroalimentaciones={retroalimentaciones}/>} 
+  {paciente&&!plan&&<section className="rounded-3xl border border-dashed border-base-300 p-10 text-center"><Salad className="mx-auto text-primary" size={42}/><h2 className="mt-4 text-lg font-bold">Aún no tienes un plan alimentario aprobado</h2><p className="mt-2 text-sm text-base-content/60">Tu nutricionista lo publicará cuando esté listo.</p></section>}
+  {plan&&dia&&<><ResumenSemanal plan={plan}/><Orientacion plan={plan}/><section className="card border border-base-300 bg-base-100 shadow-sm"><div className="card-body p-4 sm:p-6"><h2 className="text-lg font-bold">Tu semana</h2><p className="text-sm text-base-content/60">Selecciona un día para consultar tus comidas.</p><div className="mt-3 flex gap-2 overflow-x-auto pb-2">{plan.dias.map((d,i)=><button key={d.numero_dia} className={`btn min-w-24 ${i===seleccion?'btn-primary':'btn-ghost border-base-300'}`} onClick={()=>setSeleccion(i)}>Día {d.numero_dia}</button>)}</div><div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-xl font-bold capitalize">{dia.nombre_dia}</h3><p className="text-sm text-base-content/55">{dia.fecha??'Fecha por definir'}</p></div><NutrientesBox nutrientes={dia.nutrientes}/></div><div className="mt-5 grid gap-4 lg:grid-cols-2">{dia.comidas.map((c,i)=><ComidaCard key={`${c.tipo_comida}-${i}`} comida={c}/>)}</div></div></section><p className="text-center text-xs text-base-content/45">La descarga de tu plan estará disponible próximamente.</p></>}
+ </main></AuthenticatedLayout>
 }
-
-interface Props {
-    paciente?: DatosPaciente;
-}
-
-export default function Dashboard({ paciente }: Props) {
-    const { auth } = usePage().props as { auth: { user: { name: string } } };
-    const nombreUsuario = paciente?.nombre_completo ?? auth?.user?.name ?? 'Paciente';
-
-    return (
-        <AuthenticatedLayout header={<h2>Mi panel</h2>}>
-            <Head title="Mi panel" />
-
-            <div className="space-y-6">
-                {/* Saludo */}
-                <div>
-                    <h2 className="text-2xl font-extrabold text-base-content">
-                        Hola, {nombreUsuario.split(' ')[0]}
-                    </h2>
-                    <p className="text-sm text-base-content/60 mt-1">
-                        Bienvenida al sistema clínico PMOS. Aquí encontrarás tu información médica y de seguimiento.
-                    </p>
-                </div>
-
-                {/* Alerta informativa */}
-                <div className="alert border border-info/20 bg-info/5">
-                    <Info size={18} className="text-info shrink-0" />
-                    <p className="text-sm text-base-content/80">
-                        Tu módulo de seguimiento estará disponible próximamente. Si tienes alguna consulta, comunícate con tu médico tratante.
-                    </p>
-                </div>
-
-                {/* Datos personales */}
-                {paciente ? (
-                    <Tarjeta>
-                        <div className="flex items-center gap-2 mb-4">
-                            <User size={18} className="text-primary" />
-                            <h3 className="font-bold text-base-content">Mis datos</h3>
-                        </div>
-
-                        <div className="border-t border-base-300 pt-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {paciente.ci ? (
-                                    <Detalle label="CI" valor={paciente.ci} />
-                                ) : null}
-                                {paciente.fecha_nacimiento ? (
-                                    <Detalle label="Fecha de nacimiento" valor={paciente.fecha_nacimiento} icono={<Calendar size={13} />} />
-                                ) : null}
-                                {paciente.telefono ? (
-                                    <Detalle label="Teléfono" valor={paciente.telefono} icono={<Phone size={13} />} />
-                                ) : null}
-                                {paciente.estado ? (
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1">Estado</p>
-                                        <Badge variante={paciente.estado === 'activo' ? 'success' : 'ghost'}>
-                                            {paciente.estado}
-                                        </Badge>
-                                    </div>
-                                ) : null}
-                            </div>
-                        </div>
-                    </Tarjeta>
-                ) : null}
-            </div>
-        </AuthenticatedLayout>
-    );
-}
-
-function Detalle({ label, valor, icono }: { label: string; valor: string; icono?: React.ReactNode }) {
-    return (
-        <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40 mb-1">{label}</p>
-            <p className="text-sm font-medium text-base-content flex items-center gap-1.5">
-                {icono ? <span className="text-base-content/40">{icono}</span> : null}
-                {valor}
-            </p>
-        </div>
-    );
-}
+function ResumenSemanal({plan}:{plan:Plan}){const dias=Math.max(plan.dias.length,1);const datos=[['Energía',plan.objetivos.calorias*dias,plan.planificados.calorias,'kcal'],['Proteínas',plan.objetivos.proteinas*dias,plan.planificados.proteinas,'g'],['Carbohidratos',plan.objetivos.carbohidratos*dias,plan.planificados.carbohidratos,'g'],['Grasas',plan.objetivos.grasas*dias,plan.planificados.grasas,'g'],['Fibra',plan.objetivos.fibra*dias,plan.planificados.fibra,'g']] as const;return <><SeguimientoSemanal resumen={resumenAdherenciaGlobal}/><section><h2 className="mb-3 text-lg font-bold">Resumen semanal</h2><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{datos.map(([l,o,p,u])=><div className="rounded-2xl border border-base-300 bg-base-100 p-4" key={l}><p className="text-xs font-bold uppercase text-base-content/45">{l}</p><p className="mt-2 text-lg font-extrabold">{n(p)} <span className="text-xs font-normal">{u}</span></p><p className="text-xs text-base-content/50">Meta: {n(o)} {u}</p><progress className="progress progress-primary mt-2 w-full" value={Math.min(o?p/o*100:0,100)} max="100"/></div>)}</div></section><ListaComprasPacienteCard lista={listaComprasGlobal}/></>}
+function Orientacion({plan}:{plan:Plan}){const r=plan.recomendacionOrigen;return <div className="grid gap-4 lg:grid-cols-2"><section className="rounded-2xl border border-primary/20 bg-primary/5 p-5"><div className="flex gap-2"><ShieldCheck className="text-primary" size={19}/><div><h2 className="font-bold">Orientación de tu plan</h2>{r?.conclusion&&<p className="mt-2 text-sm text-base-content/70">{r.conclusion}</p>}<p className="mt-2 text-xs capitalize text-base-content/55">Enfoque: {etiqueta(r?.enfoque_nutricional_experto??null)}</p></div></div>{r?.recomendaciones?.length?<ul className="mt-3 list-inside list-disc space-y-1 text-sm">{r.recomendaciones.map((x,i)=><li key={i}>{x}</li>)}</ul>:null}</section><section className="rounded-2xl border border-warning/30 bg-warning/5 p-5"><h2 className="font-bold">Tus restricciones consideradas</h2>{r?.restricciones?.length?<div className="mt-3 flex flex-wrap gap-2">{r.restricciones.map((x,i)=><span className="badge badge-warning badge-outline" key={i}>{x}</span>)}</div>:<p className="mt-2 text-sm text-base-content/60">Sin restricciones registradas.</p>}{r?.alertas?.map((x,i)=><p className="mt-3 flex gap-2 text-sm" key={i}><Info className="shrink-0" size={15}/>{x}</p>)}</section></div>}
+function ComidaCard({comida}:{comida:Comida}){const [modal,setModal]=useState(false);const estado=comida.seguimiento.estado_cumplimiento;const colores:Record<string,string>={completada:'badge-success',parcial:'badge-warning',no_realizada:'badge-error',reemplazada:'badge-info',pendiente:'badge-ghost'};return <article className="rounded-2xl border border-base-300 bg-base-100 p-4"><header className="flex justify-between gap-2"><div><div className="flex flex-wrap gap-2"><span className="badge badge-primary badge-outline capitalize">{etiqueta(comida.tipo_comida)}</span><span className={`badge badge-sm ${colores[estado]??'badge-ghost'} capitalize`}>{etiqueta(estado)}</span></div><h4 className="mt-2 font-bold">{comida.nombre_comida}</h4></div><span className="flex items-center gap-1 text-sm text-base-content/55"><Clock3 size={14}/>{String(comida.hora_sugerida??'').slice(0,5)||'Sin hora'}</span></header><NutrientesBox nutrientes={comida.nutrientes}/><div className="mt-4 space-y-3">{comida.componentes.map((c,i)=><div className="rounded-xl bg-base-200/50 p-3" key={`${c.nombre}-${i}`}><div className="flex justify-between gap-2"><div><p className="font-semibold">{c.nombre}</p><p className="text-xs text-base-content/55">{n(c.cantidad)} {c.unidad}</p></div><span className="badge badge-ghost badge-sm capitalize">{c.tipo_componente}</span></div>{c.tipo_componente==='manual'&&<p className="mt-2 text-xs italic">Indicaciones definidas por nutrición.</p>}{c.receta?.descripcion&&<p className="mt-2 text-sm text-base-content/70">{c.receta.descripcion}</p>}{c.receta?.preparacion&&<details className="mt-2"><summary className="cursor-pointer text-sm font-semibold text-primary">Ver preparación</summary><p className="mt-2 whitespace-pre-line text-sm">{c.receta.preparacion}</p></details>}<p className="mt-2 text-xs text-base-content/50">{n(c.nutrientes.calorias)} kcal · P {n(c.nutrientes.proteinas)} g · C {n(c.nutrientes.carbohidratos)} g · G {n(c.nutrientes.grasas)} g · Fibra {n(c.nutrientes.fibra)} g</p></div>)}</div><button className="btn btn-primary btn-outline btn-sm mt-4 w-full" onClick={()=>setModal(true)}>{estado==='pendiente'?'Registrar seguimiento':'Actualizar seguimiento'}</button><ModalSeguimientoComida abierto={modal} cerrar={()=>setModal(false)} comidaId={comida.id_comida_plan_alimentario} nombre={comida.nombre_comida} seguimiento={comida.seguimiento} onSuccess={()=>router.reload({only:['planAlimentario','resumenAdherencia','indicadoresSiguientePlan']})}/></article>}
+function SeguimientoSemanal({resumen}:{resumen:ResumenAdherencia|null}){if(!resumen)return null;return <section className="rounded-2xl border border-success/30 bg-success/5 p-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><h2 className="text-lg font-bold">Seguimiento de esta semana</h2><p className="text-sm text-base-content/60">Llevas {resumen.registradas} de {resumen.comidas_totales} comidas registradas. Tus registros ayudan a ajustar mejor tu siguiente plan.</p></div><span className="text-2xl font-extrabold text-success">{n(resumen.porcentaje_adherencia)}%</span></div><progress className="progress progress-success mt-3 w-full" value={resumen.porcentaje_adherencia} max="100"/><div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-5">{[['Completadas',resumen.completadas],['Parciales',resumen.parciales],['No realizadas',resumen.no_realizadas],['Reemplazadas',resumen.reemplazadas],['Pendientes',resumen.pendientes]].map(([l,v])=><div className="rounded-lg bg-base-100 p-2" key={l}><b>{v}</b><p className="text-base-content/50">{l}</p></div>)}</div></section>}
+function NutrientesBox({nutrientes}:{nutrientes:Nutrientes}){return <div className="mt-3 grid grid-cols-5 gap-1 rounded-xl bg-base-200/60 p-2 text-center text-[10px]">{[['kcal',nutrientes.calorias],['Proteína',nutrientes.proteinas],['Carbos',nutrientes.carbohidratos],['Grasas',nutrientes.grasas],['Fibra',nutrientes.fibra]].map(([l,v])=><div key={l}><p className="text-base-content/45">{l}</p><b>{n(Number(v))}</b></div>)}</div>}

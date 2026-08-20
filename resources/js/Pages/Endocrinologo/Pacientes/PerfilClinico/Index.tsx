@@ -243,10 +243,10 @@ export default function PerfilClinico({ perfil }: Props) {
                             {stepActivo === 'diagnostico' && (
                                 <>
                                     <Desplegable titulo="Diagnóstico PMOS" tiene={!!diagnostico_pmos}>
-                                        <TarjetaDiagnosticoPmos evaluacion={evaluacion_pmos} diagnostico={diagnostico_pmos} onRegistrar={() => setFormularioDiagnosticoPmosAbierto(true)} onEditar={() => setFormularioDiagnosticoPmosAbierto(true)} />
+                                        <TarjetaDiagnosticoPmos idPaciente={id} evaluacion={evaluacion_pmos} diagnostico={diagnostico_pmos} onRegistrar={() => setFormularioDiagnosticoPmosAbierto(true)} onEditar={() => setFormularioDiagnosticoPmosAbierto(true)} />
                                     </Desplegable>
                                     <Desplegable titulo="Diagnóstico Resistencia a la Insulina" tiene={!!diagnostico_ri}>
-                                        <TarjetaDiagnosticoRi evaluacion={evaluacion_ri} diagnostico={diagnostico_ri} onRegistrar={() => setFormularioDiagnosticoRiAbierto(true)} onEditar={() => setFormularioDiagnosticoRiAbierto(true)} />
+                                        <TarjetaDiagnosticoRi idPaciente={id} evaluacion={evaluacion_ri} diagnostico={diagnostico_ri} onRegistrar={() => setFormularioDiagnosticoRiAbierto(true)} onEditar={() => setFormularioDiagnosticoRiAbierto(true)} />
                                     </Desplegable>
                                 </>
                             )}
