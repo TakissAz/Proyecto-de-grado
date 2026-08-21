@@ -14,18 +14,46 @@ use App\Models\RecomendacionNutricionalExperta;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\Prediccion\PredictorRiesgoAdherenciaService;
 
 class PerfilNutricionalService
 {
     public function __construct(
         private readonly SeguimientoPacienteNutricionistaService $seguimientoPacienteService,
         private readonly ContextoAjustePlanService $contextoAjustePlanService,
+        private readonly AnaliticaEvolucionPacienteService $analiticaEvolucionService,
+        private readonly HistorialPlanesAlimentariosService $historialPlanesService,
+        private readonly AlertasNutricionistaService $alertasNutricionistaService,
+        private readonly SugerenciasAjusteNutricionalService $sugerenciasAjusteService,
+        private readonly PredictorRiesgoAdherenciaService $predictorRiesgoAdherencia,
     ) {}
+
+    public function prediccionRiesgoAdherencia(Paciente $paciente): array
+    {
+        return $this->predictorRiesgoAdherencia->predecir($paciente);
+    }
 
     public function seguimientoPaciente(Paciente $paciente): array
     {
         return $this->seguimientoPacienteService->obtenerResumen($paciente);
     }
+
+    public function analiticaEvolucion(Paciente $paciente): array
+    {
+        return $this->analiticaEvolucionService->obtenerAnalitica($paciente);
+    }
+
+    public function alertasNutricionista(Paciente $paciente): array
+    {
+        return $this->alertasNutricionistaService->generarParaPaciente($paciente);
+    }
+
+    public function sugerenciasAjusteNutricional(Paciente $paciente): array
+    {
+        return $this->sugerenciasAjusteService->generarParaPaciente($paciente);
+    }
+
+    public function historialPlanes(Paciente $paciente): array { return $this->historialPlanesService->obtenerParaNutricionista($paciente); }
 
     public function contextoAjustePlan(Paciente $paciente): array
     {
@@ -55,6 +83,7 @@ class PerfilNutricionalService
     {
         $plan = $paciente->planesAlimentarios()
             ->whereIn('estado_plan', ['activo', 'aprobado', 'sugerido', 'en_revision'])
+            ->orderByRaw("CASE WHEN estado_plan = 'activo' THEN 0 WHEN estado_plan IN ('sugerido', 'en_revision') THEN 1 ELSE 2 END")
             ->latest('id_plan_alimentario')
             ->first();
 

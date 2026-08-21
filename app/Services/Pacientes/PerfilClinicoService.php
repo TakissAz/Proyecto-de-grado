@@ -367,6 +367,9 @@ class PerfilClinicoService
             'uso_metformina'              => $registro->uso_metformina,
             'uso_corticoides'             => $registro->uso_corticoides,
             'otros_medicamentos'          => $registro->otros_medicamentos,
+            'antecedentes_personales_detalle' => $registro->antecedentes_personales_detalle,
+            'antecedentes_familiares_detalle' => $registro->antecedentes_familiares_detalle,
+            'medicamentos_detalle'        => $registro->medicamentos_detalle,
             'observaciones'               => $registro->observaciones,
             'created_at'                  => $registro->created_at?->format('Y-m-d'),
             'updated_at'                  => $registro->updated_at?->format('Y-m-d'),
@@ -514,6 +517,7 @@ class PerfilClinicoService
             'foliculos_ovario_izquierdo'  => $registro->foliculos_ovario_izquierdo,
             'morfologia_compatible_pmos'  => $registro->morfologia_compatible_pmos,
             'distribucion_periferica'     => $registro->distribucion_periferica,
+            'imagen_url'                  => $registro->archivo_informe ? '/storage/' . $registro->archivo_informe : null,
             'observaciones'               => $registro->observaciones,
         ];
     }

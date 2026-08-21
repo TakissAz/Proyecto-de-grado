@@ -83,6 +83,11 @@ export interface PerfilProps {
     seguimientoPaciente: SeguimientoPacienteNutricionista;
     retroalimentacionesPaciente: import('@/Components/nutricionista/seguimiento/RetroalimentacionPacientePanel').RetroalimentacionHistorial[];
     contextoAjustePlan: import('@/Components/nutricionista/seguimiento/ResumenAjustePlanCard').ContextoAjustePlan;
+    analiticaEvolucion: import('@/Components/nutricionista/analitica/AnaliticaEvolucionPanel').AnaliticaEvolucion;
+    alertasNutricionista: import('@/Components/nutricionista/alertas/AlertasNutricionistaPanel').AlertasNutricionista;
+    sugerenciasAjusteNutricional: import('@/Components/nutricionista/ajustes/SugerenciasAjusteNutricionalPanel').SugerenciasAjuste;
+    historialPlanes: import('@/Components/nutricionista/planes/HistorialPlanesNutricionista').HistorialPlanes;
+    prediccionRiesgoAdherencia: import('@/Components/nutricionista/prediccion/PrediccionRiesgoAdherenciaCard').PrediccionRiesgoAdherencia;
 }
 export interface CampoFormulario {
     name: string; label: string; type?: 'text' | 'date' | 'number' | 'textarea' | 'select' | 'checkbox';

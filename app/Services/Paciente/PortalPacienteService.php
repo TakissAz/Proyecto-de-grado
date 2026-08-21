@@ -4,6 +4,7 @@ namespace App\Services\Paciente;
 
 use App\Models\PlanAlimentario;
 use App\Models\User;
+use App\Services\Nutricion\HistorialPlanesAlimentariosService;
 
 class PortalPacienteService
 {
@@ -13,13 +14,14 @@ class PortalPacienteService
         private readonly ProgresoPacienteService $progreso,
         private readonly SeguimientoSintomasPacienteService $sintomas,
         private readonly CitasPacienteService $citas,
+        private readonly HistorialPlanesAlimentariosService $historialPlanes,
     ) {}
 
     public function obtenerDashboard(User $user): array
     {
         $paciente = $user->paciente()->first();
         if (! $paciente) {
-            return ['paciente' => null, 'planAlimentario' => null, 'resumenAdherencia' => null, 'indicadoresSiguientePlan' => null, 'listaCompras' => null, 'progresoPaciente' => null, 'seguimientoSintomas' => null, 'citasPaciente' => null, 'retroalimentaciones' => ['items' => [], 'total_no_leidas' => 0]];
+            return ['paciente' => null, 'planAlimentario' => null, 'resumenAdherencia' => null, 'indicadoresSiguientePlan' => null, 'listaCompras' => null, 'progresoPaciente' => null, 'seguimientoSintomas' => null, 'citasPaciente' => null, 'historialPlanes'=>['planes'=>[],'comparacion'=>['tiene_plan_anterior'=>false,'cambios'=>[],'mensaje'=>'Todavía no existe un plan anterior para comparar.'],'total_planes'=>0], 'retroalimentaciones' => ['items' => [], 'total_no_leidas' => 0]];
         }
 
         $plan = $paciente->planesAlimentarios()
@@ -51,6 +53,7 @@ class PortalPacienteService
             'seguimientoSintomas' => $this->sintomas->obtenerResumen($paciente),
             'citasPaciente' => $this->citas->obtenerResumen($paciente),
             'retroalimentaciones' => $this->retroalimentaciones($paciente),
+            'historialPlanes' => $this->historialPlanes->obtenerParaPaciente($paciente),
         ];
     }
 

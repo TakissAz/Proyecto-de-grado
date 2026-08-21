@@ -1,4 +1,5 @@
 import { BrainCircuit, CircleAlert } from 'lucide-react';
+import { Badge } from '@/Components/ui/badge';
 
 export interface TrazabilidadExperta {
     generado_por_motor_experto?: boolean;
@@ -17,12 +18,10 @@ interface Props {
 export default function TrazabilidadExpertaCard({ trazabilidad }: Props) {
     if (!tieneEvaluacion(trazabilidad)) {
         return (
-            <div className="card border border-base-300 bg-base-200/40 shadow-none">
-                <div className="card-body p-4">
-                    <p className="text-sm text-base-content/60">
-                        Este diagnóstico aún no fue evaluado por el sistema experto.
-                    </p>
-                </div>
+            <div className="rounded-xl border border-surface-border bg-black/[0.015] px-4 py-3 dark:border-surface-border-dark dark:bg-white/[0.02]">
+                <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark">
+                    Este diagnóstico aún no fue evaluado por el sistema experto.
+                </p>
             </div>
         );
     }
@@ -33,55 +32,57 @@ export default function TrazabilidadExpertaCard({ trazabilidad }: Props) {
     const estado = trazabilidad.estado_validacion_experta ?? 'pendiente';
 
     return (
-        <div className="card border border-primary/20 bg-primary/5 shadow-none">
-            <div className="card-body gap-3 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <BrainCircuit size={17} className="text-primary" />
-                        <h4 className="text-sm font-bold">Resultados del análisis clínico asistido</h4>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {trazabilidad.confianza_experta != null && (
-                            <span className="badge badge-primary badge-outline">
-                                Confianza {formatearConfianza(trazabilidad.confianza_experta)}
-                            </span>
-                        )}
-                        <span className="badge badge-ghost">{estado}</span>
-                        {trazabilidad.version_motor_experto && (
-                            <span className="badge badge-ghost">v. {trazabilidad.version_motor_experto}</span>
-                        )}
-                    </div>
+        <div className="rounded-xl border border-brand-green/20 bg-brand-green/[0.03] p-4 dark:bg-brand-green/[0.04] space-y-3">
+
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <BrainCircuit size={15} strokeWidth={1.8} className="text-brand-green-dark dark:text-brand-green" />
+                    <h4 className="text-[12.5px] font-bold text-ink dark:text-ink-dark">Resultados del análisis clínico asistido</h4>
                 </div>
-
-                {estado === 'pendiente' && (
-                    <div className="alert alert-warning py-2 text-xs">
-                        <CircleAlert size={15} />
-                        <span>Resultado pendiente de validación por el especialista.</span>
-                    </div>
-                )}
-
-                {reglas.length > 0 && (
-                    <Seccion titulo="Criterios clínicos identificados">
-                        <div className="flex flex-wrap gap-1.5">
-                            {reglas.map((regla) => (
-                                <span key={regla} className="badge badge-outline badge-sm">{regla}</span>
-                            ))}
-                        </div>
-                    </Seccion>
-                )}
-
-                {explicaciones.length > 0 && (
-                    <Seccion titulo="Interpretación clínica">
-                        <Lista textos={explicaciones} />
-                    </Seccion>
-                )}
-
-                {recomendaciones.length > 0 && (
-                    <Seccion titulo="Recomendaciones">
-                        <Lista textos={recomendaciones} />
-                    </Seccion>
-                )}
+                <div className="flex flex-wrap gap-1.5">
+                    {trazabilidad.confianza_experta != null && (
+                        <Badge color="green">Confianza {formatearConfianza(trazabilidad.confianza_experta)}</Badge>
+                    )}
+                    <Badge color="gray">{estado}</Badge>
+                    {trazabilidad.version_motor_experto && (
+                        <Badge color="gray">v. {trazabilidad.version_motor_experto}</Badge>
+                    )}
+                </div>
             </div>
+
+            {/* Alerta pendiente */}
+            {estado === 'pendiente' && (
+                <div className="flex items-center gap-2 rounded-xl border border-brand-orange/20 bg-brand-orange/5 px-3 py-2 dark:bg-brand-orange/[0.06]">
+                    <CircleAlert size={13} strokeWidth={1.8} className="text-brand-orange shrink-0" />
+                    <span className="text-[11px] text-ink dark:text-ink-dark">Resultado pendiente de validación por el especialista.</span>
+                </div>
+            )}
+
+            {/* Reglas / criterios */}
+            {reglas.length > 0 && (
+                <Seccion titulo="Criterios clínicos identificados">
+                    <div className="flex flex-wrap gap-1.5">
+                        {reglas.map((regla) => (
+                            <Badge key={regla} color="gray">{regla}</Badge>
+                        ))}
+                    </div>
+                </Seccion>
+            )}
+
+            {/* Explicación */}
+            {explicaciones.length > 0 && (
+                <Seccion titulo="Interpretación clínica">
+                    <Lista textos={explicaciones} />
+                </Seccion>
+            )}
+
+            {/* Recomendaciones */}
+            {recomendaciones.length > 0 && (
+                <Seccion titulo="Recomendaciones">
+                    <Lista textos={recomendaciones} />
+                </Seccion>
+            )}
         </div>
     );
 }
@@ -96,7 +97,6 @@ function tieneEvaluacion(datos: TrazabilidadExperta): boolean {
 function normalizarTextos(valor?: string | string[] | null): string[] {
     if (Array.isArray(valor)) return valor;
     if (!valor) return [];
-
     try {
         const decodificado: unknown = JSON.parse(valor);
         return Array.isArray(decodificado)
@@ -116,7 +116,7 @@ function formatearConfianza(valor: number | string): string {
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
     return (
         <section>
-            <h5 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-base-content/60">{titulo}</h5>
+            <h5 className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{titulo}</h5>
             {children}
         </section>
     );
@@ -124,8 +124,13 @@ function Seccion({ titulo, children }: { titulo: string; children: React.ReactNo
 
 function Lista({ textos }: { textos: string[] }) {
     return (
-        <ul className="list-disc space-y-1 pl-5 text-xs text-base-content/75">
-            {textos.map((texto, indice) => <li key={`${indice}-${texto}`}>{texto}</li>)}
+        <ul className="space-y-1 pl-1">
+            {textos.map((texto, indice) => (
+                <li key={`${indice}-${texto}`} className="flex items-start gap-2 text-[11.5px] text-ink dark:text-ink-dark leading-relaxed">
+                    <span className="text-ink-muted dark:text-ink-muted-dark mt-0.5">•</span>
+                    {texto}
+                </li>
+            ))}
         </ul>
     );
 }

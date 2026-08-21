@@ -44,7 +44,9 @@ class GeneradorPlanSemanalService
             : null;
         $objetivos = $this->objetivosNutricionales($recomendacion);
         $paciente = Paciente::query()->find($recomendacion->id_paciente);
-        $contextoAjuste = $paciente ? $this->contextoAjusteService->construirParaPaciente($paciente) : [];
+        $contextoAjuste = is_array($opciones['contexto_ajuste'] ?? null)
+            ? $opciones['contexto_ajuste']
+            : ($paciente ? $this->contextoAjusteService->construirParaPaciente($paciente) : []);
         $recetasPorTipo = collect(self::TIEMPOS)->mapWithKeys(
             fn (array $configuracion, string $tipo): array => [
                 $tipo => collect($this->clasificadorRecetas->clasificarParaRecomendacion(

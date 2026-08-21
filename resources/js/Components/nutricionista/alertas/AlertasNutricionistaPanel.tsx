@@ -1,0 +1,13 @@
+import { AlertTriangle, BellRing, CheckCircle2 } from 'lucide-react';
+
+export interface AlertaNutricionista { codigo:string; titulo:string; mensaje:string; severidad:'baja'|'media'|'alta'; categoria:string; recomendacion:string; origen:string }
+export interface AlertasNutricionista { resumen:{total:number;altas:number;medias:number;bajas:number;tiene_alertas_criticas:boolean}; alertas:AlertaNutricionista[] }
+const estilos={alta:'border-error/30 bg-error/10',media:'border-warning/30 bg-warning/10',baja:'border-info/30 bg-info/10'};
+
+export default function AlertasNutricionistaPanel({alertasNutricionista}:{alertasNutricionista?:AlertasNutricionista|null}) {
+ const datos=alertasNutricionista??{resumen:{total:0,altas:0,medias:0,bajas:0,tiene_alertas_criticas:false},alertas:[]};
+ return <section className="card-elevated overflow-hidden">
+  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-base-300/60 px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-warning/10 text-warning"><BellRing size={18}/></span><div><h3 className="font-bold">Alertas de seguimiento</h3><p className="text-xs text-base-content/55">Situaciones que podrían requerir atención profesional.</p></div></div><div className="flex gap-2 text-xs"><span className="badge badge-error badge-outline">Altas {datos.resumen.altas}</span><span className="badge badge-warning badge-outline">Medias {datos.resumen.medias}</span><span className="badge badge-info badge-outline">Bajas {datos.resumen.bajas}</span></div></div>
+  <div className="space-y-3 p-5">{datos.alertas.length===0?<div className="flex items-center gap-2 rounded-xl border border-success/20 bg-success/5 p-4 text-sm text-success"><CheckCircle2 size={18}/>Sin alertas relevantes por el momento.</div>:datos.alertas.map(a=><article key={a.codigo} className={`rounded-xl border p-4 ${estilos[a.severidad]}`}><div className="flex flex-wrap items-start justify-between gap-2"><div className="flex gap-2"><AlertTriangle className="mt-0.5 shrink-0" size={17}/><div><h4 className="text-sm font-bold">{a.titulo}</h4><p className="mt-1 text-xs text-base-content/70">{a.mensaje}</p></div></div><div className="flex gap-1"><span className="badge badge-sm capitalize">{a.severidad}</span><span className="badge badge-sm badge-ghost capitalize">{a.categoria}</span></div></div><p className="mt-3 text-xs text-base-content/75"><strong>Acción sugerida:</strong> {a.recomendacion}</p><p className="mt-1 text-[10px] uppercase tracking-wide text-base-content/40">Origen: {a.origen.replaceAll('_',' ')}</p></article>)}</div>
+ </section>;
+}

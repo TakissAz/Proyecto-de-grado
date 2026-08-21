@@ -7,11 +7,11 @@ interface Props {
     evaluacion: EvaluacionPmosData;
 }
 
-const etiquetas: Record<string, { texto: string; variante: 'warning' | 'info' | 'success' | 'error' }> = {
-    compatible_pmos: { texto: 'Compatible con PMOS', variante: 'warning' },
-    pendiente_descartar_diferenciales: { texto: 'Pendiente descartar diferenciales', variante: 'info' },
-    datos_insuficientes: { texto: 'Datos insuficientes', variante: 'info' },
-    no_compatible: { texto: 'No compatible con PMOS', variante: 'success' },
+const etiquetas: Record<string, { texto: string; color: 'orange' | 'gray' | 'green' | 'red' }> = {
+    compatible_pmos: { texto: 'Compatible con PMOS', color: 'orange' },
+    pendiente_descartar_diferenciales: { texto: 'Pendiente descartar diferenciales', color: 'gray' },
+    datos_insuficientes: { texto: 'Datos insuficientes', color: 'gray' },
+    no_compatible: { texto: 'No compatible con PMOS', color: 'green' },
 };
 
 export function PanelSugerenciaPmos({ evaluacion }: Props) {
@@ -19,7 +19,7 @@ export function PanelSugerenciaPmos({ evaluacion }: Props) {
 
     return (
         <div className="space-y-3">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-muted dark:text-ink-muted-dark">
                 Evaluación de criterios Rotterdam (sugerencia del sistema)
             </p>
 
@@ -36,23 +36,23 @@ export function PanelSugerenciaPmos({ evaluacion }: Props) {
 
             {/* Resumen */}
             <div className="flex flex-wrap gap-1.5">
-                <Badge variante={evaluacion.total_criterios_rotterdam >= 2 ? 'warning' : 'ghost'}>
+                <Badge color={evaluacion.total_criterios_rotterdam >= 2 ? 'orange' : 'gray'}>
                     {evaluacion.total_criterios_rotterdam}/3 criterios
                 </Badge>
-                <Badge variante={evaluacion.diagnosticos_diferenciales_descartados ? 'success' : 'warning'}>
+                <Badge color={evaluacion.diagnosticos_diferenciales_descartados ? 'green' : 'orange'}>
                     {evaluacion.diagnosticos_diferenciales_descartados ? 'Diferenciales descartados' : 'Diferenciales pendientes'}
                 </Badge>
-                <Badge variante={sugerencia.variante}>{sugerencia.texto}</Badge>
-                {evaluacion.fenotipo_sugerido ? (
-                    <Badge>Fenotipo: {evaluacion.fenotipo_sugerido.replace(/_/g, ' ')}</Badge>
-                ) : null}
+                <Badge color={sugerencia.color}>{sugerencia.texto}</Badge>
+                {evaluacion.fenotipo_sugerido && (
+                    <Badge color="purple">Fenotipo: {evaluacion.fenotipo_sugerido.replace(/_/g, ' ')}</Badge>
+                )}
             </div>
 
             {/* Alertas */}
             <ListaAlertasPmos alertas={evaluacion.alertas_datos_faltantes} />
 
             {/* Disclaimer */}
-            <p className="text-[10px] text-base-content/40 italic">
+            <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark italic">
                 Sugerencia generada a partir de los datos clínicos registrados. La confirmación diagnóstica corresponde al especialista.
             </p>
         </div>

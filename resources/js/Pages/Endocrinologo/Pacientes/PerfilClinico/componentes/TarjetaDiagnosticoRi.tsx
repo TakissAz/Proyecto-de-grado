@@ -1,17 +1,24 @@
 import { router } from '@inertiajs/react';
 import { Activity, ChevronDown, Download, Edit, Plus } from 'lucide-react';
 import { useState } from 'react';
+import clsx from 'clsx';
 import FormularioEditarDiagnosticoRi from '@/Components/diagnosticos/FormularioEditarDiagnosticoRi';
 import BotonEjecutarSistemaExperto from '@/Components/sistema-experto/BotonEjecutarSistemaExperto';
 import TrazabilidadExpertaCard from '@/Components/sistema-experto/TrazabilidadExpertaCard';
 import ValidacionResultadoExperto from '@/Components/sistema-experto/ValidacionResultadoExperto';
-import { Tarjeta } from '@/Components/ui/tarjeta';
 import { Badge } from '@/Components/ui/badge';
+import { Boton } from '@/Components/ui/boton';
 import { PanelSugerenciaRi } from './ri/PanelSugerenciaRi';
 import { PanelConfirmacionRi } from './ri/PanelConfirmacionRi';
 import type { DiagnosticoRiData, EvaluacionRiData } from '../tipos';
 
-interface Props { evaluacion: EvaluacionRiData; diagnostico: DiagnosticoRiData | null; idPaciente: number; onRegistrar: () => void; onEditar: () => void; }
+interface Props {
+    evaluacion: EvaluacionRiData;
+    diagnostico: DiagnosticoRiData | null;
+    idPaciente: number;
+    onRegistrar: () => void;
+    onEditar: () => void;
+}
 
 export default function TarjetaDiagnosticoRi({ evaluacion, diagnostico, idPaciente, onRegistrar }: Props) {
     const [editandoClinico, setEditandoClinico] = useState(false);
@@ -19,36 +26,129 @@ export default function TarjetaDiagnosticoRi({ evaluacion, diagnostico, idPacien
     const tieneAnalisis = Boolean(diagnostico && (diagnostico.generado_por_motor_experto === true || diagnostico.confianza_experta != null));
     const validacionResuelta = diagnostico ? ['aprobado', 'validado', 'rechazado'].includes(diagnostico.estado_validacion_experta ?? '') : false;
 
-    return <Tarjeta>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-                <Activity size={18} className={diagnostico?.resistencia_confirmada ? 'text-error' : 'text-base-content/30'} />
-                <h3 className="text-sm font-bold text-base-content">Resistencia a la insulina</h3>
-                {diagnostico ? <Badge variante={diagnostico.resistencia_confirmada ? 'error' : 'ghost'}>{diagnostico.resistencia_confirmada ? 'Confirmada' : 'Registrada'}</Badge> : <Badge>Pendiente de evaluación</Badge>}
+    return (
+        <div className="p-5 space-y-4">
+
+            {/* ── Header ── */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                    <div className={clsx(
+                        'flex h-8 w-8 items-center justify-center rounded-xl',
+                        diagnostico?.resistencia_confirmada ? 'bg-brand-orange/15' : 'bg-brand-green/15',
+                    )}>
+                        <Activity
+                            size={15}
+                            strokeWidth={1.8}
+                            className={diagnostico?.resistencia_confirmada ? 'text-brand-orange' : 'text-ink-muted/40 dark:text-ink-muted-dark/40'}
+                        />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-[13px] font-bold text-ink dark:text-ink-dark">Resistencia a la insulina</h3>
+                            {diagnostico ? (
+                                <Badge color={diagnostico.resistencia_confirmada ? 'orange' : 'gray'}>
+                                    {diagnostico.resistencia_confirmada ? 'Confirmada' : 'Registrada'}
+                                </Badge>
+                            ) : (
+                                <Badge color="gray">Pendiente</Badge>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Acciones */}
+                {diagnostico ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        <a
+                            href={`/endocrinologo/pacientes/${idPaciente}/diagnostico/resistencia-insulina/reporte-pdf`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-black/[0.03] hover:text-ink dark:border-surface-border-dark dark:text-ink-muted-dark dark:hover:bg-white/[0.04] dark:hover:text-ink-dark"
+                        >
+                            <Download size={12} strokeWidth={1.8} /> Descargar PDF
+                        </a>
+                        <button
+                            onClick={() => setEditandoClinico(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green/10 dark:text-brand-green dark:hover:bg-brand-green-dark/15"
+                        >
+                            <Edit size={12} strokeWidth={1.8} /> Editar diagnóstico
+                        </button>
+                    </div>
+                ) : (
+                    <Boton variante="primary" tamano="sm" onClick={onRegistrar}>
+                        <Plus size={13} strokeWidth={1.8} /> Registrar diagnóstico
+                    </Boton>
+                )}
             </div>
-            {diagnostico ? <div className="flex flex-wrap gap-2">
-                <a href={`/endocrinologo/pacientes/${idPaciente}/diagnostico/resistencia-insulina/reporte-pdf`} target="_blank" rel="noreferrer" className="btn btn-outline btn-secondary btn-xs gap-1"><Download size={13} /> Descargar PDF RI</a>
-                <button onClick={() => setEditandoClinico(true)} className="btn btn-outline btn-primary btn-xs gap-1"><Edit size={13} /> Editar diagnóstico clínico</button>
-            </div> : <button onClick={onRegistrar} className="btn btn-primary btn-sm gap-1.5"><Plus size={14} /> Registrar diagnóstico</button>}
+
+            {/* ── Sugerencia del motor ── */}
+            <PanelSugerenciaRi evaluacion={evaluacion} />
+
+            {/* ── Panel de confirmación ── */}
+            {diagnostico && (
+                <>
+                    <div className="border-t border-surface-border dark:border-surface-border-dark" />
+                    <PanelConfirmacionRi diagnostico={diagnostico} />
+
+                    <div className="border-t border-surface-border dark:border-surface-border-dark" />
+
+                    {/* ── Sistema experto ── */}
+                    <div className="space-y-3">
+                        {validacionResuelta ? (
+                            <div className="flex items-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/5 px-4 py-2.5 dark:bg-brand-green/[0.06]">
+                                <span className="text-[11.5px] text-ink dark:text-ink-dark">La valoración asistida ya fue revisada por el especialista.</span>
+                            </div>
+                        ) : !tieneAnalisis ? (
+                            <BotonEjecutarSistemaExperto
+                                url={`/endocrinologo/sistema-experto/resistencia-insulina/${diagnostico.id_diagnostico_ri}/ejecutar`}
+                                label="Generar análisis metabólico asistido"
+                                successMessage="El análisis metabólico fue generado correctamente."
+                                onSuccess={() => router.reload({ only: ['perfil'] })}
+                            />
+                        ) : null}
+
+                        {tieneAnalisis && (
+                            <button
+                                type="button"
+                                className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-4 py-2 text-[12px] font-semibold text-ink transition-colors hover:bg-black/[0.03] dark:border-surface-border-dark dark:text-ink-dark dark:hover:bg-white/[0.04]"
+                                onClick={() => setMostrarResultados((actual) => !actual)}
+                            >
+                                {mostrarResultados ? 'Ocultar resultados finales' : 'Ver resultados finales'}
+                                <ChevronDown size={14} className={clsx('transition-transform', mostrarResultados && 'rotate-180')} />
+                            </button>
+                        )}
+
+                        {tieneAnalisis && mostrarResultados && (
+                            <div className="space-y-3 rounded-xl border border-surface-border p-4 dark:border-surface-border-dark">
+                                <TrazabilidadExpertaCard trazabilidad={diagnostico} />
+                                <ValidacionResultadoExperto
+                                    url={`/endocrinologo/sistema-experto/resistencia-insulina/${diagnostico.id_diagnostico_ri}/validar`}
+                                    estadoActual={diagnostico.estado_validacion_experta}
+                                    validadoPor={diagnostico.validado_por}
+                                    fechaValidacion={diagnostico.fecha_validacion}
+                                    observacionActual={diagnostico.observacion_validacion}
+                                    onRejected={() => setEditandoClinico(true)}
+                                    onSuccess={(data) => {
+                                        const estado = (data as { estado_validacion_experta?: string } | undefined)?.estado_validacion_experta;
+                                        if (estado !== 'rechazado') router.reload({ only: ['perfil'] });
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
+
+            {/* Modal de edición */}
+            {diagnostico && (
+                <FormularioEditarDiagnosticoRi
+                    abierto={editandoClinico}
+                    diagnostico={diagnostico}
+                    evaluacion={evaluacion}
+                    onCerrar={() => setEditandoClinico(false)}
+                    onSuccess={() => router.reload({ only: ['perfil'] })}
+                />
+            )}
         </div>
-        <div className="mb-3 border-b border-base-300" />
-        <PanelSugerenciaRi evaluacion={evaluacion} />
-        {diagnostico && <>
-            <div className="my-3 border-b border-base-300" />
-            <PanelConfirmacionRi diagnostico={diagnostico} />
-            <div className="my-3 border-b border-base-300" />
-            <div className="space-y-3">
-                {validacionResuelta ? <div className="alert alert-info py-2 text-xs"><span>La valoración asistida ya fue revisada por el especialista.</span></div> : !tieneAnalisis ? <BotonEjecutarSistemaExperto url={`/endocrinologo/sistema-experto/resistencia-insulina/${diagnostico.id_diagnostico_ri}/ejecutar`} label="Generar análisis metabólico asistido" successMessage="El análisis metabólico fue generado correctamente." onSuccess={() => router.reload({ only: ['perfil'] })} /> : null}
-                {tieneAnalisis && <button type="button" className="btn btn-primary btn-sm w-full justify-between sm:w-auto" onClick={() => setMostrarResultados((actual) => !actual)}>
-                    {mostrarResultados ? 'Ocultar resultados finales' : 'Ver resultados finales'}
-                    <ChevronDown size={16} className={`transition-transform ${mostrarResultados ? 'rotate-180' : ''}`} />
-                </button>}
-                {tieneAnalisis && mostrarResultados && <div className="space-y-3 rounded-2xl border border-primary/15 bg-base-200/30 p-3">
-                    <TrazabilidadExpertaCard trazabilidad={diagnostico} />
-                    <ValidacionResultadoExperto url={`/endocrinologo/sistema-experto/resistencia-insulina/${diagnostico.id_diagnostico_ri}/validar`} estadoActual={diagnostico.estado_validacion_experta} validadoPor={diagnostico.validado_por} fechaValidacion={diagnostico.fecha_validacion} observacionActual={diagnostico.observacion_validacion} onRejected={() => setEditandoClinico(true)} onSuccess={(data) => { const estado = (data as { estado_validacion_experta?: string } | undefined)?.estado_validacion_experta; if (estado !== 'rechazado') router.reload({ only: ['perfil'] }); }} />
-                </div>}
-            </div>
-        </>}
-        {diagnostico && <FormularioEditarDiagnosticoRi abierto={editandoClinico} diagnostico={diagnostico} evaluacion={evaluacion} onCerrar={() => setEditandoClinico(false)} onSuccess={() => router.reload({ only: ['perfil'] })} />}
-    </Tarjeta>;
+    );
 }

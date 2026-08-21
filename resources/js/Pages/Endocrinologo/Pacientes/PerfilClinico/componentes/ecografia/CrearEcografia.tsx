@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
-import { X, Save, ScanSearch, FileText } from 'lucide-react';
+import { X, Save, ScanSearch, FileText, ImagePlus } from 'lucide-react';
 import { Boton } from '@/Components/ui/boton';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 export default function CrearEcografia({ abierto, idPaciente, idConsulta, onCerrar }: Props) {
     const { data, setData, post, processing, reset } = useForm({
         id_consulta_endocrinologica: idConsulta ?? '',
-        fecha_ecografia: '',
+        fecha_ecografia: new Date().toISOString().split('T')[0],
         tipo_ecografia: '',
         volumen_ovario_derecho: '',
         volumen_ovario_izquierdo: '',
@@ -20,8 +21,21 @@ export default function CrearEcografia({ abierto, idPaciente, idConsulta, onCerr
         foliculos_ovario_izquierdo: '',
         morfologia_compatible_pmos: false,
         distribucion_periferica: false,
+        imagen_ecografia: null as File | null,
         observaciones: '',
     });
+
+    const [preview, setPreview] = useState<string | null>(null);
+
+    function handleImagen(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0] ?? null;
+        setData('imagen_ecografia', file);
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        } else {
+            setPreview(null);
+        }
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -30,7 +44,7 @@ export default function CrearEcografia({ abierto, idPaciente, idConsulta, onCerr
         });
     }
 
-    function handleCerrar() { reset(); onCerrar(); }
+    function handleCerrar() { reset(); setPreview(null); onCerrar(); }
     if (!abierto) return null;
 
     return (
@@ -98,6 +112,28 @@ export default function CrearEcografia({ abierto, idPaciente, idConsulta, onCerr
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <CheckboxItem label="Morfología compatible PMOS" descripcion="Criterio ovárico para diagnóstico PMOS" checked={data.morfologia_compatible_pmos} onChange={(v) => setData('morfologia_compatible_pmos', v)} />
                             <CheckboxItem label="Distribución periférica" descripcion="Folículos en collar de perlas periférico" checked={data.distribucion_periferica} onChange={(v) => setData('distribucion_periferica', v)} />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="flex items-center gap-2 mb-2 text-[11.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">
+                            <ImagePlus size={11} strokeWidth={2} className="text-category-dairy" /> Imagen de la ecografía
+                        </label>
+                        <div className="rounded-xl border border-dashed border-surface-border p-4 dark:border-surface-border-dark">
+                            {preview ? (
+                                <div className="space-y-2">
+                                    <img src={preview} alt="Preview ecografía" className="w-full max-h-48 object-contain rounded-lg" />
+                                    <button type="button" onClick={() => { setData('imagen_ecografia', null); setPreview(null); }}
+                                        className="text-[11px] text-category-fruits hover:underline">Quitar imagen</button>
+                                </div>
+                            ) : (
+                                <label className="flex flex-col items-center gap-2 cursor-pointer py-4">
+                                    <ImagePlus size={28} strokeWidth={1.2} className="text-ink-muted/40 dark:text-ink-muted-dark/40" />
+                                    <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark">Haz clic para subir la imagen de la ecografía</p>
+                                    <p className="text-[10px] text-ink-muted/50 dark:text-ink-muted-dark/50">JPG, PNG o WEBP · Máx. 5 MB</p>
+                                    <input type="file" accept="image/*" onChange={handleImagen} className="hidden" />
+                                </label>
+                            )}
                         </div>
                     </div>
 

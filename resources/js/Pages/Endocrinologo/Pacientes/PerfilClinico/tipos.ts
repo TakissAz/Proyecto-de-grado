@@ -140,6 +140,9 @@ export interface AntecedentesData {
     uso_metformina: boolean;
     uso_corticoides: boolean;
     otros_medicamentos?: string | null;
+    antecedentes_personales_detalle?: AntecedentePersonalDetalle[] | null;
+    antecedentes_familiares_detalle?: AntecedenteFamiliarDetalle[] | null;
+    medicamentos_detalle?: MedicamentoDetalle[] | null;
     observaciones?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
@@ -261,6 +264,7 @@ export interface EcografiaData {
     foliculos_ovario_izquierdo?: number | null;
     morfologia_compatible_pmos: boolean;
     distribucion_periferica: boolean;
+    imagen_url?: string | null;
     observaciones?: string | null;
 }
 
@@ -362,6 +366,28 @@ export interface DiagnosticoRiData {
     validado_por?: number | null;
     fecha_validacion?: string | null;
     observacion_validacion?: string | null;
+}
+
+export interface AntecedentePersonalDetalle {
+    antecedente: string;
+    fecha_diagnostico?: string | null;
+    estado?: 'activo' | 'controlado' | 'resuelto' | 'en_estudio' | null;
+    observacion?: string | null;
+}
+
+export interface AntecedenteFamiliarDetalle {
+    antecedente: string;
+    parentesco: string;
+    observacion?: string | null;
+}
+
+export interface MedicamentoDetalle {
+    nombre: string;
+    dosis?: string | null;
+    frecuencia?: string | null;
+    motivo?: string | null;
+    fecha_inicio?: string | null;
+    estado?: 'actual' | 'suspendido' | 'finalizado' | null;
 }
 
 export interface PerfilClinicoData {

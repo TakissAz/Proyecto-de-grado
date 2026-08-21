@@ -36,6 +36,9 @@ class AntecedenteEndocrinoMetabolico extends Model
         'uso_metformina',
         'uso_corticoides',
         'otros_medicamentos',
+        'antecedentes_personales_detalle',
+        'antecedentes_familiares_detalle',
+        'medicamentos_detalle',
         'observaciones',
         'estado',
     ];
@@ -52,6 +55,9 @@ class AntecedenteEndocrinoMetabolico extends Model
         'uso_anticonceptivos' => 'boolean',
         'uso_metformina' => 'boolean',
         'uso_corticoides' => 'boolean',
+        'antecedentes_personales_detalle' => 'array',
+        'antecedentes_familiares_detalle' => 'array',
+        'medicamentos_detalle' => 'array',
     ];
 
     public function consultaEndocrinologica()

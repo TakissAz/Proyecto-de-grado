@@ -65,6 +65,11 @@ class PerfilNutricionalController extends Controller
             'seguimientoPaciente' => $this->service->seguimientoPaciente($paciente),
             'retroalimentacionesPaciente' => $this->service->historialRetroalimentaciones($paciente),
             'contextoAjustePlan' => $this->service->contextoAjustePlan($paciente),
+            'analiticaEvolucion' => $this->service->analiticaEvolucion($paciente),
+            'alertasNutricionista' => $this->service->alertasNutricionista($paciente),
+            'sugerenciasAjusteNutricional' => $this->service->sugerenciasAjusteNutricional($paciente),
+            'prediccionRiesgoAdherencia' => $this->service->prediccionRiesgoAdherencia($paciente),
+            'historialPlanes' => $this->service->historialPlanes($paciente),
             'recomendacionExpertaAprobada' => $this->service->recomendacionExpertaAprobada($paciente),
             'puedeGenerarPlanSemanal' => $this->service->recomendacionExpertaAprobada($paciente) !== null,
             'alimentosPlan' => Alimento::query()->where('estado', 'activo')->orderBy('nombre')->limit(200)->get([

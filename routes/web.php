@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuditoriaPacienteController;
 use App\Http\Controllers\Admin\PacienteController as AdminPacienteController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Endocrinologo\AntecedentesEndocrinoMetabolicosController;
 use App\Http\Controllers\Endocrinologo\ConsultaEndocrinologicaController;
 use App\Http\Controllers\Endocrinologo\DiagnosticoPmosController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Paciente\DashboardController as PacienteDashboardContro
 use App\Http\Controllers\Paciente\SeguimientoComidaController;
 use App\Http\Controllers\Paciente\SeguimientoSintomasController;
 use App\Http\Controllers\Paciente\RetroalimentacionPacienteController as PacienteRetroalimentacionController;
+use App\Http\Controllers\Paciente\PlanPacientePdfController;
 use App\Http\Controllers\Nutricionista\AlimentoBusquedaController;
 use App\Http\Controllers\Nutricionista\AlimentoController as NutricionistaAlimentoController;
 use App\Http\Controllers\Nutricionista\PacienteController as NutricionistaPacienteController;
@@ -26,6 +28,9 @@ use App\Http\Controllers\Nutricionista\PerfilNutricionalController;
 use App\Http\Controllers\Nutricionista\PlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\RecomendacionNutricionalExpertaController;
 use App\Http\Controllers\Nutricionista\ReportePlanAlimentarioPdfController;
+use App\Http\Controllers\Nutricionista\ReporteSeguimientoEvolucionPdfController;
+use App\Http\Controllers\Nutricionista\ReporteCambiosPlanPdfController;
+use App\Http\Controllers\Nutricionista\CicloPlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
 use App\Http\Controllers\Nutricionista\RetroalimentacionPacienteController as NutricionistaRetroalimentacionController;
 use App\Http\Controllers\Endocrinologo\CitaController as EndocrinologoCitaController;
@@ -83,13 +88,11 @@ Route::middleware('auth')->group(function () {
         ->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'role:administrador'])
+Route::middleware(['auth', 'verified', 'role:administrador'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Admin/Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', DashboardAdminController::class)->name('dashboard');
 
         Route::resource('users', UserController::class)
             ->except(['show', 'destroy']);
@@ -174,6 +177,8 @@ Route::middleware(['auth', 'role:nutricionista'])
             ->middleware('verified')
             ->name('recomendacion-experta.validar');
         Route::middleware('verified')->group(function () {
+            Route::get('pacientes/{paciente}/reporte-seguimiento-evolucion-pdf', ReporteSeguimientoEvolucionPdfController::class)
+                ->name('pacientes.reporte-seguimiento-evolucion-pdf');
             Route::post('pacientes/{paciente}/retroalimentaciones', [NutricionistaRetroalimentacionController::class, 'store'])
                 ->name('pacientes.retroalimentaciones.store');
             Route::get('pacientes/{paciente}/planes-alimentarios', [PlanAlimentarioController::class, 'index'])->name('planes.index');
@@ -181,6 +186,10 @@ Route::middleware(['auth', 'role:nutricionista'])
             Route::get('planes-alimentarios/{plan}', [PlanAlimentarioController::class, 'show'])->name('planes.show');
             Route::get('planes-alimentarios/{plan}/reporte-pdf', ReportePlanAlimentarioPdfController::class)
                 ->name('planes.reporte-pdf');
+            Route::get('planes-alimentarios/{plan}/reporte-cambios-pdf', ReporteCambiosPlanPdfController::class)
+                ->name('planes.reporte-cambios-pdf');
+            Route::post('planes-alimentarios/{plan}/finalizar-y-generar-siguiente', [CicloPlanAlimentarioController::class, 'finalizarYGenerar'])
+                ->name('planes.finalizar-y-generar-siguiente');
             Route::patch('planes-alimentarios/{plan}/estado', [PlanAlimentarioController::class, 'actualizarEstado'])->name('planes.estado');
             Route::patch('comidas-plan/{comida}', [PlanAlimentarioController::class, 'actualizarComida'])->name('planes.comidas.update');
             Route::post('comidas-plan/{comida}/componentes', [PlanAlimentarioController::class, 'crearComponente'])->name('planes.componentes.store');
@@ -412,6 +421,8 @@ Route::middleware(['auth', 'role:paciente'])
     ->name('paciente.')
     ->group(function () {
         Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
+        Route::get('/mi-plan-alimentario/pdf', PlanPacientePdfController::class)
+            ->middleware('verified')->name('plan-alimentario.pdf');
         Route::post('/comidas-plan/{comida}/seguimiento', [SeguimientoComidaController::class, 'guardar'])
             ->middleware('verified')->name('comidas.seguimiento.guardar');
         Route::post('/seguimiento-sintomas', [SeguimientoSintomasController::class, 'store'])

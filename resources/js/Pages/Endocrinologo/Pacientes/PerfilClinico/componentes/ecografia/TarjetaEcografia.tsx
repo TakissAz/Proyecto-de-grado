@@ -74,20 +74,20 @@ export default function TarjetaEcografia({ ecografia, idPaciente, onRegistrar, o
             </div>
 
             {/* Datos + Gráfico ovárico */}
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_200px] gap-4">
                 <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-2">Datos</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-2">Datos clínicos</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         <DatoItem label="Fecha" valor={ecografia.fecha_ecografia} />
                         <DatoItem label="Tipo" valor={formatTipo(ecografia.tipo_ecografia)} />
                         <DatoItem label="Vol. ovario derecho" valor={ecografia.volumen_ovario_derecho != null ? `${ecografia.volumen_ovario_derecho} mL` : null} destacar={ecografia.volumen_ovario_derecho != null && ecografia.volumen_ovario_derecho >= 10} />
                         <DatoItem label="Vol. ovario izquierdo" valor={ecografia.volumen_ovario_izquierdo != null ? `${ecografia.volumen_ovario_izquierdo} mL` : null} destacar={ecografia.volumen_ovario_izquierdo != null && ecografia.volumen_ovario_izquierdo >= 10} />
-                        <DatoItem label="Folículos OD" valor={ecografia.foliculos_ovario_derecho?.toString()} destacar={ecografia.foliculos_ovario_derecho != null && ecografia.foliculos_ovario_derecho >= 12} />
-                        <DatoItem label="Folículos OI" valor={ecografia.foliculos_ovario_izquierdo?.toString()} destacar={ecografia.foliculos_ovario_izquierdo != null && ecografia.foliculos_ovario_izquierdo >= 12} />
+                        <DatoItem label="Folículos OD" valor={ecografia.foliculos_ovario_derecho?.toString() ?? '—'} destacar={ecografia.foliculos_ovario_derecho != null && ecografia.foliculos_ovario_derecho >= 12} />
+                        <DatoItem label="Folículos OI" valor={ecografia.foliculos_ovario_izquierdo?.toString() ?? '—'} destacar={ecografia.foliculos_ovario_izquierdo != null && ecografia.foliculos_ovario_izquierdo >= 12} />
                     </div>
                 </div>
 
-                {/* Mini gráfico comparativo de ovarios */}
+                {/* Gráfico comparativo de ovarios (siempre visible) */}
                 <GraficoOvarios
                     volOD={ecografia.volumen_ovario_derecho}
                     volOI={ecografia.volumen_ovario_izquierdo}
@@ -95,6 +95,20 @@ export default function TarjetaEcografia({ ecografia, idPaciente, onRegistrar, o
                     folOI={ecografia.foliculos_ovario_izquierdo}
                 />
             </div>
+
+            {/* Imagen de ecografía */}
+            {ecografia.imagen_url && (
+                <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-2">Imagen ecográfica</p>
+                    <a href={ecografia.imagen_url} target="_blank" rel="noopener noreferrer" className="block">
+                        <img
+                            src={ecografia.imagen_url}
+                            alt="Ecografía"
+                            className="w-full max-h-56 object-contain rounded-xl border border-surface-border dark:border-surface-border-dark cursor-zoom-in hover:opacity-90 transition-opacity"
+                        />
+                    </a>
+                </div>
+            )}
 
             {/* Hallazgos */}
             <div className="flex flex-wrap gap-1.5">
@@ -123,7 +137,6 @@ export default function TarjetaEcografia({ ecografia, idPaciente, onRegistrar, o
 }
 
 function GraficoOvarios({ volOD, volOI, folOD, folOI }: { volOD?: number | null; volOI?: number | null; folOD?: number | null; folOI?: number | null }) {
-    if (!volOD && !volOI && !folOD && !folOI) return null;
     const maxVol = Math.max(volOD ?? 0, volOI ?? 0, 10) * 1.2;
     return (
         <div className="rounded-xl border border-surface-border p-3 dark:border-surface-border-dark">

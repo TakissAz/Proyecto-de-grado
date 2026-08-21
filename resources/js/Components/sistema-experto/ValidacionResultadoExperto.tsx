@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { CheckCircle2, LoaderCircle, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import clsx from 'clsx';
 
 interface RespuestaValidacion {
     success: boolean;
@@ -60,72 +61,85 @@ export default function ValidacionResultadoExperto({
     };
 
     return (
-        <div className="card border border-base-300 bg-base-100 shadow-none">
-            <div className="card-body gap-3 p-4">
-                <div>
-                    <h4 className="text-sm font-bold">Validación médica</h4>
-                    <p className="mt-0.5 text-xs text-base-content/60">
-                        Confirme el análisis asistido o rechácelo para complementar la valoración clínica.
-                    </p>
-                </div>
+        <div className="rounded-xl border border-surface-border bg-black/[0.015] p-4 dark:border-surface-border-dark dark:bg-white/[0.02] space-y-3">
 
-                {resuelta && (
-                    <div className="alert alert-info py-2 text-xs">
-                        <span>
-                            Estado: <strong>{estadoActual}</strong>
-                            {validadoPor != null ? ` · Validado por usuario #${validadoPor}` : ''}
-                            {fechaValidacion ? ` · ${formatearFecha(fechaValidacion)}` : ''}
-                        </span>
-                    </div>
-                )}
-
-                <label className="form-control">
-                    <span className="label-text mb-1 text-xs font-semibold">Observación</span>
-                    <textarea
-                        className="textarea textarea-bordered min-h-20 text-sm"
-                        maxLength={1000}
-                        value={observacion}
-                        onChange={(evento) => setObservacion(evento.target.value)}
-                        placeholder="Observación clínica opcional"
-                        disabled={procesando !== null}
-                    />
-                </label>
-
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        className="btn btn-success btn-sm gap-2"
-                        onClick={() => validar('aprobado')}
-                        disabled={procesando !== null || estadoActual === 'aprobado' || estadoActual === 'validado'}
-                    >
-                        {procesando === 'aprobado' ? <LoaderCircle size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
-                        {procesando === 'aprobado'
-                            ? 'Aprobando...'
-                            : estadoActual === 'rechazado'
-                                ? 'Aprobar nuevamente'
-                                : 'Aprobar resultado'}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-error btn-outline btn-sm gap-2"
-                        onClick={() => validar('rechazado')}
-                        disabled={procesando !== null || estadoActual === 'rechazado'}
-                    >
-                        {procesando === 'rechazado' ? <LoaderCircle size={15} className="animate-spin" /> : <XCircle size={15} />}
-                        {procesando === 'rechazado'
-                            ? 'Actualizando decisión...'
-                            : estadoActual === 'aprobado' || estadoActual === 'validado'
-                                ? 'Desaprobar resultado'
-                                : 'Rechazar resultado'}
-                    </button>
-                </div>
-
-                {mensaje && (
-                    <div className={`alert py-2 text-xs ${esError ? 'alert-error' : 'alert-success'}`} role="status">
-                        <span>{mensaje}</span>
-                    </div>
-                )}
+            <div>
+                <h4 className="text-[12.5px] font-bold text-ink dark:text-ink-dark">Validación médica</h4>
+                <p className="mt-0.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                    Confirme el análisis asistido o rechácelo para complementar la valoración clínica.
+                </p>
             </div>
+
+            {/* Estado actual */}
+            {resuelta && (
+                <div className={clsx(
+                    'flex items-center gap-2 rounded-xl px-3.5 py-2.5',
+                    estadoActual === 'rechazado'
+                        ? 'border border-category-fruits/20 bg-category-fruits/5 dark:bg-category-fruits/[0.06]'
+                        : 'border border-brand-green/20 bg-brand-green/5 dark:bg-brand-green/[0.06]',
+                )}>
+                    <span className="text-[11px] text-ink dark:text-ink-dark">
+                        Estado: <strong className="capitalize">{estadoActual}</strong>
+                        {validadoPor != null ? ` · Validado por usuario #${validadoPor}` : ''}
+                        {fechaValidacion ? ` · ${formatearFecha(fechaValidacion)}` : ''}
+                    </span>
+                </div>
+            )}
+
+            {/* Observación */}
+            <div>
+                <p className="text-[10.5px] font-semibold text-ink-muted dark:text-ink-muted-dark mb-1.5">Observación</p>
+                <textarea
+                    className="w-full rounded-xl border border-surface-border bg-[#FAF9F6] px-4 py-3 text-[13px] text-ink placeholder:text-ink-muted/40 outline-none focus:border-brand-green/50 focus:ring-0 resize-y min-h-[70px] dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark"
+                    maxLength={1000}
+                    value={observacion}
+                    onChange={(e) => setObservacion(e.target.value)}
+                    placeholder="Observación clínica opcional"
+                    disabled={procesando !== null}
+                />
+            </div>
+
+            {/* Botones */}
+            <div className="flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    onClick={() => validar('aprobado')}
+                    disabled={procesando !== null || estadoActual === 'aprobado' || estadoActual === 'validado'}
+                    className="inline-flex items-center gap-2 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green/25 disabled:opacity-40 disabled:cursor-not-allowed dark:text-brand-green"
+                >
+                    {procesando === 'aprobado' ? <LoaderCircle size={13} className="animate-spin" /> : <CheckCircle2 size={13} strokeWidth={1.8} />}
+                    {procesando === 'aprobado'
+                        ? 'Aprobando...'
+                        : estadoActual === 'rechazado'
+                            ? 'Aprobar nuevamente'
+                            : 'Aprobar resultado'}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => validar('rechazado')}
+                    disabled={procesando !== null || estadoActual === 'rechazado'}
+                    className="inline-flex items-center gap-2 rounded-lg border border-category-fruits/30 px-4 py-2 text-[11.5px] font-semibold text-category-fruits transition-colors hover:bg-category-fruits/8 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    {procesando === 'rechazado' ? <LoaderCircle size={13} className="animate-spin" /> : <XCircle size={13} strokeWidth={1.8} />}
+                    {procesando === 'rechazado'
+                        ? 'Actualizando...'
+                        : estadoActual === 'aprobado' || estadoActual === 'validado'
+                            ? 'Desaprobar resultado'
+                            : 'Rechazar resultado'}
+                </button>
+            </div>
+
+            {/* Mensaje feedback */}
+            {mensaje && (
+                <div className={clsx(
+                    'rounded-xl px-3.5 py-2.5 text-[11.5px]',
+                    esError
+                        ? 'border border-category-fruits/20 bg-category-fruits/5 text-category-fruits'
+                        : 'border border-brand-green/20 bg-brand-green/5 text-brand-green-dark dark:text-brand-green',
+                )} role="status">
+                    {mensaje}
+                </div>
+            )}
         </div>
     );
 }

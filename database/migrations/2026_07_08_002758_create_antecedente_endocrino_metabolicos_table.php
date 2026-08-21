@@ -36,6 +36,9 @@ return new class extends Migration
             $table->boolean('uso_corticoides')->default(false);
 
             $table->text('otros_medicamentos')->nullable();
+            $table->json('antecedentes_personales_detalle')->nullable();
+            $table->json('antecedentes_familiares_detalle')->nullable();
+            $table->json('medicamentos_detalle')->nullable();
             $table->text('observaciones')->nullable();
 
             $table->string('estado')->default('activo');

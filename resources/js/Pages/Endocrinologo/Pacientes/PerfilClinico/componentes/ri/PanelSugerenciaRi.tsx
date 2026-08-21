@@ -7,11 +7,11 @@ interface Props {
     evaluacion: EvaluacionRiData;
 }
 
-const etiquetas: Record<string, { texto: string; variante: 'error' | 'warning' | 'info' | 'success' }> = {
-    compatible_resistencia_insulina: { texto: 'Compatible con RI', variante: 'error' },
-    sospecha_clinica_pendiente_confirmacion: { texto: 'Sospecha clínica, pendiente confirmación', variante: 'warning' },
-    datos_insuficientes: { texto: 'Datos insuficientes', variante: 'info' },
-    no_compatible: { texto: 'No compatible con RI', variante: 'success' },
+const etiquetas: Record<string, { texto: string; color: 'red' | 'orange' | 'gray' | 'green' }> = {
+    compatible_resistencia_insulina: { texto: 'Compatible con RI', color: 'red' },
+    sospecha_clinica_pendiente_confirmacion: { texto: 'Sospecha clínica, pendiente confirmación', color: 'orange' },
+    datos_insuficientes: { texto: 'Datos insuficientes', color: 'gray' },
+    no_compatible: { texto: 'No compatible con RI', color: 'green' },
 };
 
 export function PanelSugerenciaRi({ evaluacion }: Props) {
@@ -19,7 +19,7 @@ export function PanelSugerenciaRi({ evaluacion }: Props) {
 
     return (
         <div className="space-y-3">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-base-content/40">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-muted dark:text-ink-muted-dark">
                 Indicadores metabólicos evaluados (sugerencia del sistema)
             </p>
 
@@ -37,15 +37,15 @@ export function PanelSugerenciaRi({ evaluacion }: Props) {
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-                <Badge variante={sugerencia.variante}>{sugerencia.texto}</Badge>
-                <Badge variante={evaluacion.riesgo_sugerido === 'alto' ? 'error' : evaluacion.riesgo_sugerido === 'moderado' ? 'warning' : 'ghost'}>
+                <Badge color={sugerencia.color}>{sugerencia.texto}</Badge>
+                <Badge color={evaluacion.riesgo_sugerido === 'alto' ? 'red' : evaluacion.riesgo_sugerido === 'moderado' ? 'orange' : 'gray'}>
                     Riesgo sugerido: {evaluacion.riesgo_sugerido}
                 </Badge>
             </div>
 
             <ListaAlertasRi alertas={evaluacion.alertas_datos_faltantes} />
 
-            <p className="text-[10px] text-base-content/40 italic">
+            <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark italic">
                 Sugerencia generada a partir de indicadores metabólicos registrados. La confirmación diagnóstica corresponde al especialista.
             </p>
         </div>

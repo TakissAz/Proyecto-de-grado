@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Info, Salad, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Download, Info, Salad, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import ModalSeguimientoComida, { type SeguimientoComida } from '@/Components/paciente/ModalSeguimientoComida';
 import ListaComprasPacienteCard, { type ListaCompras } from '@/Components/paciente/ListaComprasPacienteCard';
@@ -8,6 +8,8 @@ import ProgresoPacienteCard, { type Progreso } from '@/Components/paciente/Progr
 import SeguimientoSintomasCard, { type SeguimientoSintomas } from '@/Components/paciente/SeguimientoSintomasCard';
 import CitasPacienteCard, { type CitasPaciente } from '@/Components/paciente/CitasPacienteCard';
 import RetroalimentacionesNutricionistaCard, { type RetroalimentacionesPaciente } from '@/Components/paciente/RetroalimentacionesNutricionistaCard';
+import HistorialPlanesPaciente from '@/Components/paciente/HistorialPlanesPaciente';
+import type { HistorialPlanes } from '@/Components/nutricionista/planes/HistorialPlanesNutricionista';
 
 type Nutrientes={calorias:number;proteinas:number;carbohidratos:number;grasas:number;fibra:number};
 interface Componente{tipo_componente:'receta'|'alimento'|'manual';nombre:string|null;cantidad:number;unidad:string|null;nutrientes:Nutrientes;receta:{descripcion:string|null;preparacion:string|null}|null}
@@ -17,17 +19,19 @@ interface Plan{nombre_plan:string;estado_plan:string;fecha_inicio:string|null;fe
 interface ResumenAdherencia{comidas_totales:number;completadas:number;parciales:number;no_realizadas:number;reemplazadas:number;pendientes:number;registradas:number;porcentaje_adherencia:number}
 let resumenAdherenciaGlobal:ResumenAdherencia|null=null;
 let listaComprasGlobal:ListaCompras|null=null;
-interface Props{paciente:{nombre:string;ci:string|null;fecha_nacimiento:string|null;edad:number|null;telefono:string|null;estado:string|null}|null;planAlimentario:Plan|null;resumenAdherencia:ResumenAdherencia|null;listaCompras:ListaCompras|null;progresoPaciente:Progreso|null;seguimientoSintomas:SeguimientoSintomas|null;citasPaciente:CitasPaciente|null;retroalimentaciones:RetroalimentacionesPaciente|null}
+interface Props{paciente:{nombre:string;ci:string|null;fecha_nacimiento:string|null;edad:number|null;telefono:string|null;estado:string|null}|null;planAlimentario:Plan|null;resumenAdherencia:ResumenAdherencia|null;listaCompras:ListaCompras|null;progresoPaciente:Progreso|null;seguimientoSintomas:SeguimientoSintomas|null;citasPaciente:CitasPaciente|null;retroalimentaciones:RetroalimentacionesPaciente|null;historialPlanes:HistorialPlanes|null}
 const n=(v:number)=>Number(v??0).toLocaleString('es-BO',{maximumFractionDigits:1});const etiqueta=(v:string|null)=>v?.replaceAll('_',' ')??'No definido';
 
-export default function Dashboard({paciente,planAlimentario:plan,resumenAdherencia,listaCompras,progresoPaciente,seguimientoSintomas,citasPaciente,retroalimentaciones}:Props){
+export default function Dashboard({paciente,planAlimentario:plan,resumenAdherencia,listaCompras,progresoPaciente,seguimientoSintomas,citasPaciente,retroalimentaciones,historialPlanes}:Props){
  resumenAdherenciaGlobal=resumenAdherencia;
  listaComprasGlobal=listaCompras;
  const [seleccion,setSeleccion]=useState(0);const dia=plan?.dias[seleccion];
  return <AuthenticatedLayout header={<h2>Mi plan alimentario</h2>}><Head title="Mi plan alimentario"/><main className="mx-auto max-w-7xl space-y-6">
+  {plan&&<div className="flex justify-end"><a className="btn btn-primary" href={route('paciente.plan-alimentario.pdf')} target="_blank" rel="noreferrer"><Download size={17}/>Descargar mi plan en PDF</a></div>}
   <header className="rounded-3xl bg-gradient-to-br from-primary/15 via-base-100 to-success/10 p-6 sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-primary">Portal del paciente</p><h1 className="mt-2 text-3xl font-extrabold">{paciente?`Hola, ${paciente.nombre.split(' ')[0]}`:'Mi plan alimentario'}</h1><p className="mt-2 text-sm text-base-content/60">Tu planificación semanal, preparada y validada por el equipo de nutrición.</p>{plan&&<div className="mt-5 flex flex-wrap gap-2"><span className="badge badge-success gap-1 capitalize"><CheckCircle2 size={12}/>{etiqueta(plan.estado_plan)}</span><span className="badge badge-outline gap-1"><CalendarDays size={12}/>{plan.fecha_inicio??'—'} al {plan.fecha_fin??'—'}</span></div>}</header>
   {!paciente&&<div className="alert alert-warning"><AlertTriangle size={18}/>No se encontró un perfil de paciente vinculado a tu cuenta.</div>}
   {paciente&&<ProgresoPacienteCard progreso={progresoPaciente}/>} 
+  {paciente&&<HistorialPlanesPaciente historial={historialPlanes}/>} 
   {paciente&&<SeguimientoSintomasCard seguimiento={seguimientoSintomas}/>} 
   {paciente&&<CitasPacienteCard citas={citasPaciente}/>} 
   {paciente&&<RetroalimentacionesNutricionistaCard retroalimentaciones={retroalimentaciones}/>} 

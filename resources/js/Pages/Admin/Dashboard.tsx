@@ -1,89 +1,37 @@
-﻿declare const route: any;
-
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Users, ClipboardList, History, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowRight, CalendarDays, ClipboardList, HeartPulse, History, Salad, Stethoscope, Users } from 'lucide-react';
 import { Tarjeta } from '@/Components/ui/tarjeta';
 
-export default function Dashboard() {
-    const { auth } = usePage().props as { auth: { user: { name: string } } };
-    const nombre = auth?.user?.name ?? 'Administrador';
+declare const route: any;
+type N = Record<string, number>;
+type Alerta = { titulo: string; mensaje: string; severidad: string; categoria: string };
+type Diagnosticos = { pmos_confirmado:number; pmos_no_confirmado:number; pmos_en_estudio:number; ri_confirmada:number; ri_no_confirmada:number; ri_no_evaluada:number; pmos_fenotipos:N; ri_grados:N };
+type Metricas = { resumen:N; diagnosticos:Diagnosticos; planes:N; recomendaciones_expertas:N; seguimiento:N; citas:N; actividad:N; alertas:N; alertas_admin:Alerta[]; prediccion_adherencia:N };
+const VACIO:Metricas={resumen:{},diagnosticos:{pmos_confirmado:0,pmos_no_confirmado:0,pmos_en_estudio:0,ri_confirmada:0,ri_no_confirmada:0,ri_no_evaluada:0,pmos_fenotipos:{},ri_grados:{}},planes:{},recomendaciones_expertas:{},seguimiento:{},citas:{},actividad:{},alertas:{},alertas_admin:[],prediccion_adherencia:{}};
 
-    return (
-        <AuthenticatedLayout header={<h2>Panel de Administración</h2>}>
-            <Head title="Administrador" />
-
-            <div className="space-y-6">
-                {/* Header */}
-                <div>
-                    <h2 className="text-2xl font-extrabold text-base-content">
-                        Hola, {nombre.split(' ')[0]}
-                    </h2>
-                    <p className="text-sm text-base-content/60 mt-1">
-                        Gestión de usuarios, auditoría clínica y configuración del sistema.
-                    </p>
-                </div>
-
-                {/* Acciones */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <AccionCard
-                        titulo="Usuarios"
-                        descripcion="Crear, editar, activar, inactivar y bloquear usuarios del sistema."
-                        icono={<Users size={20} />}
-                        color="bg-primary/10 text-primary"
-                        href={route('admin.users.index')}
-                        cta="Gestionar usuarios"
-                    />
-                    <AccionCard
-                        titulo="Auditoría de pacientes"
-                        descripcion="Revisar origen, creador, editor y flujo clínico de cada paciente."
-                        icono={<ClipboardList size={20} />}
-                        color="bg-secondary/10 text-secondary"
-                        href={route('admin.auditoria.pacientes')}
-                        cta="Ver pacientes"
-                    />
-                    <AccionCard
-                        titulo="Actividad del sistema"
-                        descripcion="Revisar eventos y cambios recientes registrados en el módulo clínico."
-                        icono={<History size={20} />}
-                        color="bg-info/10 text-info"
-                        href={route('admin.auditoria.actividad')}
-                        cta="Ver actividad"
-                    />
-                </div>
-
-                {/* Info */}
-                <Tarjeta>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
-                            <ShieldCheck size={20} />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-base-content">Sistema operativo</h3>
-                            <p className="text-xs text-base-content/50">
-                                Todos los módulos están activos. La auditoría registra cambios automáticamente.
-                            </p>
-                        </div>
-                    </div>
-                </Tarjeta>
-            </div>
-        </AuthenticatedLayout>
-    );
+export default function Dashboard({ metricasGenerales }: { metricasGenerales?:Metricas }) {
+ const m=metricasGenerales??VACIO;
+ const pagina=usePage().props as {auth?:{user?:{name?:string}|null}};
+ const nombreAdministrador=pagina.auth?.user?.name?.trim()||'Superadministrador';
+ const cards=[['Usuarios',m.resumen.total_usuarios,Users],['Pacientes',m.resumen.total_pacientes,HeartPulse],['PMOS confirmados',m.diagnosticos.pmos_confirmado,Stethoscope],['RI confirmada',m.diagnosticos.ri_confirmada,Activity],['Planes activos',m.planes.activos,Salad],['Adherencia promedio',`${m.seguimiento.adherencia_promedio}%`,ClipboardList],['Citas próximas',m.citas.proximas,CalendarDays],['Alertas activas',m.alertas_admin.length,AlertTriangle]] as const;
+ return <AuthenticatedLayout header={<h2>Panel general del sistema</h2>}><Head title="Panel general"/><div className="space-y-7">
+  <header className="flex flex-wrap items-end justify-between gap-2"><div><h1 className="text-2xl font-black">Hola, {nombreAdministrador.split(' ')[0]}</h1><p className="text-sm opacity-60">Vista global del funcionamiento del sistema, sin información clínica sensible.</p></div><span className="badge badge-ghost badge-lg capitalize">{new Intl.DateTimeFormat('es-BO',{dateStyle:'long'}).format(new Date())}</span></header>
+  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{cards.map(([label,value,Icon])=><Tarjeta key={label}><div className="flex items-center justify-between"><div><p className="text-xs opacity-55">{label}</p><p className="mt-1 text-2xl font-black">{value}</p></div><span className="rounded-xl bg-primary/10 p-2.5 text-primary"><Icon size={20}/></span></div></Tarjeta>)}</div>
+  <div className="grid gap-5 xl:grid-cols-2">
+   <Panel title="Diagnósticos endocrinológicos"><Grupo title="PMOS" data={{Confirmados:m.diagnosticos.pmos_confirmado,'No confirmados':m.diagnosticos.pmos_no_confirmado,'En estudio':m.diagnosticos.pmos_en_estudio}}/><Badges prefix="Fenotipo" data={m.diagnosticos.pmos_fenotipos}/><div className="divider my-3"/><Grupo title="Resistencia a la insulina" data={{Confirmada:m.diagnosticos.ri_confirmada,'No confirmada':m.diagnosticos.ri_no_confirmada,'No evaluada':m.diagnosticos.ri_no_evaluada}}/><Badges data={m.diagnosticos.ri_grados}/></Panel>
+   <Panel title="Planificación nutricional"><Grupo title="Planes por estado" data={{Sugeridos:m.planes.sugeridos,'En revisión':m.planes.en_revision,Aprobados:m.planes.aprobados,Activos:m.planes.activos,Rechazados:m.planes.rechazados,Finalizados:m.planes.finalizados}}/><div className="mt-3 grid grid-cols-3 gap-2"><Mini label="Generados por IA" value={m.planes.generados_por_sistema_experto}/><Mini label="Con manuales" value={m.planes.con_componentes_manuales}/><Mini label="Solo recetas" value={m.planes.con_solo_recetas}/></div><div className="divider my-3"/><Grupo title="Recomendaciones expertas" data={{Pendientes:m.recomendaciones_expertas.pendientes,Aprobadas:m.recomendaciones_expertas.aprobadas,Rechazadas:m.recomendaciones_expertas.rechazadas}}/><p className="mt-3 text-xs opacity-60">Confianza promedio: <b>{m.recomendaciones_expertas.confianza_promedio}%</b></p></Panel>
+   <Panel title="Seguimiento y adherencia"><div className="flex items-end justify-between"><div><p className="text-3xl font-black text-primary">{m.seguimiento.adherencia_promedio}%</p><p className="text-xs opacity-60">Adherencia promedio general</p></div><span className="badge badge-warning">{m.seguimiento.pacientes_baja_adherencia} bajo 60%</span></div><progress className="progress progress-primary mt-4 w-full" value={m.seguimiento.adherencia_promedio} max="100"/><div className="mt-4 grid grid-cols-3 gap-2"><Mini label="Comidas" value={m.seguimiento.seguimientos_comidas}/><Mini label="Síntomas" value={m.seguimiento.seguimientos_sintomas}/><Mini label="Pacientes" value={m.seguimiento.pacientes_con_seguimiento}/></div></Panel>
+   <Panel title="Agenda general"><Grupo title="Citas" data={{Pendientes:m.citas.pendientes,Realizadas:m.citas.realizadas,Canceladas:m.citas.canceladas,Próximas:m.citas.proximas,Hoy:m.citas.hoy}}/></Panel>
+  </div>
+  <Panel title="Riesgo predictivo de adherencia"><p className="mb-3 text-xs opacity-60">Estimación agregada para pacientes activos; no sustituye la evaluación profesional.</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><Mini label="Riesgo alto" value={m.prediccion_adherencia.riesgo_alto}/><Mini label="Riesgo medio" value={m.prediccion_adherencia.riesgo_medio}/><Mini label="Riesgo bajo" value={m.prediccion_adherencia.riesgo_bajo}/><Mini label="Sin datos" value={m.prediccion_adherencia.sin_datos}/></div></Panel>
+  <div className="grid gap-5 xl:grid-cols-2"><Panel title="Alertas administrativas">{m.alertas_admin.length===0?<div className="alert alert-success">No hay alertas administrativas activas.</div>:<div className="space-y-2">{m.alertas_admin.map((a,i)=><div key={`${a.categoria}-${i}`} className={`alert ${a.severidad==='alta'?'alert-error':a.severidad==='media'?'alert-warning':'alert-info'}`}><div><b className="block text-sm">{a.titulo}</b><span className="text-xs">{a.mensaje}</span></div></div>)}</div>}</Panel>
+   <Panel title="Actividad reciente"><Grupo title="Últimos 30 días" data={{Pacientes:m.actividad.pacientes_registrados_ultimos_30_dias,Planes:m.actividad.planes_generados_ultimos_30_dias,Recomendaciones:m.actividad.recomendaciones_generadas_ultimos_30_dias}}/><div className="divider my-3"/><Grupo title="Últimos 7 días" data={{Comidas:m.actividad.seguimientos_comidas_ultimos_7_dias,Síntomas:m.actividad.seguimientos_sintomas_ultimos_7_dias,Retroalimentaciones:m.actividad.retroalimentaciones_ultimos_7_dias,'Citas próximas':m.actividad.citas_proximos_7_dias}}/></Panel></div>
+  <div className="grid gap-3 md:grid-cols-3"><Accion title="Gestionar usuarios" href={route('admin.users.index')}/><Accion title="Auditoría de pacientes" href={route('admin.auditoria.pacientes')}/><Accion title="Actividad del sistema" href={route('admin.auditoria.actividad')}/></div>
+ </div></AuthenticatedLayout>;
 }
-
-function AccionCard({ titulo, descripcion, icono, color, href, cta }: {
-    titulo: string; descripcion: string; icono: React.ReactNode; color: string; href: string; cta: string;
-}) {
-    return (
-        <Tarjeta>
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color} mb-3`}>
-                {icono}
-            </div>
-            <h3 className="font-bold text-base-content mb-1">{titulo}</h3>
-            <p className="text-xs text-base-content/50 mb-4">{descripcion}</p>
-            <Link href={href} className="btn btn-primary btn-sm gap-1.5 w-full">
-                {cta} <ArrowRight size={14} />
-            </Link>
-        </Tarjeta>
-    );
-}
+function Panel({title,children}:{title:string;children:React.ReactNode}){return <Tarjeta><h2 className="mb-4 font-bold">{title}</h2>{children}</Tarjeta>}
+function Grupo({title,data}:{title:string;data:N}){return <div><p className="mb-2 text-xs font-bold uppercase tracking-wide opacity-50">{title}</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{Object.entries(data).map(([k,v])=><Mini key={k} label={k} value={v}/>)}</div></div>}
+function Mini({label,value}:{label:string;value:number}){return <div className="rounded-xl bg-base-200 p-2.5 text-center"><b className="block text-lg">{value}</b><span className="text-[11px] opacity-60">{label}</span></div>}
+function Badges({data,prefix}:{data:N;prefix?:string}){return <div className="mt-3 flex flex-wrap gap-2">{Object.entries(data).map(([k,v])=><span className="badge badge-outline capitalize" key={k}>{prefix} {k.replace('_',' ')}: {v}</span>)}</div>}
+function Accion({title,href}:{title:string;href:string}){return <Link href={href} className="btn btn-outline justify-between"><span>{title}</span><ArrowRight size={15}/></Link>}

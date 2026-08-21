@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +26,7 @@ class EcografiaController extends Controller
             'foliculos_ovario_derecho'    => ['nullable', 'integer', 'min:0', 'max:50'],
             'foliculos_ovario_izquierdo'  => ['nullable', 'integer', 'min:0', 'max:50'],
             'distribucion_periferica'     => ['boolean'],
+            'imagen_ecografia'            => ['nullable', 'image', 'max:5120'],
             'observaciones'               => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -52,6 +54,14 @@ class EcografiaController extends Controller
         $validated = $request->validate($this->reglas());
         $morfologia = $this->evaluarMorfologia($validated);
 
+        $archivoPath = null;
+        if ($request->hasFile('imagen_ecografia')) {
+            $archivoPath = $request->file('imagen_ecografia')->store(
+                "ecografias/{$paciente->id_paciente}",
+                'public'
+            );
+        }
+
         EvaluacionEcografica::create([
             'id_consulta_endocrinologica' => $validated['id_consulta_endocrinologica'],
             'id_paciente'                 => $paciente->id_paciente,
@@ -64,6 +74,7 @@ class EcografiaController extends Controller
             'foliculos_ovario_izquierdo'  => $validated['foliculos_ovario_izquierdo'] ?? null,
             'morfologia_compatible_pmos'  => $morfologia,
             'distribucion_periferica'     => $validated['distribucion_periferica'] ?? false,
+            'archivo_informe'             => $archivoPath,
             'observaciones'               => $validated['observaciones'] ?? null,
             'estado'                      => 'registrada',
         ]);
@@ -76,6 +87,18 @@ class EcografiaController extends Controller
         $validated = $request->validate($this->reglas());
         $morfologia = $this->evaluarMorfologia($validated);
 
+        $archivoPath = $ecografia->archivo_informe;
+        if ($request->hasFile('imagen_ecografia')) {
+            // Eliminar imagen anterior si existe
+            if ($archivoPath) {
+                Storage::disk('public')->delete($archivoPath);
+            }
+            $archivoPath = $request->file('imagen_ecografia')->store(
+                "ecografias/{$paciente->id_paciente}",
+                'public'
+            );
+        }
+
         $ecografia->update([
             'fecha_ecografia'             => $validated['fecha_ecografia'],
             'tipo_ecografia'              => $validated['tipo_ecografia'] ?? null,
@@ -85,6 +108,7 @@ class EcografiaController extends Controller
             'foliculos_ovario_izquierdo'  => $validated['foliculos_ovario_izquierdo'] ?? null,
             'morfologia_compatible_pmos'  => $morfologia,
             'distribucion_periferica'     => $validated['distribucion_periferica'] ?? false,
+            'archivo_informe'             => $archivoPath,
             'observaciones'               => $validated['observaciones'] ?? null,
         ]);
 
@@ -109,6 +133,7 @@ class EcografiaController extends Controller
                 'foliculos_ovario_izquierdo'  => $r->foliculos_ovario_izquierdo,
                 'morfologia_compatible_pmos'  => $r->morfologia_compatible_pmos,
                 'distribucion_periferica'     => $r->distribucion_periferica,
+                'imagen_url'                  => $r->archivo_informe ? '/storage/' . $r->archivo_informe : null,
                 'observaciones'               => $r->observaciones,
                 'estado'                      => $r->estado,
                 'created_at'                  => $r->created_at?->format('Y-m-d H:i'),

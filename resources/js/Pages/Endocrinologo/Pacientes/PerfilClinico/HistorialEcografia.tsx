@@ -129,8 +129,8 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
                             />
                         </div>
 
-                        {/* ═══ CONTENIDO PRINCIPAL ═══ */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-4">
+                        {/* ═══ CONTENIDO PRINCIPAL: listado + panel lateral con scroll ═══ */}
+                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4">
                             {/* Listado */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-1">
@@ -172,20 +172,13 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
                                 )}
                             </div>
 
-                            {/* Panel lateral */}
-                            {registros.length >= 2 && (
-                                <aside className="lg:sticky lg:top-20 lg:self-start space-y-4">
-                                    <ComparativaOvarios registros={registros} />
+                            {/* Panel lateral derecho con scroll */}
+                            <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-1 space-y-4">
+                                <ComparativaOvarios registros={registros} />
+                                {registros.length >= 2 && (
                                     <GraficoEvolucionEcografia registros={registros} />
-                                </aside>
-                            )}
-
-                            {/* Si solo hay 1 registro, mostrar gráfico comparativo abajo */}
-                            {registros.length === 1 && (
-                                <aside>
-                                    <ComparativaOvarios registros={registros} />
-                                </aside>
-                            )}
+                                )}
+                            </aside>
                         </div>
                     </>
                 )}
@@ -388,106 +381,96 @@ function ComparativaOvarios({ registros }: { registros: EcografiaRegistro[] }) {
     const folOD = ultimo.foliculos_ovario_derecho;
     const folOI = ultimo.foliculos_ovario_izquierdo;
 
-    // Tamaño visual proporcional del ovario (mínimo 40px, máximo 80px)
+    // Tamaño visual proporcional del ovario (mínimo 36px, máximo 60px)
     const maxVol = Math.max(volOD ?? 5, volOI ?? 5, 10);
-    const sizeOD = 40 + ((volOD ?? 5) / maxVol) * 40;
-    const sizeOI = 40 + ((volOI ?? 5) / maxVol) * 40;
+    const sizeOD = 36 + ((volOD ?? 5) / maxVol) * 24;
+    const sizeOI = 36 + ((volOI ?? 5) / maxVol) * 24;
 
     return (
-        <div className="card-elevated p-5">
-            <div className="flex items-center justify-between mb-4">
-                <p className="flex items-center gap-2 text-[13px] font-bold text-ink dark:text-ink-dark">
-                    <ScanSearch size={15} strokeWidth={1.8} className="text-category-dairy" />
+        <div className="card-elevated p-4">
+            <div className="flex items-center justify-between mb-3">
+                <p className="flex items-center gap-2 text-[12px] font-bold text-ink dark:text-ink-dark">
+                    <ScanSearch size={14} strokeWidth={1.8} className="text-category-dairy" />
                     Última ecografía
                 </p>
-                <span className="text-[10px] text-ink-muted dark:text-ink-muted-dark">{ultimo.fecha_ecografia}</span>
-            </div>
-
-            {/* Diagrama visual de ovarios */}
-            <div className="flex items-center justify-center gap-8 py-4">
-                {/* Ovario Derecho */}
-                <div className="flex flex-col items-center gap-2">
-                    <div
-                        className={clsx(
-                            'relative rounded-[45%] border-2 flex items-center justify-center transition-all',
-                            (volOD ?? 0) >= 10 ? 'border-brand-orange bg-brand-orange/[0.08]' : 'border-brand-green/40 bg-brand-green/[0.04]'
-                        )}
-                        style={{ width: `${sizeOD}px`, height: `${sizeOD * 0.7}px` }}
-                    >
-                        {/* Folículos como puntitos */}
-                        {folOD != null && folOD > 0 && (
-                            <div className="flex flex-wrap items-center justify-center gap-[2px] p-1.5">
-                                {Array.from({ length: Math.min(folOD, 20) }, (_, i) => (
-                                    <div
-                                        key={i}
-                                        className={clsx('rounded-full', folOD >= 12 ? 'bg-category-fruits/60' : 'bg-brand-green/40')}
-                                        style={{ width: '4px', height: '4px' }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className="text-center">
-                        <p className="text-[10px] font-bold text-ink dark:text-ink-dark">OD</p>
-                        <p className={clsx('text-[11px] font-bold', (volOD ?? 0) >= 10 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark')}>
-                            {volOD != null ? `${volOD} mL` : '—'}
-                        </p>
-                        <p className={clsx('text-[10px]', (folOD ?? 0) >= 12 ? 'text-category-fruits font-semibold' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                            {folOD != null ? `${folOD} fol.` : '—'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Separador central (útero simplificado) */}
-                <div className="flex flex-col items-center gap-1">
-                    <div className="w-5 h-8 rounded-b-full border border-surface-border bg-surface-card dark:border-surface-border-dark dark:bg-surface-card-dark" />
-                    <p className="text-[8px] text-ink-muted/40 dark:text-ink-muted-dark/40 uppercase tracking-wider">útero</p>
-                </div>
-
-                {/* Ovario Izquierdo */}
-                <div className="flex flex-col items-center gap-2">
-                    <div
-                        className={clsx(
-                            'relative rounded-[45%] border-2 flex items-center justify-center transition-all',
-                            (volOI ?? 0) >= 10 ? 'border-category-dairy bg-category-dairy/[0.08]' : 'border-category-dairy/30 bg-category-dairy/[0.04]'
-                        )}
-                        style={{ width: `${sizeOI}px`, height: `${sizeOI * 0.7}px` }}
-                    >
-                        {folOI != null && folOI > 0 && (
-                            <div className="flex flex-wrap items-center justify-center gap-[2px] p-1.5">
-                                {Array.from({ length: Math.min(folOI, 20) }, (_, i) => (
-                                    <div
-                                        key={i}
-                                        className={clsx('rounded-full', folOI >= 12 ? 'bg-category-fruits/60' : 'bg-category-dairy/40')}
-                                        style={{ width: '4px', height: '4px' }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className="text-center">
-                        <p className="text-[10px] font-bold text-ink dark:text-ink-dark">OI</p>
-                        <p className={clsx('text-[11px] font-bold', (volOI ?? 0) >= 10 ? 'text-category-dairy' : 'text-ink dark:text-ink-dark')}>
-                            {volOI != null ? `${volOI} mL` : '—'}
-                        </p>
-                        <p className={clsx('text-[10px]', (folOI ?? 0) >= 12 ? 'text-category-fruits font-semibold' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                            {folOI != null ? `${folOI} fol.` : '—'}
-                        </p>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-ink-muted dark:text-ink-muted-dark">{ultimo.fecha_ecografia}</span>
+                    {ultimo.morfologia_compatible_pmos && <Badge color="orange">Compatible PMOS</Badge>}
+                    {!ultimo.morfologia_compatible_pmos && <Badge color="green">Sin criterios PMOS</Badge>}
                 </div>
             </div>
 
-            {/* Leyenda */}
-            <div className="mt-3 pt-3 border-t border-surface-border dark:border-surface-border-dark flex flex-wrap items-center justify-center gap-3">
-                <LeyendaItem color="bg-brand-orange" label="Vol ≥ 10 mL" />
-                <LeyendaItem color="bg-category-fruits/60" label="Fol ≥ 12" />
-                <LeyendaItem color="bg-brand-green/40" label="Normal" />
-                {ultimo.morfologia_compatible_pmos && (
-                    <Badge color="orange">Compatible PMOS</Badge>
-                )}
-                {!ultimo.morfologia_compatible_pmos && (
-                    <Badge color="green">Sin criterios PMOS</Badge>
-                )}
+            {/* Layout horizontal: OD | útero | OI + leyenda */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-6">
+                    {/* OD */}
+                    <div className="flex items-center gap-2">
+                        <div
+                            className={clsx(
+                                'relative rounded-[45%] border-2 flex items-center justify-center',
+                                (volOD ?? 0) >= 10 ? 'border-brand-orange bg-brand-orange/[0.08]' : 'border-brand-green/40 bg-brand-green/[0.04]'
+                            )}
+                            style={{ width: `${sizeOD}px`, height: `${sizeOD * 0.7}px` }}
+                        >
+                            {folOD != null && folOD > 0 && (
+                                <div className="flex flex-wrap items-center justify-center gap-[2px] p-1">
+                                    {Array.from({ length: Math.min(folOD, 16) }, (_, i) => (
+                                        <div key={i} className={clsx('rounded-full', folOD >= 12 ? 'bg-category-fruits/60' : 'bg-brand-green/40')} style={{ width: '3px', height: '3px' }} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-bold text-ink-muted dark:text-ink-muted-dark">OD</p>
+                            <p className={clsx('text-[11px] font-bold', (volOD ?? 0) >= 10 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark')}>
+                                {volOD != null ? `${volOD} mL` : '—'}
+                            </p>
+                            <p className={clsx('text-[9px]', (folOD ?? 0) >= 12 ? 'text-category-fruits font-semibold' : 'text-ink-muted dark:text-ink-muted-dark')}>
+                                {folOD != null ? `${folOD} fol.` : '—'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Útero */}
+                    <div className="flex flex-col items-center">
+                        <div className="w-4 h-6 rounded-b-full border border-surface-border bg-surface-card dark:border-surface-border-dark dark:bg-surface-card-dark" />
+                    </div>
+
+                    {/* OI */}
+                    <div className="flex items-center gap-2">
+                        <div
+                            className={clsx(
+                                'relative rounded-[45%] border-2 flex items-center justify-center',
+                                (volOI ?? 0) >= 10 ? 'border-category-dairy bg-category-dairy/[0.08]' : 'border-category-dairy/30 bg-category-dairy/[0.04]'
+                            )}
+                            style={{ width: `${sizeOI}px`, height: `${sizeOI * 0.7}px` }}
+                        >
+                            {folOI != null && folOI > 0 && (
+                                <div className="flex flex-wrap items-center justify-center gap-[2px] p-1">
+                                    {Array.from({ length: Math.min(folOI, 16) }, (_, i) => (
+                                        <div key={i} className={clsx('rounded-full', folOI >= 12 ? 'bg-category-fruits/60' : 'bg-category-dairy/40')} style={{ width: '3px', height: '3px' }} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-bold text-ink-muted dark:text-ink-muted-dark">OI</p>
+                            <p className={clsx('text-[11px] font-bold', (volOI ?? 0) >= 10 ? 'text-category-dairy' : 'text-ink dark:text-ink-dark')}>
+                                {volOI != null ? `${volOI} mL` : '—'}
+                            </p>
+                            <p className={clsx('text-[9px]', (folOI ?? 0) >= 12 ? 'text-category-fruits font-semibold' : 'text-ink-muted dark:text-ink-muted-dark')}>
+                                {folOI != null ? `${folOI} fol.` : '—'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Leyenda compacta */}
+                <div className="hidden sm:flex flex-col gap-1">
+                    <LeyendaItem color="bg-brand-orange" label="Vol ≥ 10 mL" />
+                    <LeyendaItem color="bg-category-fruits/60" label="Fol ≥ 12" />
+                    <LeyendaItem color="bg-brand-green/40" label="Normal" />
+                </div>
             </div>
         </div>
     );
