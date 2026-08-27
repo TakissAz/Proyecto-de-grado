@@ -87,6 +87,20 @@ class DashboardPacienteTest extends TestCase
         $this->get(route('paciente.dashboard'))->assertRedirect(route('login'));
     }
 
+    public function test_paciente_puede_acceder_a_los_modulos_separados_del_portal(): void
+    {
+        [$user] = $this->pacienteConUsuario();
+
+        foreach ([
+            'paciente.progreso' => 'Paciente/Progreso',
+            'paciente.sintomas' => 'Paciente/Sintomas',
+            'paciente.lista-compras' => 'Paciente/ListaCompras',
+        ] as $ruta => $componente) {
+            $this->actingAs($user)->get(route($ruta))->assertOk()
+                ->assertInertia(fn (Assert $page) => $page->component($componente));
+        }
+    }
+
     public function test_portal_incluye_lista_de_compras_con_plan_aprobado(): void
     {
         [$user, $paciente] = $this->pacienteConUsuario();

@@ -28,7 +28,7 @@ export default function ModalObjetivos({ abierto, cerrar, registro, pacienteId, 
     const id = registro?.id_objetivo_nutricional;
     const url = `/nutricionista/pacientes/${pacienteId}/perfil-nutricional/objetivos${id ? `/${id}` : ''}`;
 
-    const { data, setData, post, put, processing, errors, clearErrors } = useForm({
+    const valoresIniciales = {
         objetivo_principal: String(registro?.objetivo_principal ?? ''),
         prioridad: String(registro?.prioridad ?? 'media'),
         objetivo_secundario: String(registro?.objetivo_secundario ?? ''),
@@ -37,16 +37,17 @@ export default function ModalObjetivos({ abierto, cerrar, registro, pacienteId, 
         meta_cintura: String(registro?.meta_cintura ?? ''),
         plazo_semanas: String(registro?.plazo_semanas ?? ''),
         observaciones: String(registro?.observaciones ?? ''),
-    });
+    };
+    const { data, setData, post, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
 
-    useEffect(() => { if (abierto) clearErrors(); }, [abierto]);
+    useEffect(() => { if (abierto) { setData(valoresIniciales); clearErrors(); } }, [abierto, id]);
 
     if (!abierto) return null;
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        const opts = { preserveScroll: true, onSuccess: cerrar };
-        registro ? put(url, opts) : post(url, opts);
+        const opts = { preserveScroll: true, onSuccess: () => { reset(); cerrar(); } };
+        registro ? post(`${url}?_method=PUT`, opts) : post(url, opts);
     };
 
     return (

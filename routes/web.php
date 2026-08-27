@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuditoriaPacienteController;
 use App\Http\Controllers\Admin\PacienteController as AdminPacienteController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DashboardAdminController;
+use App\Http\Controllers\Admin\RespaldoBaseDatosController;
 use App\Http\Controllers\Endocrinologo\AntecedentesEndocrinoMetabolicosController;
 use App\Http\Controllers\Endocrinologo\ConsultaEndocrinologicaController;
 use App\Http\Controllers\Endocrinologo\DiagnosticoPmosController;
@@ -34,9 +35,11 @@ use App\Http\Controllers\Nutricionista\CicloPlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
 use App\Http\Controllers\Nutricionista\RetroalimentacionPacienteController as NutricionistaRetroalimentacionController;
 use App\Http\Controllers\Endocrinologo\CitaController as EndocrinologoCitaController;
+use App\Http\Controllers\Endocrinologo\DashboardController as EndocrinologoDashboardController;
 use App\Http\Controllers\SistemaExperto\EjecutarSistemaExpertoController;
 use App\Http\Controllers\SistemaExperto\ValidarResultadoExpertoController;
 use App\Http\Controllers\Nutricionista\CitaController as NutricionistaCitaController;
+use App\Http\Controllers\Nutricionista\DashboardController as NutricionistaDashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +96,8 @@ Route::middleware(['auth', 'verified', 'role:administrador'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', DashboardAdminController::class)->name('dashboard');
+        Route::get('/base-datos', [RespaldoBaseDatosController::class, 'index'])->name('base-datos.index');
+        Route::get('/base-datos/respaldo', [RespaldoBaseDatosController::class, 'descargar'])->name('base-datos.respaldo');
 
         Route::resource('users', UserController::class)
             ->except(['show', 'destroy']);
@@ -134,9 +139,7 @@ Route::middleware(['auth', 'role:nutricionista'])
     ->prefix('nutricionista')
     ->name('nutricionista.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Nutricionista/Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', NutricionistaDashboardController::class)->name('dashboard');
 
         Route::get('pacientes', [NutricionistaPacienteController::class, 'index'])
             ->name('pacientes.index');
@@ -157,6 +160,7 @@ Route::middleware(['auth', 'role:nutricionista'])
 
         // Perfil nutricional
         Route::get('pacientes/{paciente}/perfil-nutricional', [PerfilNutricionalController::class, 'index'])->name('pacientes.perfil-nutricional');
+        Route::get('pacientes/{paciente}/planes-alimentarios/historial', [PerfilNutricionalController::class, 'historialPlanes'])->name('pacientes.planes-alimentarios.historial');
         Route::post('pacientes/{paciente}/perfil-nutricional/consulta', [PerfilNutricionalController::class, 'storeConsulta'])->name('pacientes.perfil-nutricional.consulta.store');
         Route::put('pacientes/{paciente}/perfil-nutricional/consulta/{consulta}', [PerfilNutricionalController::class, 'updateConsulta'])->name('pacientes.perfil-nutricional.consulta.update');
         Route::post('pacientes/{paciente}/perfil-nutricional/evaluacion', [PerfilNutricionalController::class, 'storeEvaluacion'])->name('pacientes.perfil-nutricional.evaluacion.store');
@@ -259,9 +263,7 @@ Route::middleware(['auth', 'role:endocrinologo'])
     ->prefix('endocrinologo')
     ->name('endocrinologo.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Endocrinologo/Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [EndocrinologoDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('pacientes', [EndocrinologoPacienteController::class, 'index'])
             ->name('pacientes.index');
@@ -420,7 +422,16 @@ Route::middleware(['auth', 'role:paciente'])
     ->prefix('paciente')
     ->name('paciente.')
     ->group(function () {
-        Route::get('/dashboard', PacienteDashboardController::class)->name('dashboard');
+        Route::get('/dashboard', [PacienteDashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/mi-plan', [PacienteDashboardController::class, 'miPlan'])->name('mi-plan');
+        Route::get('/seguimiento', [PacienteDashboardController::class, 'seguimiento'])->name('seguimiento');
+        Route::get('/progreso', [PacienteDashboardController::class, 'progreso'])->name('progreso');
+        Route::get('/sintomas', [PacienteDashboardController::class, 'sintomas'])->name('sintomas');
+        Route::get('/lista-compras', [PacienteDashboardController::class, 'listaCompras'])->name('lista-compras');
+        Route::get('/orientacion', [PacienteDashboardController::class, 'orientacion'])->name('orientacion');
+        Route::get('/historial', [PacienteDashboardController::class, 'historial'])->name('historial');
+        Route::get('/citas', [PacienteDashboardController::class, 'citas'])->name('citas');
+        Route::get('/compras', [PacienteDashboardController::class, 'compras'])->name('compras');
         Route::get('/mi-plan-alimentario/pdf', PlanPacientePdfController::class)
             ->middleware('verified')->name('plan-alimentario.pdf');
         Route::post('/comidas-plan/{comida}/seguimiento', [SeguimientoComidaController::class, 'guardar'])

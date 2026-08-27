@@ -23,7 +23,7 @@ const NIVELES_ACTIVIDAD: Record<string, string> = {
 export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId, opciones }: Props) {
     const id = registro?.id_evaluacion_nutricional;
 
-    const { data, setData, post, processing, errors, clearErrors } = useForm({
+    const valoresIniciales = {
         fecha_evaluacion: normalizarFechaInput(registro?.fecha_evaluacion) || new Date().toISOString().split('T')[0],
         nivel_actividad: String(registro?.nivel_actividad ?? ''),
         peso: String(registro?.peso ?? ''),
@@ -33,18 +33,20 @@ export default function ModalEvaluacion({ abierto, cerrar, registro, pacienteId,
         porcentaje_grasa: String(registro?.porcentaje_grasa ?? ''),
         masa_muscular: String(registro?.masa_muscular ?? ''),
         observaciones: String(registro?.observaciones ?? ''),
-    });
+    };
+    const { data, setData, post, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
 
     useEffect(() => {
         if (!abierto) return;
+        setData(valoresIniciales);
         clearErrors();
-    }, [abierto]);
+    }, [abierto, id]);
 
     if (!abierto) return null;
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        const opciones = { preserveScroll: true, onSuccess: cerrar };
+        const opciones = { preserveScroll: true, onSuccess: () => { reset(); cerrar(); } };
         const endpoint = `/nutricionista/pacientes/${pacienteId}/perfil-nutricional/evaluacion`;
 
         if (id) {

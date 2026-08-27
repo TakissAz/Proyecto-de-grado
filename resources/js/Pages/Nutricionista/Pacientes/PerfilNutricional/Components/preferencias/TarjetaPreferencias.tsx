@@ -1,4 +1,4 @@
-import { Heart, Plus, Edit, History, ThumbsUp, ThumbsDown, Salad, Flame, Sparkles } from 'lucide-react';
+import { Heart, Plus, Edit, History, ThumbsUp, ThumbsDown, Salad, Flame, Sparkles, Cherry } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { Boton } from '@/Components/ui/boton';
 import { Badge } from '@/Components/ui/badge';
@@ -13,115 +13,87 @@ interface Props {
     idPaciente?: number;
 }
 
-type SeccionTipo = 'like' | 'dislike' | 'neutral';
-
-const SECCIONES: { key: string; label: string; tipo: SeccionTipo; icono: typeof ThumbsUp }[] = [
-    { key: 'alimentos_preferidos', label: 'Alimentos preferidos', tipo: 'like', icono: ThumbsUp },
-    { key: 'alimentos_no_preferidos', label: 'Alimentos no preferidos', tipo: 'dislike', icono: ThumbsDown },
-    { key: 'comidas_preferidas', label: 'Comidas preferidas', tipo: 'like', icono: Salad },
-    { key: 'comidas_frecuentes', label: 'Comidas frecuentes', tipo: 'neutral', icono: Flame },
-    { key: 'preparaciones_preferidas', label: 'Preparaciones preferidas', tipo: 'like', icono: Sparkles },
-    { key: 'sabores_preferidos', label: 'Sabores preferidos', tipo: 'like', icono: Heart },
+const SECCIONES: { key: string; label: string; icono: typeof Heart; color: string; bgColor: string; borderColor: string; badgeColor: 'green' | 'red' | 'orange' | 'purple' | 'gray' }[] = [
+    { key: 'alimentos_preferidos', label: 'Alimentos preferidos', icono: ThumbsUp, color: 'text-brand-green-dark dark:text-brand-green', bgColor: 'bg-brand-green/[0.05] dark:bg-brand-green/[0.06]', borderColor: 'border-brand-green/20', badgeColor: 'green' },
+    { key: 'alimentos_no_preferidos', label: 'No preferidos', icono: ThumbsDown, color: 'text-category-fruits', bgColor: 'bg-category-fruits/[0.04] dark:bg-category-fruits/[0.05]', borderColor: 'border-category-fruits/20', badgeColor: 'red' },
+    { key: 'comidas_preferidas', label: 'Comidas preferidas', icono: Salad, color: 'text-category-dairy', bgColor: 'bg-category-dairy/[0.05] dark:bg-category-dairy/[0.06]', borderColor: 'border-category-dairy/20', badgeColor: 'purple' },
+    { key: 'comidas_frecuentes', label: 'Comidas frecuentes', icono: Flame, color: 'text-brand-orange', bgColor: 'bg-brand-orange/[0.04] dark:bg-brand-orange/[0.05]', borderColor: 'border-brand-orange/20', badgeColor: 'orange' },
+    { key: 'preparaciones_preferidas', label: 'Preparaciones', icono: Sparkles, color: 'text-info', bgColor: 'bg-info/[0.04] dark:bg-info/[0.05]', borderColor: 'border-info/20', badgeColor: 'gray' },
+    { key: 'sabores_preferidos', label: 'Sabores', icono: Cherry, color: 'text-category-fruits', bgColor: 'bg-category-fruits/[0.03] dark:bg-category-fruits/[0.04]', borderColor: 'border-category-fruits/15', badgeColor: 'red' },
 ];
-
-const TIPO_ESTILOS: Record<SeccionTipo, { border: string; bg: string; badgeColor: 'green' | 'red' | 'gray'; iconColor: string }> = {
-    like: { border: 'border-brand-green/20', bg: 'bg-brand-green/[0.03] dark:bg-brand-green/[0.04]', badgeColor: 'green', iconColor: 'text-brand-green-dark dark:text-brand-green' },
-    dislike: { border: 'border-category-fruits/20', bg: 'bg-category-fruits/[0.03] dark:bg-category-fruits/[0.04]', badgeColor: 'red', iconColor: 'text-category-fruits' },
-    neutral: { border: 'border-surface-border dark:border-surface-border-dark', bg: 'bg-black/[0.015] dark:bg-white/[0.02]', badgeColor: 'gray', iconColor: 'text-ink-muted dark:text-ink-muted-dark' },
-};
 
 export default function TarjetaPreferencias({ registro, onRegistrar, onEditar, bloqueada, idPaciente }: Props) {
     if (!registro) {
         return (
-            <div className="p-5">
-                <div className="flex items-center gap-2.5 mb-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-category-dairy/10">
-                        <Heart size={15} strokeWidth={1.8} className="text-ink-muted/40 dark:text-ink-muted-dark/40" />
-                    </div>
-                    <div>
-                        <h3 className="text-[13px] font-semibold text-ink dark:text-ink-dark">Preferencias alimentarias</h3>
-                        <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Gustos y afinidades del paciente</p>
-                    </div>
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-category-dairy/10">
+                    <Heart size={18} strokeWidth={1.5} className="text-ink-muted/30 dark:text-ink-muted-dark/30" />
                 </div>
-                <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark mb-4 leading-relaxed">
-                    No se han registrado preferencias. Conocer los gustos permite diseñar planes más adherentes.
-                </p>
+                <div>
+                    <p className="text-[12.5px] font-semibold text-ink dark:text-ink-dark">Sin preferencias registradas</p>
+                    <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark mt-0.5">Conocer los gustos permite diseñar planes más adherentes</p>
+                </div>
                 <Boton variante="primary" tamano="sm" onClick={onRegistrar} disabled={bloqueada}>
-                    <Plus size={13} strokeWidth={1.8} /> Registrar preferencias
+                    <Plus size={13} strokeWidth={1.8} /> Registrar
                 </Boton>
             </div>
         );
     }
 
-    // Contar secciones con datos
     const seccionesConDatos = SECCIONES.filter(s => registro[s.key]);
 
     return (
-        <div className="p-5 space-y-4">
+        <div className="space-y-4">
 
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-category-dairy/15">
-                        <Heart size={15} strokeWidth={1.8} className="text-category-dairy" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-[13px] font-bold text-ink dark:text-ink-dark">Preferencias alimentarias</h3>
-                            <Badge color="purple">{seccionesConDatos.length} categorías</Badge>
-                        </div>
-                    </div>
+            {/* Mini header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Heart size={14} strokeWidth={1.8} className="text-category-dairy" />
+                    <span className="text-[12px] font-bold text-ink dark:text-ink-dark">Preferencias</span>
+                    <Badge color="purple">{seccionesConDatos.length} categorías</Badge>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <Boton variante="primary" tamano="xs" onClick={onRegistrar}>
-                        <Plus size={11} strokeWidth={1.8} /> Nuevo
-                    </Boton>
+                    <Boton variante="primary" tamano="xs" onClick={onRegistrar}><Plus size={11} /> Nuevo</Boton>
                     {idPaciente && (
                         <Link href={`/nutricionista/pacientes/${idPaciente}/perfil-nutricional/preferencias/historial`}
-                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-black/[0.03] hover:text-ink dark:text-ink-muted-dark dark:hover:bg-white/[0.04] dark:hover:text-ink-dark">
-                            <History size={11} strokeWidth={1.8} /> Historial
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-ink-muted hover:bg-black/[0.03] dark:text-ink-muted-dark dark:hover:bg-white/[0.04]">
+                            <History size={10} /> Historial
                         </Link>
                     )}
-                    <button onClick={onEditar} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green-soft dark:text-brand-green dark:hover:bg-brand-green-dark/15">
-                        <Edit size={11} strokeWidth={1.8} /> Editar
+                    <button onClick={onEditar} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-brand-green-dark hover:bg-brand-green/10 dark:text-brand-green">
+                        <Edit size={10} /> Editar
                     </button>
                 </div>
             </div>
 
-            {/* ── Secciones con chips ── */}
-            <div className="space-y-3">
-                {SECCIONES.map(({ key, label, tipo, icono: Icon }) => {
+            {/* Grid de secciones — 2 columnas para mejor distribución */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {SECCIONES.map(({ key, label, icono: Icon, color, bgColor, borderColor, badgeColor }) => {
                     const valor = registro[key];
                     if (!valor) return null;
-                    const estilo = TIPO_ESTILOS[tipo];
-                    // Intentar parsear como items separados por coma
                     const items = String(valor).split(',').map(s => s.trim()).filter(Boolean);
 
                     return (
-                        <div key={key} className={clsx('rounded-xl border px-3.5 py-3', estilo.border, estilo.bg)}>
+                        <div key={key} className={clsx('rounded-xl border px-3.5 py-3', borderColor, bgColor)}>
                             <div className="flex items-center gap-1.5 mb-2">
-                                <Icon size={12} strokeWidth={1.8} className={estilo.iconColor} />
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{label}</p>
+                                <Icon size={12} strokeWidth={1.8} className={color} />
+                                <p className="text-[9.5px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{label}</p>
                             </div>
-                            <div className="flex flex-wrap gap-1.5">
-                                {items.length > 1 ? (
-                                    items.map((item, i) => (
-                                        <Badge key={`${key}-${i}`} color={estilo.badgeColor}>{item}</Badge>
-                                    ))
-                                ) : (
-                                    <p className="text-[11.5px] text-ink dark:text-ink-dark leading-relaxed">{String(valor)}</p>
-                                )}
+                            <div className="flex flex-wrap gap-1">
+                                {items.map((item, i) => (
+                                    <Badge key={`${key}-${i}`} color={badgeColor}>{item}</Badge>
+                                ))}
                             </div>
                         </div>
                     );
                 })}
             </div>
 
-            {/* ── Observaciones ── */}
+            {/* Observaciones */}
             {registro.observaciones && (
-                <div className="rounded-xl border border-surface-border px-4 py-3 dark:border-surface-border-dark">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-1">Observaciones</p>
-                    <p className="text-[12px] text-ink dark:text-ink-dark leading-relaxed">{String(registro.observaciones)}</p>
+                <div className="rounded-xl border border-surface-border px-3.5 py-2.5 dark:border-surface-border-dark">
+                    <p className="text-[9.5px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-1">Observaciones</p>
+                    <p className="text-[11.5px] text-ink dark:text-ink-dark leading-relaxed">{String(registro.observaciones)}</p>
                 </div>
             )}
         </div>

@@ -22,7 +22,7 @@ export default function FormularioBase({ abierto, cerrar, titulo, campos, regist
         [campos, registro],
     );
     const firmaInicial = JSON.stringify(inicial);
-    const { data, setData, post, put, processing, errors, clearErrors } = useForm<Record<string, string | number | boolean | null>>(inicial);
+    const { data, setData, post, processing, errors, clearErrors } = useForm<Record<string, string | number | boolean | null>>(inicial);
 
     useEffect(() => {
         if (! abierto) return;
@@ -34,7 +34,7 @@ export default function FormularioBase({ abierto, cerrar, titulo, campos, regist
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
         const opciones = { preserveScroll: true, onSuccess: cerrar };
-        registro ? put(url, opciones) : post(url, opciones);
+        registro ? post(`${url}?_method=PUT`, opciones) : post(url, opciones);
     };
     return (
         <div className="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">

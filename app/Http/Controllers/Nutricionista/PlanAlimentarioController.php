@@ -208,6 +208,6 @@ class PlanAlimentarioController extends Controller
 
     private function detalle(PlanAlimentario $plan): PlanAlimentario
     {
-        return $plan->refresh()->load(['recomendacionNutricionalExperta', 'requerimientoNutricional', 'dias.comidas.componentes.alimento', 'dias.comidas.componentes.receta']);
+        return $plan->refresh()->load(['recomendacionNutricionalExperta', 'requerimientoNutricional', 'dias.comidas.componentes.alimento', 'dias.comidas.componentes.receta.recetaAlimentos.alimento']);
     }
 }

@@ -12,11 +12,19 @@ export default function Sidebar() {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const rol = pathname.startsWith('/nutricionista') ? 'nutricionista'
     : pathname.startsWith('/endocrinologo') ? 'endocrinologo'
+    : pathname.startsWith('/paciente') ? 'paciente'
+    : pathname.startsWith('/admin') ? 'administrador'
+    : roles.find(r => ['administrador', 'superadministrador'].includes(r.nombre)) ? 'administrador'
     : roles.find(r => r.nombre === 'nutricionista') ? 'nutricionista'
+    : roles.find(r => r.nombre === 'paciente') ? 'paciente'
+    : roles.find(r => r.nombre === 'endocrinologo') ? 'endocrinologo'
     : 'endocrinologo';
 
   const items = getMenuPorRol(rol);
-  const dashboardHref = rol === 'nutricionista' ? '/nutricionista/dashboard' : '/endocrinologo/dashboard';
+  const dashboardHref = rol === 'nutricionista' ? '/nutricionista/dashboard'
+    : rol === 'paciente' ? '/paciente/dashboard'
+    : rol === 'administrador' ? '/admin/dashboard'
+    : '/endocrinologo/dashboard';
 
   return (
     <aside
@@ -50,7 +58,13 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#3D3A34] to-[#2C2A25] p-3.5 text-center text-white">
+      {rol === 'paciente' ? (
+        <div className="mt-auto rounded-2xl border border-brand-green/20 bg-brand-green/[0.05] p-3.5">
+          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green-dark dark:text-brand-green"><Leaf size={17} /></div>
+          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Tu bienestar, paso a paso</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Consulta tu plan y registra tu avance para que nutrición pueda acompañarte.</p>
+        </div>
+      ) : rol === 'nutricionista' ? <div className="mt-auto rounded-2xl bg-gradient-to-br from-[#3D3A34] to-[#2C2A25] p-3.5 text-center text-white">
         <div className="mx-auto mb-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-brand-green">
           <Leaf size={20} strokeWidth={1.8} />
         </div>
@@ -60,7 +74,19 @@ export default function Sidebar() {
         <button className="w-full rounded-lg bg-brand-green py-1.5 text-xs font-bold text-[#173312]">
           Reclamar ahora
         </button>
-      </div>
+      </div> : rol === 'administrador' ? (
+        <div className="mt-auto rounded-2xl border border-category-dairy/15 bg-category-dairy/[0.04] p-3.5">
+          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-category-dairy/10 text-category-dairy"><Leaf size={17} /></div>
+          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Control del sistema</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Supervisa usuarios, pacientes, auditoría y actividad desde módulos separados.</p>
+        </div>
+      ) : (
+        <div className="mt-auto rounded-2xl border border-info/15 bg-info/[0.04] p-3.5">
+          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-info/10 text-info"><Leaf size={17} /></div>
+          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Atención endocrinológica</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Gestiona consultas y abre el perfil de una paciente para completar su evaluación clínica.</p>
+        </div>
+      )}
 
       <Link
         href="/logout"

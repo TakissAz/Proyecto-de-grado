@@ -8,11 +8,26 @@ import ListaIngredientes, { type Ingrediente } from './ListaIngredientes';
 import EditorPreparacion from './EditorPreparacion';
 import ResumenNutricional from './ResumenNutricional';
 import ModalNuevoAlimento from '@/Components/Nutricion/ModalNuevoAlimento';
+import axios, { AxiosError } from 'axios';
 
 interface Props {
     abierto: boolean;
     alimentos: AlimentoOpcion[];
     onCerrar: () => void;
+    tipoComidaInicial?: string;
+    onCreada?: (receta: RecetaCreada) => void | Promise<void>;
+}
+
+export interface RecetaCreada {
+    id_receta: number;
+    nombre: string;
+    tipo_comida: string;
+    porciones: number;
+    calorias_totales: number | string;
+    proteinas_totales: number | string;
+    carbohidratos_totales: number | string;
+    grasas_totales: number | string;
+    fibra_total: number | string;
 }
 
 interface FormData {
@@ -24,14 +39,16 @@ interface FormData {
     ingredientes: Ingrediente[];
 }
 
-export default function ModalCrearReceta({ abierto, alimentos: alimentosIniciales, onCerrar }: Props) {
+export default function ModalCrearReceta({ abierto, alimentos: alimentosIniciales, onCerrar, tipoComidaInicial = '', onCreada }: Props) {
     const [alimentosLista, setAlimentosLista] = useState<AlimentoOpcion[]>(alimentosIniciales);
     const [modalAlimento, setModalAlimento] = useState(false);
     const [pasos, setPasos] = useState<string[]>(['']);
+    const [errorIntegrado, setErrorIntegrado] = useState('');
+    const [guardandoIntegrado, setGuardandoIntegrado] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm<FormData>({
         nombre: '',
-        tipo_comida: '',
+        tipo_comida: tipoComidaInicial,
         porciones: 1,
         tiempo_preparacion_minutos: '',
         preparacion: '',
@@ -72,9 +89,29 @@ export default function ModalCrearReceta({ abierto, alimentos: alimentosIniciale
         { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0, fibra: 0 }
     );
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         const prep = pasos.filter(p => p.trim()).join('\n');
+        const payload = { ...data, preparacion: prep };
+
+        if (onCreada) {
+            setGuardandoIntegrado(true);
+            setErrorIntegrado('');
+            try {
+                const respuesta = await axios.post<{ data: RecetaCreada }>('/nutricionista/recetas', payload, { headers: { Accept: 'application/json' } });
+                await onCreada(respuesta.data.data);
+                reset();
+                setPasos(['']);
+                onCerrar();
+            } catch (error) {
+                const detalle = (error as AxiosError<{ message?: string; errors?: Record<string, string[]> }>).response?.data;
+                setErrorIntegrado(Object.values(detalle?.errors ?? {})[0]?.[0] ?? detalle?.message ?? 'No se pudo crear y asignar la receta.');
+            } finally {
+                setGuardandoIntegrado(false);
+            }
+            return;
+        }
+
         data.preparacion = prep;
         post('/nutricionista/recetas', { onSuccess: () => { reset(); setPasos(['']); onCerrar(); } });
     }
@@ -175,10 +212,11 @@ export default function ModalCrearReceta({ abierto, alimentos: alimentosIniciale
                     {data.ingredientes.length > 0 && <ResumenNutricional {...totales} />}
 
                     {/* Footer */}
+                    {errorIntegrado && <div className="rounded-xl border border-category-fruits/20 bg-category-fruits/5 px-4 py-2.5 text-[11.5px] text-category-fruits">{errorIntegrado}</div>}
                     <div className="flex items-center justify-end gap-3 border-t border-surface-border pt-4 dark:border-surface-border-dark">
                         <Boton type="button" variante="ghost" tamano="sm" onClick={onCerrar}>Cancelar</Boton>
-                        <Boton type="submit" variante="primary" tamano="md" disabled={processing}>
-                            <Save size={14} strokeWidth={1.8} /> {processing ? 'Guardando...' : 'Crear receta'}
+                        <Boton type="submit" variante="primary" tamano="md" disabled={processing || guardandoIntegrado}>
+                            <Save size={14} strokeWidth={1.8} /> {processing || guardandoIntegrado ? 'Guardando...' : onCreada ? 'Crear y asignar receta' : 'Crear receta'}
                         </Boton>
                     </div>
                 </form>

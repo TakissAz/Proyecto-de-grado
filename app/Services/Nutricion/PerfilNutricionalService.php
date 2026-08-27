@@ -91,7 +91,7 @@ class PerfilNutricionalService
             'recomendacionNutricionalExperta',
             'requerimientoNutricional',
             'dias.comidas.componentes.alimento',
-            'dias.comidas.componentes.receta',
+            'dias.comidas.componentes.receta.recetaAlimentos.alimento',
         ]);
     }
 

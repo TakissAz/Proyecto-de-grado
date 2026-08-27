@@ -1,194 +1,36 @@
-﻿import { DollarSign, Users, Activity, MoreHorizontal, Filter, Plus } from 'lucide-react';
-import clsx from 'clsx';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Tarjeta, { TarjetaStat } from '@/Components/ui/tarjeta';
+import type { PageProps } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { AlertTriangle, BrainCircuit, CalendarDays, CheckCircle2, ChevronRight, ClipboardCheck, FlaskConical, HeartPulse, Stethoscope, UserPlus, Users } from 'lucide-react';
+import clsx from 'clsx';
 
-interface Paciente {
-  nombre: string;
-  diagnostico: 'Tipo 1' | 'Tipo 2' | 'Tiroides' | 'Obesidad' | 'Prediabetes';
-  glucosa: string;
-  proximaCita: string;
-  costoConsulta: string;
-  estado: 'Confirmado' | 'Pendiente';
+interface Resumen { total_pacientes: number; consultas_mes: number; pmos_confirmados: number; ri_confirmados: number; validaciones_pendientes_pmos: number; validaciones_pendientes_ri: number; citas_hoy: number }
+interface Cita { id_cita: number; id_paciente: number; paciente: string; fecha: string; hora: string; motivo: string | null; tipo_cita: string | null; modalidad: string | null; estado: string }
+interface Props extends PageProps { resumen: Resumen; proximasCitas: Cita[] }
+const etiqueta = (v?: string | null) => v?.replaceAll('_', ' ') ?? 'Sin definir';
+const fecha = (v: string) => new Date(`${v}T12:00:00`).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' });
+
+export default function Dashboard({ auth, resumen, proximasCitas }: Props) {
+    const nombre = auth?.user?.name?.split(' ')[0] ?? 'Especialista';
+    const validaciones = resumen.validaciones_pendientes_pmos + resumen.validaciones_pendientes_ri;
+    return <AuthenticatedLayout title="Panel endocrinológico"><Head title="Panel endocrinológico"/><main className="mx-auto max-w-7xl space-y-5">
+        <header className="relative overflow-hidden rounded-2xl border border-surface-border bg-white p-6 shadow-[0_8px_30px_rgba(16,24,20,.04)] dark:border-surface-border-dark dark:bg-[#1c2027] dark:shadow-none"><div className="absolute inset-y-0 left-0 w-1 bg-info"/><div className="flex flex-wrap items-center justify-between gap-5"><div className="flex items-center gap-4"><div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-info/10 text-info sm:flex"><Stethoscope size={23}/></div><div><div className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-info"/><p className="text-[9.5px] font-bold uppercase tracking-[.18em] text-info">Seguimiento endocrinológico</p></div><h1 className="mt-1.5 text-2xl font-bold tracking-tight text-ink dark:text-ink-dark">Hola, Dr. {nombre}</h1><p className="mt-1 text-[12px] text-ink-muted dark:text-ink-muted-dark">Consulta la actividad clínica, diagnósticos y validaciones prioritarias.</p></div></div><div className="flex gap-2"><Link href={route('endocrinologo.citas.index')} className="inline-flex items-center gap-2 rounded-xl border border-surface-border px-4 py-2.5 text-[11px] font-bold dark:border-surface-border-dark"><CalendarDays size={15}/> Ver agenda</Link><Link href={route('endocrinologo.pacientes.create')} className="inline-flex items-center gap-2 rounded-xl bg-info px-4 py-2.5 text-[11px] font-bold text-white"><UserPlus size={15}/> Nuevo paciente</Link></div></div></header>
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metrica icon={Users} titulo="Pacientes atendidos" valor={resumen.total_pacientes} detalle="Con consulta o diagnóstico endocrino" color="blue"/><Metrica icon={ClipboardCheck} titulo="Consultas del mes" valor={resumen.consultas_mes} detalle={`${resumen.citas_hoy} cita${resumen.citas_hoy === 1 ? '' : 's'} para hoy`} color="green"/><Metrica icon={BrainCircuit} titulo="PMOS confirmado" valor={resumen.pmos_confirmados} detalle={`${resumen.validaciones_pendientes_pmos} validación${resumen.validaciones_pendientes_pmos === 1 ? '' : 'es'} pendiente${resumen.validaciones_pendientes_pmos === 1 ? '' : 's'}`} color="purple"/><Metrica icon={FlaskConical} titulo="RI confirmada" valor={resumen.ri_confirmados} detalle={`${resumen.validaciones_pendientes_ri} validación${resumen.validaciones_pendientes_ri === 1 ? '' : 'es'} pendiente${resumen.validaciones_pendientes_ri === 1 ? '' : 's'}`} color="orange"/></section>
+
+        <section className="grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
+            <article className="rounded-2xl border border-surface-border p-5 dark:border-surface-border-dark"><Titulo icon={CalendarDays} titulo="Próximas consultas" subtitulo="Agenda endocrinológica programada" href={route('endocrinologo.citas.index')}/>{proximasCitas.length ? <div className="mt-4 overflow-hidden rounded-xl border border-surface-border/70 dark:border-surface-border-dark">{proximasCitas.map((c, i) => <Link key={c.id_cita} href={route('endocrinologo.pacientes.show', c.id_paciente)} className={clsx('flex items-center gap-3 p-3.5 transition hover:bg-info/[.025]', i && 'border-t border-surface-border/70 dark:border-surface-border-dark')}><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-[10px] font-bold text-info">{c.hora}</div><div className="min-w-0 flex-1"><p className="truncate text-[12px] font-bold">{c.paciente || 'Paciente'}</p><p className="mt-0.5 truncate text-[10px] capitalize text-ink-muted">{fecha(c.fecha)} · {etiqueta(c.tipo_cita)} · {etiqueta(c.modalidad)}</p>{c.motivo && <p className="mt-0.5 truncate text-[9.5px] text-ink-muted">{c.motivo}</p>}</div><span className={clsx('rounded-lg px-2 py-1 text-[9px] font-bold capitalize', c.estado === 'confirmada' ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-orange/10 text-brand-orange')}>{etiqueta(c.estado)}</span><ChevronRight size={14} className="text-ink-muted"/></Link>)}</div> : <Vacio texto="No tienes próximas consultas programadas."/>}</article>
+            <article className="rounded-2xl border border-surface-border p-5 dark:border-surface-border-dark"><div className="flex items-center gap-3"><Icono icon={AlertTriangle} color={validaciones ? 'orange' : 'green'}/><div><p className="text-[10px] font-bold uppercase tracking-wider text-brand-orange">Atención clínica</p><h2 className="text-[14px] font-bold">Validaciones pendientes</h2></div></div><div className="mt-4 space-y-2"><Pendiente cantidad={resumen.validaciones_pendientes_pmos} titulo="Resultados PMOS" detalle="Propuestas expertas por aprobar o rechazar"/><Pendiente cantidad={resumen.validaciones_pendientes_ri} titulo="Resultados de resistencia a la insulina" detalle="Propuestas expertas pendientes de revisión"/><Pendiente cantidad={resumen.citas_hoy} titulo="Consultas de hoy" detalle="Citas programadas o confirmadas" href={route('endocrinologo.citas.index')}/></div>{validaciones === 0 && resumen.citas_hoy === 0 && <div className="mt-4 flex items-center gap-2 rounded-xl bg-brand-green/5 p-3 text-[11px] font-semibold text-brand-green-dark dark:text-brand-green"><CheckCircle2 size={15}/> No tienes pendientes prioritarios.</div>}</article>
+        </section>
+
+        <section className="rounded-2xl border border-surface-border p-5 dark:border-surface-border-dark"><p className="text-[10px] font-bold uppercase tracking-wider text-info">Accesos clínicos</p><h2 className="mt-1 text-[15px] font-bold">¿Qué deseas gestionar?</h2><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Acceso icon={Users} titulo="Pacientes" detalle="Perfiles e historia clínica" href={route('endocrinologo.pacientes.index')}/><Acceso icon={CalendarDays} titulo="Agenda" detalle="Consultas y controles" href={route('endocrinologo.citas.index')}/><Acceso icon={UserPlus} titulo="Registrar paciente" detalle="Crear nuevo perfil" href={route('endocrinologo.pacientes.create')}/><Acceso icon={HeartPulse} titulo="Evaluación clínica" detalle="Ingresar desde un paciente" href={route('endocrinologo.pacientes.index')}/></div></section>
+    </main></AuthenticatedLayout>;
 }
 
-const diagnosticoStyles: Record<Paciente['diagnostico'], string> = {
-  'Tipo 1': 'bg-category-grains/20 text-category-grains dark:bg-category-grains/25',
-  'Tipo 2': 'bg-category-fruits/20 text-category-fruits dark:bg-category-fruits/25',
-  Tiroides: 'bg-category-veggies/20 text-category-veggies dark:bg-category-veggies/25',
-  Obesidad: 'bg-category-protein/20 text-category-protein dark:bg-category-protein/25',
-  Prediabetes: 'bg-category-dairy/20 text-category-dairy dark:bg-category-dairy/25',
-};
-
-const pacientes: Paciente[] = [
-  { nombre: 'Ana Torres', diagnostico: 'Tipo 2', glucosa: '126 mg/dL', proximaCita: '18 Jul', costoConsulta: '$45', estado: 'Confirmado' },
-  { nombre: 'Luis Fernandez', diagnostico: 'Tiroides', glucosa: '—', proximaCita: '19 Jul', costoConsulta: '$40', estado: 'Pendiente' },
-  { nombre: 'Maria Rojas', diagnostico: 'Prediabetes', glucosa: '108 mg/dL', proximaCita: '20 Jul', costoConsulta: '$35', estado: 'Confirmado' },
-  { nombre: 'Carlos Perez', diagnostico: 'Tipo 1', glucosa: '142 mg/dL', proximaCita: '21 Jul', costoConsulta: '$45', estado: 'Confirmado' },
-  { nombre: 'Sofia Vargas', diagnostico: 'Obesidad', glucosa: '—', proximaCita: '22 Jul', costoConsulta: '$50', estado: 'Pendiente' },
-];
-
-export default function Dashboard() {
-  return (
-    <AuthenticatedLayout title="Panel del Endocrinologo">
-      {/* Tarjetas de estadisticas */}
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <TarjetaStat
-          label="Ingresos del mes"
-          value="$3,450"
-          delta="+2.5%"
-          tone="green"
-          icon={<DollarSign size={17} strokeWidth={1.8} />}
-        />
-        <TarjetaStat
-          label="Pacientes activos"
-          value="128"
-          delta="+5.2%"
-          tone="orange"
-          icon={<Users size={17} strokeWidth={1.8} />}
-        />
-        <TarjetaStat
-          label="Consultas del mes"
-          value="64"
-          delta="+3.9%"
-          tone="peach"
-          icon={<Activity size={17} strokeWidth={1.8} />}
-        />
-
-        <Tarjeta>
-          <div className="mb-2 flex items-center justify-between">
-            <div>
-              <div className="text-[11.5px] text-ink-muted dark:text-ink-muted-dark">
-                Pacientes por diagnostico
-              </div>
-              <div className="text-[22px] font-bold text-ink dark:text-ink-dark">
-                128 <span className="text-[11px] font-normal text-ink-muted dark:text-ink-muted-dark">pacientes</span>
-              </div>
-            </div>
-            <MoreHorizontal size={16} className="cursor-pointer text-ink-muted dark:text-ink-muted-dark" />
-          </div>
-
-          <div className="mb-2.5 flex h-2 overflow-hidden rounded-md">
-            <div className="w-[35%] bg-category-grains" />
-            <div className="w-[28%] bg-category-fruits" />
-            <div className="w-[20%] bg-category-veggies" />
-            <div className="w-[17%] bg-category-protein" />
-          </div>
-
-          <div className="space-y-1 text-[11px]">
-            <div className="flex justify-between text-ink dark:text-ink-dark">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-category-grains" />
-                Tipo 2
-              </span>
-              <span className="text-ink-muted dark:text-ink-muted-dark">45 pacientes · 35%</span>
-            </div>
-            <div className="flex justify-between text-ink dark:text-ink-dark">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-category-fruits" />
-                Tipo 1
-              </span>
-              <span className="text-ink-muted dark:text-ink-muted-dark">36 pacientes · 28%</span>
-            </div>
-          </div>
-        </Tarjeta>
-      </div>
-
-      {/* Tabla de proximas consultas */}
-      <Tarjeta>
-        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2.5">
-          <div>
-            <h3 className="text-[15px] font-semibold text-ink dark:text-ink-dark">
-              Proximas Consultas
-            </h3>
-            <div className="mt-2 flex gap-4 border-b border-surface-border text-[12.5px] text-ink-muted dark:border-surface-border-dark dark:text-ink-muted-dark">
-              <span className="border-b-2 border-brand-green-dark pb-2 font-semibold text-brand-green-dark dark:text-brand-green">
-                Todos
-              </span>
-              <span className="cursor-pointer pb-2">Confirmados</span>
-              <span className="cursor-pointer pb-2">Pendientes</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <input
-              placeholder="Buscar paciente"
-              className="rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-1.5 text-xs
-                text-ink-muted focus:outline-none dark:border-surface-border-dark
-                dark:bg-[#20232B] dark:text-ink-muted-dark"
-            />
-            <button
-              type="button"
-              className="flex items-center gap-1 rounded-lg border border-surface-border px-3.5 py-1.5
-                text-xs text-ink dark:border-surface-border-dark dark:text-ink-dark"
-            >
-              <Filter size={12} /> Filtrar
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-1 rounded-lg bg-brand-green px-4 py-2 text-xs
-                font-bold text-white"
-            >
-              <Plus size={14} /> Nuevo paciente
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse">
-            <thead>
-              <tr className="border-b border-surface-border text-left text-[11px] font-semibold text-ink-muted dark:border-surface-border-dark dark:text-ink-muted-dark">
-                <th className="px-2.5 py-2">Paciente</th>
-                <th className="px-2.5 py-2">Diagnostico</th>
-                <th className="px-2.5 py-2">Glucosa</th>
-                <th className="px-2.5 py-2">Proxima cita</th>
-                <th className="px-2.5 py-2">Costo consulta</th>
-                <th className="px-2.5 py-2">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pacientes.map((paciente) => (
-                <tr
-                  key={paciente.nombre}
-                  className="border-b border-[#F5F2EB] text-[12.5px] dark:border-[#262A32]"
-                >
-                  <td className="px-2.5 py-2.5 font-semibold text-ink dark:text-ink-dark">
-                    {paciente.nombre}
-                  </td>
-                  <td className="px-2.5 py-2.5">
-                    <span className={clsx('pill', diagnosticoStyles[paciente.diagnostico])}>
-                      {paciente.diagnostico}
-                    </span>
-                  </td>
-                  <td className="px-2.5 py-2.5 text-ink dark:text-ink-dark">{paciente.glucosa}</td>
-                  <td className="px-2.5 py-2.5 text-ink dark:text-ink-dark">{paciente.proximaCita}</td>
-                  <td className="px-2.5 py-2.5 text-ink dark:text-ink-dark">{paciente.costoConsulta}</td>
-                  <td className="px-2.5 py-2.5">
-                    <span
-                      className={clsx(
-                        'inline-flex items-center gap-1.5 text-[11.5px] font-semibold',
-                        paciente.estado === 'Confirmado'
-                          ? 'text-brand-green-dark dark:text-brand-green'
-                          : 'text-ink-muted dark:text-ink-muted-dark'
-                      )}
-                    >
-                      <span
-                        className={clsx(
-                          'status-dot',
-                          paciente.estado === 'Confirmado'
-                            ? 'bg-brand-green-dark'
-                            : 'bg-[#E4E0D6] dark:bg-[#2B2F38]'
-                        )}
-                      />
-                      {paciente.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Tarjeta>
-    </AuthenticatedLayout>
-  );
-}
+const colores = { green: 'bg-brand-green/10 text-brand-green-dark dark:text-brand-green', orange: 'bg-brand-orange/10 text-brand-orange', blue: 'bg-info/10 text-info', purple: 'bg-category-dairy/10 text-category-dairy' };
+function Icono({ icon: Icon, color }: { icon: typeof Users; color: keyof typeof colores }) { return <div className={clsx('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', colores[color])}><Icon size={18}/></div>; }
+function Metrica({ icon, titulo, valor, detalle, color }: { icon: typeof Users; titulo: string; valor: number; detalle: string; color: keyof typeof colores }) { return <article className="rounded-2xl border border-surface-border p-4 dark:border-surface-border-dark"><Icono icon={icon} color={color}/><p className="mt-3 text-[9.5px] font-bold uppercase tracking-wider text-ink-muted">{titulo}</p><p className="mt-1 text-2xl font-bold">{valor}</p><p className="mt-1 text-[10.5px] text-ink-muted">{detalle}</p></article>; }
+function Titulo({ icon, titulo, subtitulo, href }: { icon: typeof Users; titulo: string; subtitulo: string; href: string }) { return <div className="flex items-center gap-3"><Icono icon={icon} color="blue"/><div className="flex-1"><h2 className="text-[14px] font-bold">{titulo}</h2><p className="text-[10.5px] text-ink-muted">{subtitulo}</p></div><Link href={href} className="text-[10.5px] font-bold text-info">Ver agenda</Link></div>; }
+function Pendiente({ cantidad, titulo, detalle, href = route('endocrinologo.pacientes.index') }: { cantidad: number; titulo: string; detalle: string; href?: string }) { return <Link href={href} className="flex items-center gap-3 rounded-xl border border-surface-border/70 p-3 dark:border-surface-border-dark"><div className={clsx('flex h-8 w-8 items-center justify-center rounded-lg text-[12px] font-bold', cantidad ? colores.orange : colores.green)}>{cantidad || <CheckCircle2 size={16}/>}</div><div className="min-w-0 flex-1"><p className="text-[11.5px] font-bold">{titulo}</p><p className="truncate text-[9.5px] text-ink-muted">{detalle}</p></div><ChevronRight size={14} className="text-ink-muted"/></Link>; }
+function Acceso({ icon, titulo, detalle, href }: { icon: typeof Users; titulo: string; detalle: string; href: string }) { return <Link href={href} className="group flex items-center gap-3 rounded-xl border border-surface-border p-3.5 transition hover:border-info/35 dark:border-surface-border-dark"><Icono icon={icon} color="blue"/><div className="flex-1"><p className="text-[11.5px] font-bold">{titulo}</p><p className="text-[9.5px] text-ink-muted">{detalle}</p></div><ChevronRight size={14} className="text-ink-muted transition group-hover:translate-x-0.5"/></Link>; }
+function Vacio({ texto }: { texto: string }) { return <div className="mt-4 flex flex-col items-center rounded-xl bg-black/[.025] p-8 text-center dark:bg-white/[.025]"><CalendarDays size={25} className="text-ink-muted/40"/><p className="mt-2 text-[11px] text-ink-muted">{texto}</p></div>; }

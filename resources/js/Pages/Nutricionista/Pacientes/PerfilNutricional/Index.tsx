@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
-import { Download, Info, Utensils, ClipboardList, Target, BrainCircuit, TrendingUp } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowRight, Download, History, Info, Utensils, ClipboardList, Target, BrainCircuit, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
 import { Desplegable } from '@/Components/ui/desplegable';
@@ -19,7 +19,6 @@ import SeguimientoPacientePanel from '@/Components/nutricionista/seguimiento/Seg
 import RetroalimentacionPacientePanel from '@/Components/nutricionista/seguimiento/RetroalimentacionPacientePanel';
 import ResumenAjustePlanCard from '@/Components/nutricionista/seguimiento/ResumenAjustePlanCard';
 import AnaliticaEvolucionPanel from '@/Components/nutricionista/analitica/AnaliticaEvolucionPanel';
-import HistorialPlanesNutricionista from '@/Components/nutricionista/planes/HistorialPlanesNutricionista';
 import AlertasNutricionistaPanel from '@/Components/nutricionista/alertas/AlertasNutricionistaPanel';
 import SugerenciasAjusteNutricionalPanel from '@/Components/nutricionista/ajustes/SugerenciasAjusteNutricionalPanel';
 import PrediccionRiesgoAdherenciaCard from '@/Components/nutricionista/prediccion/PrediccionRiesgoAdherenciaCard';
@@ -40,11 +39,17 @@ const STEPS: { id: StepId; label: string; icono: typeof ClipboardList; desc: str
 export default function Index(props: PerfilProps) {
     const [modal, setModal] = useState<Seccion>(null);
     const [stepActivo, setStepActivo] = useState<StepId>('valoracion');
-    const [modalEval, setModalEval] = useState(false);
-    const [modalHabitos, setModalHabitos] = useState(false);
+    const [tabPrefRest, setTabPrefRest] = useState<'pref' | 'rest'>('pref');
+    const [modalEvalEditar, setModalEvalEditar] = useState(false);
+    const [modalEvalCrear, setModalEvalCrear] = useState(false);
+    const [modalHabitosEditar, setModalHabitosEditar] = useState(false);
+    const [modalHabitosCrear, setModalHabitosCrear] = useState(false);
     const [modalPref, setModalPref] = useState(false);
+    const [modalPrefCrear, setModalPrefCrear] = useState(false);
     const [modalRest, setModalRest] = useState(false);
-    const [modalObj, setModalObj] = useState(false);
+    const [modalRestCrear, setModalRestCrear] = useState(false);
+    const [modalObjEditar, setModalObjEditar] = useState(false);
+    const [modalObjCrear, setModalObjCrear] = useState(false);
     const flash = usePage<PageProps & { flash?: { success?: string; error?: string } }>().props.flash;
     const registros = [props.consulta, props.evaluacion, props.habitos, props.preferencias, props.restricciones, props.objetivo];
     const bloqueada = !props.consulta;
@@ -107,19 +112,28 @@ export default function Index(props: PerfilProps) {
                             {stepActivo === 'valoracion' && (
                                 <>
                                     <Desplegable titulo="Evaluación nutricional" tiene={!!props.evaluacion}>
-                                        <TarjetaEvaluacion registro={props.evaluacion} onRegistrar={() => setModalEval(true)} onEditar={() => setModalEval(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                        <TarjetaEvaluacion registro={props.evaluacion} onRegistrar={() => setModalEvalCrear(true)} onEditar={() => setModalEvalEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
                                     <Desplegable titulo="Hábitos alimentarios" tiene={!!props.habitos}>
-                                        <TarjetaHabitos registro={props.habitos} onRegistrar={() => setModalHabitos(true)} onEditar={() => setModalHabitos(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                        <TarjetaHabitos registro={props.habitos} onRegistrar={() => setModalHabitosCrear(true)} onEditar={() => setModalHabitosEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
-                                    <Desplegable titulo="Preferencias alimentarias" tiene={!!props.preferencias}>
-                                        <TarjetaPreferencias registro={props.preferencias} onRegistrar={() => setModalPref(true)} onEditar={() => setModalPref(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
-                                    </Desplegable>
-                                    <Desplegable titulo="Restricciones alimentarias" tiene={!!props.restricciones}>
-                                        <TarjetaRestricciones registro={props.restricciones} onRegistrar={() => setModalRest(true)} onEditar={() => setModalRest(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                    <Desplegable titulo="Preferencias y restricciones" tiene={!!props.preferencias || !!props.restricciones}>
+                                        <div className="p-5 space-y-4">
+                                            {/* Tabs internos */}
+                                            <div className="flex gap-1 rounded-lg bg-black/[0.02] p-1 dark:bg-white/[0.03]">
+                                                <TabInterno id="pref" activo={tabPrefRest === 'pref'} onClick={() => setTabPrefRest('pref')} label="Preferencias" tiene={!!props.preferencias} />
+                                                <TabInterno id="rest" activo={tabPrefRest === 'rest'} onClick={() => setTabPrefRest('rest')} label="Restricciones" tiene={!!props.restricciones} />
+                                            </div>
+                                            {tabPrefRest === 'pref' && (
+                                                <TarjetaPreferencias registro={props.preferencias} onRegistrar={() => setModalPrefCrear(true)} onEditar={() => setModalPref(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                            )}
+                                            {tabPrefRest === 'rest' && (
+                                                <TarjetaRestricciones registro={props.restricciones} onRegistrar={() => setModalRestCrear(true)} onEditar={() => setModalRest(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                            )}
+                                        </div>
                                     </Desplegable>
                                     <Desplegable titulo="Objetivos nutricionales" tiene={!!props.objetivo}>
-                                        <TarjetaObjetivos registro={props.objetivo} onRegistrar={() => setModalObj(true)} onEditar={() => setModalObj(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
+                                        <TarjetaObjetivos registro={props.objetivo} onRegistrar={() => setModalObjCrear(true)} onEditar={() => setModalObjEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
                                 </>
                             )}
@@ -143,7 +157,25 @@ export default function Index(props: PerfilProps) {
                                 <Desplegable titulo="Plan alimentario" tiene={!!props.planAlimentarioPrincipal} defaultAbierto>
                                     <div className="p-4 space-y-3">
                                         <PlanAlimentarioCard plan={props.planAlimentarioPrincipal} recomendacion={props.recomendacionExpertaAprobada} puedeGenerar={props.puedeGenerarPlanSemanal} alimentos={props.alimentosPlan} recetas={props.recetasPlan} />
-                                        <HistorialPlanesNutricionista historial={props.historialPlanes} />
+                                        <Link
+                                            href={route('nutricionista.pacientes.planes-alimentarios.historial', props.paciente.id_paciente)}
+                                            className="group flex items-center justify-between gap-4 rounded-xl border border-surface-border bg-black/[0.015] p-4 transition-colors hover:border-brand-green/30 hover:bg-brand-green/[0.035] dark:border-surface-border-dark dark:bg-white/[0.02] dark:hover:bg-brand-green/[0.05]"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/12 text-brand-green-dark dark:text-brand-green">
+                                                    <History size={17} strokeWidth={1.8} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[12.5px] font-bold text-ink dark:text-ink-dark">Historial de planes alimentarios</p>
+                                                    <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                                        {props.historialPlanes.total_planes} plan(es) registrados. Consulta planes anteriores, fundamentos y cambios.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-brand-green-dark dark:text-brand-green">
+                                                Ver historial <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+                                            </span>
+                                        </Link>
                                     </div>
                                 </Desplegable>
                             )}
@@ -204,11 +236,38 @@ export default function Index(props: PerfilProps) {
 
             {/* Modales */}
             <FormularioConsultaNutricional {...comunes} abierto={modal === 'consulta'} registro={props.consulta} opciones={props.opciones} />
-            <ModalEvaluacion abierto={modalEval} cerrar={() => setModalEval(false)} registro={props.evaluacion} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
-            <ModalHabitos abierto={modalHabitos} cerrar={() => setModalHabitos(false)} registro={props.habitos} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalEvaluacion abierto={modalEvalEditar} cerrar={() => setModalEvalEditar(false)} registro={props.evaluacion} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalEvaluacion abierto={modalEvalCrear} cerrar={() => setModalEvalCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalHabitos abierto={modalHabitosEditar} cerrar={() => setModalHabitosEditar(false)} registro={props.habitos} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalHabitos abierto={modalHabitosCrear} cerrar={() => setModalHabitosCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
             <ModalPreferencias abierto={modalPref} cerrar={() => setModalPref(false)} registro={props.preferencias} pacienteId={props.paciente.id_paciente} />
+            <ModalPreferencias abierto={modalPrefCrear} cerrar={() => setModalPrefCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} />
             <ModalRestricciones abierto={modalRest} cerrar={() => setModalRest(false)} registro={props.restricciones} pacienteId={props.paciente.id_paciente} />
-            <ModalObjetivos abierto={modalObj} cerrar={() => setModalObj(false)} registro={props.objetivo} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalRestricciones abierto={modalRestCrear} cerrar={() => setModalRestCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} />
+            <ModalObjetivos abierto={modalObjEditar} cerrar={() => setModalObjEditar(false)} registro={props.objetivo} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
+            <ModalObjetivos abierto={modalObjCrear} cerrar={() => setModalObjCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
         </AuthenticatedLayout>
+    );
+}
+
+
+function TabInterno({ id, activo, onClick, label, tiene }: { id: string; activo: boolean; onClick: () => void; label: string; tiene: boolean }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={clsx(
+                'flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11.5px] font-semibold transition-all',
+                activo
+                    ? 'bg-surface-card shadow-sm text-ink dark:bg-surface-card-dark dark:text-ink-dark'
+                    : 'text-ink-muted hover:text-ink dark:text-ink-muted-dark dark:hover:text-ink-dark',
+            )}
+        >
+            {tiene
+                ? <CheckCircle2 size={12} strokeWidth={1.8} className="text-brand-green-dark dark:text-brand-green" />
+                : <Circle size={12} strokeWidth={1.8} className="text-ink-muted/40 dark:text-ink-muted-dark/40" />
+            }
+            {label}
+        </button>
     );
 }

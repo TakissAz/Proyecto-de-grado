@@ -1,92 +1,30 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import { ImageIcon, ShieldCheck } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 
-// Cuando tengas la imagen institucional, coloca su ruta pública aquí.
-// Ejemplo: const COVER_IMAGE = '/images/login/portada-nutricional.webp';
-const COVER_IMAGE = '';
-
 export default function Guest({ children }: PropsWithChildren) {
-    const portada = COVER_IMAGE
-        ? {
-            backgroundImage: `linear-gradient(180deg, rgba(17, 55, 47, 0.28), rgba(13, 39, 35, 0.88)), url('${COVER_IMAGE}')`,
-        }
-        : undefined;
+    return <main className="min-h-screen bg-[#f8faf7] text-ink dark:bg-surface-bg-dark dark:text-ink-dark">
+        <div className="grid min-h-screen lg:grid-cols-[minmax(500px,1.05fr)_minmax(460px,.95fr)]">
+            <section className="relative hidden min-h-screen overflow-hidden bg-[#263326] text-white lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
+                <img src="/images/login/hero-nutrigo.png" alt="Alimentos frescos para una nutrición integral" className="absolute inset-0 h-full w-full object-cover object-center" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/[.08] to-[#102019]/95" aria-hidden="true" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/15 via-transparent to-transparent" aria-hidden="true" />
 
-    return (
-        <main className="min-h-screen bg-surface-bg text-ink dark:bg-surface-bg-dark dark:text-ink-dark">
-            <div className="grid min-h-screen lg:grid-cols-[minmax(420px,0.92fr)_minmax(540px,1.08fr)]">
-                <section
-                    className="relative hidden overflow-hidden bg-[#173f38] bg-cover bg-center text-white lg:flex lg:min-h-screen lg:flex-col lg:justify-between lg:p-10 xl:p-14"
-                    style={portada}
-                >
-                    {!COVER_IMAGE && (
-                        <div className="absolute inset-0" aria-hidden="true">
-                            <div className="absolute -left-24 -top-20 h-96 w-96 rounded-full bg-brand-green/20 blur-3xl" />
-                            <div className="absolute -bottom-24 -right-12 h-[30rem] w-[30rem] rounded-full bg-brand-orange/15 blur-3xl" />
-                            <div className="absolute inset-0 opacity-[0.09] [background-image:radial-gradient(circle_at_center,white_1px,transparent_1px)] [background-size:26px_26px]" />
-                        </div>
-                    )}
+                <div />
 
-                    <div className="relative z-10 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <span className="grid size-11 place-items-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm">
-                                <ApplicationLogo className="size-6 fill-current text-white" />
-                            </span>
-                            <div>
-                                <p className="text-lg font-black leading-none tracking-tight">Sistema PMOS</p>
-                                <p className="mt-1 text-[11px] text-white/65">Gestión clínica y nutricional</p>
-                            </div>
-                        </div>
-                        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.15em] backdrop-blur-sm">
-                            <ShieldCheck size={13} /> Acceso seguro
-                        </span>
-                    </div>
+                <div className="relative z-10 max-w-lg">
+                    <h1 className="max-w-xl text-5xl font-black leading-[1.06] tracking-[-.04em] xl:text-[58px]">Alcanzá tus metas<br/>con <span className="italic text-[#83df76]">acompañamiento</span><br/>profesional.</h1>
+                    <p className="mt-5 max-w-md text-[15px] leading-7 text-white/70">Conectamos pacientes y nutricionistas<br/>para un camino más saludable.</p>
+                </div>
+            </section>
 
-                    <div className="relative z-10 max-w-xl">
-                        {!COVER_IMAGE && (
-                            <div className="mb-8 inline-flex items-center gap-2 rounded-2xl border border-dashed border-white/25 bg-white/[0.06] px-4 py-3 text-xs text-white/65">
-                                <ImageIcon size={16} /> Espacio preparado para la imagen institucional
-                            </div>
-                        )}
-                        <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-white/75">
-                            Sistema PMOS
-                        </p>
-                        <h1 className="max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.045em] xl:text-6xl">
-                            Almendra
-                            <br />
-                            Nutrición Integral
-                        </h1>
-                        <p className="mt-6 max-w-md text-[15px] leading-7 text-white/80">
-                            Plataforma de gestión clínica y nutricional para el equipo del consultorio.
-                        </p>
-                    </div>
-
-                    <p className="relative z-10 text-[11px] text-white/55">
-                        Solo el personal autorizado puede acceder al sistema.
-                    </p>
-                </section>
-
-                <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-12">
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
-                        <div className="absolute -right-20 -top-24 size-72 rounded-full bg-brand-green/10 blur-3xl" />
-                        <div className="absolute -bottom-24 -left-16 size-72 rounded-full bg-brand-orange/10 blur-3xl" />
-                    </div>
-
-                    <div className="relative z-10 w-full max-w-[430px]">
-                        <div className="mb-9 flex items-center gap-3 lg:hidden">
-                            <span className="grid size-11 place-items-center rounded-2xl bg-brand-green-dark text-white shadow-lg shadow-brand-green-dark/15">
-                                <ApplicationLogo className="size-6 fill-current" />
-                            </span>
-                            <div>
-                                <p className="font-black leading-none">Sistema PMOS</p>
-                                <p className="mt-1 text-[11px] text-ink-muted dark:text-ink-muted-dark">Gestión clínica y nutricional</p>
-                            </div>
-                        </div>
-                        {children}
-                    </div>
-                </section>
-            </div>
-        </main>
-    );
+            <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-10 sm:px-8 lg:px-12">
+                <div className="pointer-events-none absolute inset-0" aria-hidden="true"><div className="absolute -right-28 -top-28 size-80 rounded-full bg-brand-green/[.08] blur-3xl"/><div className="absolute -bottom-28 -left-20 size-72 rounded-full bg-brand-orange/[.055] blur-3xl"/></div>
+                <div className="relative z-10 w-full max-w-[440px]">
+                    <div className="mb-8 flex items-center gap-3 lg:hidden"><span className="grid size-11 place-items-center rounded-2xl bg-brand-green text-white shadow-lg shadow-brand-green/20"><ApplicationLogo className="size-6 fill-current"/></span><div><p className="font-black leading-none">Nutrigo</p><p className="mt-1 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Salud endocrina y nutrición integral</p></div></div>
+                    <div className="rounded-[24px] border border-surface-border/80 bg-white p-6 shadow-[0_24px_70px_rgba(28,48,28,.08)] sm:p-8 dark:border-surface-border-dark dark:bg-surface-card-dark dark:shadow-black/20">{children}</div>
+                    <p className="mt-5 text-center text-[10px] text-ink-muted/70 dark:text-ink-muted-dark/70">© {new Date().getFullYear()} Nutrigo · Plataforma de atención integral</p>
+                </div>
+            </section>
+        </div>
+    </main>;
 }

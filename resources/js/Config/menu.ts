@@ -1,15 +1,18 @@
 import {
   LayoutDashboard,
+  Activity,
   Calendar,
   CalendarClock,
   MessageSquare,
   Salad,
   ClipboardList,
   TrendingUp,
-  Dumbbell,
-  HeartPulse,
   Users,
   CookingPot,
+  ShoppingCart,
+  UserCog,
+  ShieldCheck,
+  DatabaseBackup,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -34,50 +37,24 @@ export const menuEndocrinologo: MenuItem[] = [
     icon: LayoutDashboard,
   },
   {
+    label: 'Pacientes',
+    href: '/endocrinologo/pacientes',
+    icon: Users,
+  },
+  {
     label: 'Citas',
     href: '/endocrinologo/citas',
     icon: CalendarClock,
   },
-  {
-    label: 'Calendario',
-    href: '/endocrinologo/calendario',
-    icon: Calendar,
-  },
-  {
-    label: 'Mensajes',
-    href: '/endocrinologo/mensajes',
-    icon: MessageSquare,
-    badge: 3,
-  },
-  {
-    label: 'Menu Saludable',
-    href: '/endocrinologo/menu',
-    icon: Salad,
-  },
-  {
-    label: 'Plan de Consulta',
-    href: '/endocrinologo/plan',
-    icon: ClipboardList,
-    children: [
-      { label: 'Lista de Pacientes', href: '/endocrinologo/pacientes' },
-      { label: 'Historial Clinico', href: '/endocrinologo/historial' },
-    ],
-  },
-  {
-    label: 'Progreso',
-    href: '/endocrinologo/progreso',
-    icon: TrendingUp,
-  },
-  {
-    label: 'Ejercicios',
-    href: '/endocrinologo/ejercicios',
-    icon: Dumbbell,
-  },
-  {
-    label: 'Salud General',
-    href: '/endocrinologo/salud',
-    icon: HeartPulse,
-  },
+];
+
+export const menuAdministrador: MenuItem[] = [
+  { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { label: 'Usuarios', href: '/admin/users', icon: UserCog },
+  { label: 'Pacientes', href: '/admin/pacientes', icon: Users },
+  { label: 'Auditoría', href: '/admin/auditoria/pacientes', icon: ShieldCheck },
+  { label: 'Actividad', href: '/admin/auditoria/actividad', icon: Activity },
+  { label: 'Base de datos', href: '/admin/base-datos', icon: DatabaseBackup },
 ];
 
 /* ═══ Menú Nutricionista ═══ */
@@ -114,12 +91,53 @@ export const menuNutricionista: MenuItem[] = [
   },
 ];
 
+/* ═══ Menú Paciente ═══ */
+export const menuPaciente: MenuItem[] = [
+  {
+    label: 'Inicio',
+    href: '/paciente/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'Mi Plan',
+    href: '/paciente/mi-plan',
+    icon: Salad,
+  },
+  {
+    label: 'Seguimiento',
+    href: '/paciente/seguimiento',
+    icon: ClipboardList,
+  },
+  {
+    label: 'Lista de compras',
+    href: '/paciente/compras',
+    icon: ShoppingCart,
+  },
+  {
+    label: 'Orientación',
+    href: '/paciente/orientacion',
+    icon: MessageSquare,
+  },
+  {
+    label: 'Historial',
+    href: '/paciente/historial',
+    icon: CalendarClock,
+  },
+  {
+    label: 'Citas',
+    href: '/paciente/citas',
+    icon: Calendar,
+  },
+];
+
 /* ═══ Default (fallback) ═══ */
 export const menuItems = menuEndocrinologo;
 
 /* ═══ Selector por rol ═══ */
 export function getMenuPorRol(rol: string): MenuItem[] {
+  if (rol === 'administrador' || rol === 'superadministrador') return menuAdministrador;
   if (rol === 'nutricionista') return menuNutricionista;
   if (rol === 'endocrinologo') return menuEndocrinologo;
+  if (rol === 'paciente') return menuPaciente;
   return menuEndocrinologo;
 }

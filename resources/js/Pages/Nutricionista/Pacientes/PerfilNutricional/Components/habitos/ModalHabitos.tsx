@@ -19,7 +19,7 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
     const id = registro?.id_habito_alimentario;
     const url = `/nutricionista/pacientes/${pacienteId}/perfil-nutricional/habitos${id ? `/${id}` : ''}`;
 
-    const { data, setData, post, put, processing, errors, clearErrors } = useForm({
+    const valoresIniciales = {
         comidas_por_dia: String(registro?.comidas_por_dia ?? ''),
         consumo_agua_litros: String(registro?.consumo_agua_litros ?? ''),
         consumo_azucar: String(registro?.consumo_azucar ?? ''),
@@ -33,16 +33,21 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
         ansiedad_por_comida: Boolean(registro?.ansiedad_por_comida),
         hambre_nocturna: Boolean(registro?.hambre_nocturna),
         observaciones: String(registro?.observaciones ?? ''),
-    });
+    };
+    const { data, setData, post, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
 
-    useEffect(() => { if (abierto) clearErrors(); }, [abierto]);
+    useEffect(() => {
+        if (!abierto) return;
+        setData(valoresIniciales);
+        clearErrors();
+    }, [abierto, id]);
 
     if (!abierto) return null;
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        const opts = { preserveScroll: true, onSuccess: cerrar };
-        registro ? put(url, opts) : post(url, opts);
+        const opts = { preserveScroll: true, onSuccess: () => { reset(); cerrar(); } };
+        registro ? post(`${url}?_method=PUT`, opts) : post(url, opts);
     };
 
     const FrecuenciaSelector = ({ campo, label }: { campo: string; label: string }) => (

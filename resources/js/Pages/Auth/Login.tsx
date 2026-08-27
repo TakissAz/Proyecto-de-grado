@@ -31,15 +31,15 @@ export default function Login({
         <GuestLayout>
             <Head title="Iniciar sesión" />
 
-            <div className="mb-8">
-                <span className="mb-5 grid size-11 place-items-center rounded-2xl bg-brand-green-soft text-brand-green-dark dark:bg-brand-green-dark/20 dark:text-brand-green">
+            <div className="mb-7">
+                <span className="mb-5 grid size-11 place-items-center rounded-2xl bg-brand-green/10 text-brand-green-dark dark:bg-brand-green/15 dark:text-brand-green">
                     <LogIn size={20} strokeWidth={1.8} />
                 </span>
                 <h1 className="text-3xl font-black tracking-[-0.035em] text-ink dark:text-ink-dark sm:text-[34px]">
-                    Bienvenido
+                    Bienvenido a Nutrigo
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-ink-muted dark:text-ink-muted-dark">
-                    Ingresa tus credenciales para acceder al sistema.
+                    Ingresa tus credenciales para continuar con tu atención.
                 </p>
             </div>
 
@@ -122,7 +122,7 @@ export default function Login({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-brand-green-dark px-5 text-sm font-bold text-white shadow-lg shadow-brand-green-dark/15 transition hover:bg-[#205f51] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-brand-green dark:text-[#102c27]"
+                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-brand-green px-5 text-sm font-bold text-white shadow-lg shadow-brand-green/20 transition hover:-translate-y-0.5 hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-60 dark:bg-brand-green dark:text-white"
                 >
                     {processing ? (
                         <>

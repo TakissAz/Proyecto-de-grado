@@ -89,6 +89,14 @@ class PerfilNutricionalController extends Controller
         ]);
     }
 
+    public function historialPlanes(Paciente $paciente): Response
+    {
+        return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialPlanes', [
+            'paciente' => $paciente,
+            'historialPlanes' => $this->service->historialPlanes($paciente),
+        ]);
+    }
+
     public function storeConsulta(StoreConsultaNutricionalRequest $request, Paciente $paciente): RedirectResponse
     {
         $this->service->crearConsulta($paciente, Auth::id(), $request->validated());

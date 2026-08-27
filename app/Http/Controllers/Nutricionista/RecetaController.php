@@ -11,6 +11,7 @@ use App\Models\Alimento;
 use App\Models\Receta;
 use App\Services\Nutricion\RecetaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,9 +50,17 @@ class RecetaController extends Controller
         ]);
     }
 
-    public function store(StoreRecetaRequest $request): RedirectResponse
+    public function store(StoreRecetaRequest $request): RedirectResponse|JsonResponse
     {
-        $this->recetaService->crear($request->validated());
+        $receta = $this->recetaService->crear($request->validated());
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Receta creada correctamente.',
+                'data' => new RecetaResource($receta),
+            ], 201);
+        }
 
         return redirect()
             ->route('nutricionista.recetas.index')

@@ -100,7 +100,9 @@ class CitasPacienteServiceTest extends TestCase
 
     public function test_no_existen_rutas_de_citas_paciente_con_ids(): void
     {
-        $rutas = collect(Route::getRoutes())->filter(fn ($ruta) => str_starts_with($ruta->uri(), 'paciente/') && str_contains($ruta->uri(), 'cita'));
+        $rutas = collect(Route::getRoutes())->filter(fn ($ruta) => str_starts_with($ruta->uri(), 'paciente/')
+            && str_contains($ruta->uri(), 'cita')
+            && str_contains($ruta->uri(), '{'));
         $this->assertCount(0, $rutas);
     }
 
