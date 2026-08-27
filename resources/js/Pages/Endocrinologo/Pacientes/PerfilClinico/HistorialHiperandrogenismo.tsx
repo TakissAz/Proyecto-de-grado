@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Calendar, FileDown, TrendingUp } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
 import clsx from 'clsx';
@@ -22,9 +22,38 @@ interface Props extends PageProps {
 export default function HistorialHiperandrogenismo({ paciente, registros }: Props) {
     const id = paciente.id_paciente;
     const [pagina, setPagina] = useState(1);
+    const [signo, setSigno] = useState('');
+    const [progresion, setProgresion] = useState('');
+    const [desde, setDesde] = useState('');
+    const [hasta, setHasta] = useState('');
     const porPagina = 10;
-    const totalPaginas = Math.ceil(registros.length / porPagina);
-    const registrosPaginados = registros.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+    const registrosFiltrados = useMemo(() => {
+        return registros.filter(r => {
+            if (signo && !(r as unknown as Record<string, boolean>)[signo]) return false;
+            if (progresion && r.progresion_sintomas !== progresion) return false;
+            const fecha = (r.created_at ?? '').slice(0, 10);
+            if (desde && fecha < desde) return false;
+            if (hasta && fecha > hasta) return false;
+            return true;
+        });
+    }, [registros, signo, progresion, desde, hasta]);
+
+    const totalPaginas = Math.ceil(registrosFiltrados.length / porPagina);
+    const registrosPaginados = registrosFiltrados.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+    const urlPdf = useMemo(() => {
+        const params = new URLSearchParams();
+        if (signo) params.set('signo', signo);
+        if (progresion) params.set('progresion', progresion);
+        if (desde) params.set('desde', desde);
+        if (hasta) params.set('hasta', hasta);
+        const qs = params.toString();
+        return `/endocrinologo/pacientes/${id}/hiperandrogenismo/reporte-pdf${qs ? `?${qs}` : ''}`;
+    }, [id, signo, progresion, desde, hasta]);
+
+    const hayFiltros = signo || progresion || desde || hasta;
+    const limpiar = () => { setSigno(''); setProgresion(''); setDesde(''); setHasta(''); setPagina(1); };
 
     return (
         <AuthenticatedLayout title="Historial hiperandrogenismo">
@@ -66,6 +95,59 @@ export default function HistorialHiperandrogenismo({ paciente, registros }: Prop
                     </div>
                 </div>
 
+                {/* Barra de filtros + PDF */}
+                {registros.length > 0 && (
+                    <div className="card-elevated p-4">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[140px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Signo</label>
+                                <select value={signo} onChange={e => { setSigno(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                    <option value="">Todos</option>
+                                    <option value="acne">Acné</option>
+                                    <option value="hirsutismo">Hirsutismo</option>
+                                    <option value="alopecia_androgenica">Alopecia androgénica</option>
+                                    <option value="seborrea">Seborrea</option>
+                                </select>
+                            </div>
+                            <div className="flex-1 min-w-[140px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Progresión</label>
+                                <select value={progresion} onChange={e => { setProgresion(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                    <option value="">Todas</option>
+                                    <option value="estable">Estable</option>
+                                    <option value="progresivo">Progresivo</option>
+                                    <option value="regresivo">Regresivo</option>
+                                </select>
+                            </div>
+                            <div className="min-w-[120px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Desde</label>
+                                <input type="date" value={desde} onChange={e => { setDesde(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            <div className="min-w-[120px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Hasta</label>
+                                <input type="date" value={hasta} onChange={e => { setHasta(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            {hayFiltros && (
+                                <button type="button" onClick={limpiar} className="rounded-lg px-3 py-2 text-[11px] font-semibold text-ink-muted hover:bg-black/[0.03] dark:text-ink-muted-dark dark:hover:bg-white/[0.04]">
+                                    Limpiar
+                                </button>
+                            )}
+                            <a href={urlPdf} target="_blank" rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-orange/15 px-4 py-2 text-[11.5px] font-semibold text-brand-orange hover:bg-brand-orange/25 transition-colors">
+                                <FileDown size={14} strokeWidth={1.8} /> Descargar PDF
+                            </a>
+                        </div>
+                        {hayFiltros && (
+                            <p className="mt-2.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                {registrosFiltrados.length} de {registros.length} registros coinciden con los filtros.
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {registros.length === 0 ? (
                     <div className="card-elevated flex flex-col items-center gap-2 px-5 py-14 text-center">
                         <AlertTriangle size={28} strokeWidth={1.2} className="text-ink-muted/40 dark:text-ink-muted-dark/40" />
@@ -78,11 +160,15 @@ export default function HistorialHiperandrogenismo({ paciente, registros }: Prop
                         <div className="space-y-3">
                             <div className="flex items-center justify-between mb-1">
                                 <p className="text-[12px] font-semibold text-ink dark:text-ink-dark">Registros cronológicos</p>
-                                <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Mostrando {registrosPaginados.length} de {registros.length}</p>
+                                <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Mostrando {registrosPaginados.length} de {registrosFiltrados.length}</p>
                             </div>
 
-                            {registrosPaginados.map((r, idx) => (
-                                <RegistroCard key={r.id_historia_hiperandrogenica} registro={r} numero={registros.length - ((pagina - 1) * porPagina + idx)} />
+                            {registrosFiltrados.length === 0 ? (
+                                <div className="card-elevated px-5 py-10 text-center">
+                                    <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark">Ningún registro coincide con los filtros.</p>
+                                </div>
+                            ) : registrosPaginados.map((r, idx) => (
+                                <RegistroCard key={r.id_historia_hiperandrogenica} registro={r} numero={registrosFiltrados.length - ((pagina - 1) * porPagina + idx)} />
                             ))}
 
                             {totalPaginas > 1 && (

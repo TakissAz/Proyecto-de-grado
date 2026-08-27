@@ -48,6 +48,12 @@ class MotorReglasNutricionalesService
                 'nombre' => $regla->nombre,
                 'tipo_regla' => $tipo,
                 'prioridad' => $regla->prioridad,
+                'descripcion' => $regla->descripcion,
+                'fuente' => $regla->fuente,
+                'condicion_campo' => $regla->condicion_campo,
+                'condicion_operador' => $regla->condicion_operador,
+                'condicion_valor' => $regla->condicion_valor,
+                'resultado' => $regla->resultado,
             ];
         }
 

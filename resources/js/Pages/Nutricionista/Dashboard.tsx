@@ -12,7 +12,7 @@ const fecha = (valor: string) => new Date(`${valor}T12:00:00`).toLocaleDateStrin
 const etiqueta = (valor?: string | null) => valor?.replaceAll('_', ' ') ?? 'Sin definir';
 
 export default function Dashboard({ auth, resumen, proximasCitas }: Props) {
-    const nombre = auth?.user?.name?.split(' ')[0] ?? 'Nutricionista';
+    const nombre = auth?.user?.name?.trim().replace(/^(lic\.?|dra?\.?|nut\.?)\s+/i, '').split(/\s+/)[0] || 'Nutricionista';
     const tareas = resumen.planes_por_aprobar + resumen.seguimientos_por_revisar;
 
     return <AuthenticatedLayout title="Panel nutricional">

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ClipboardList, SquarePen, FileText, CheckCircle2, X, ArrowLeft } from 'lucide-react';
+import { ClipboardList, SquarePen, FileText, CheckCircle2, X, ArrowLeft, Leaf } from 'lucide-react';
 import clsx from 'clsx';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
 import EstadoPill from '@/Components/ui/estado-pill';
@@ -30,12 +30,13 @@ export default function PerfilCabecera({
 }: Props) {
     return (
         <div className="card-elevated overflow-hidden">
-            {/* Cover — patrón geométrico sutil */}
-            <div className="relative h-24 overflow-hidden bg-[#F7F5F0] dark:bg-[#1E2124]">
+            {/* Cover — gradiente verde con decoración */}
+            <div className="relative h-28 overflow-hidden bg-gradient-to-br from-brand-green/25 via-brand-green/10 to-brand-orange/10 dark:from-brand-green/15 dark:via-brand-green/[0.06] dark:to-brand-orange/[0.06]">
                 {/* Decoración: círculos difusos */}
-                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-green/[0.07] dark:bg-brand-green/[0.04]" />
-                <div className="absolute left-1/3 -bottom-6 h-24 w-24 rounded-full bg-brand-orange/[0.06] dark:bg-brand-orange/[0.03]" />
-                <div className="absolute right-1/4 top-2 h-16 w-16 rounded-full bg-category-others/[0.05] dark:bg-category-others/[0.03]" />
+                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-green/15 blur-2xl" />
+                <div className="absolute left-1/3 -bottom-8 h-28 w-28 rounded-full bg-brand-orange/15 blur-2xl" />
+                {/* Hoja decorativa */}
+                <Leaf size={120} className="absolute -right-4 top-2 text-white/10 dark:text-white/[0.04] rotate-12" />
 
                 {/* Volver */}
                 <Link

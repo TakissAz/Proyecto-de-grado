@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Nutricion\CalculadoraTotalesPlanAlimentarioService;
 use App\Services\Nutricion\GeneradorPlanSemanalService;
 use App\Services\Nutricion\PerfilNutricionalService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +39,7 @@ class PlanAlimentarioController extends Controller
 
     public function generarDesdeRecomendacion(Request $request, RecomendacionNutricionalExperta $recomendacion): JsonResponse
     {
-        $datos = $request->validate(['fecha_inicio' => ['nullable', 'date']]);
+        $datos = $request->validate(['fecha_inicio' => ['nullable', 'date', 'after_or_equal:tomorrow']]);
         if (! in_array($recomendacion->estado_validacion_experta, ['aprobado', 'validado'], true)) {
             throw ValidationException::withMessages([
                 'recomendacion' => 'Solo se puede generar el plan desde una recomendación aprobada o validada.',
@@ -62,25 +63,56 @@ class PlanAlimentarioController extends Controller
             'estado_plan' => ['required', Rule::in(['en_revision', 'aprobado', 'rechazado', 'activo', 'finalizado'])],
             'observaciones' => ['nullable', 'string', 'max:2000'],
         ]);
-        $this->asegurarEditable($plan);
+        if (! in_array($plan->estado_plan, ['sugerido', 'en_revision', 'aprobado', 'rechazado'], true)) {
+            throw ValidationException::withMessages([
+                'estado_plan' => 'El estado de un plan activo o finalizado ya no puede modificarse.',
+            ]);
+        }
 
         if ($datos['estado_plan'] === 'aprobado') {
             $plan->load('dias.comidas.componentes');
-            if ($plan->dias->isEmpty()
-                || $plan->dias->contains(fn ($dia) => $dia->comidas->isEmpty())
+            if ($plan->dias->count() !== 7
+                || $plan->dias->contains(fn ($dia) => $dia->comidas->count() !== 4)
                 || $plan->dias->flatMap->comidas->contains(fn ($comida) => $comida->componentes->isEmpty())) {
-                throw ValidationException::withMessages(['estado_plan' => 'No se puede aprobar un plan sin días, comidas y componentes.']);
+                throw ValidationException::withMessages([
+                    'estado_plan' => 'El plan debe contener exactamente 7 días, 4 comidas por día y al menos un componente en cada comida.',
+                ]);
             }
+
+            $this->asegurarPeriodoSemanal($plan);
         }
 
         $plan->update([
             'estado_plan' => $datos['estado_plan'],
             'observaciones' => $datos['observaciones'] ?? $plan->observaciones,
-            'fecha_aprobacion' => $datos['estado_plan'] === 'aprobado' ? now() : $plan->fecha_aprobacion,
-            'aprobado_por' => $datos['estado_plan'] === 'aprobado' ? Auth::id() : $plan->aprobado_por,
+            'fecha_aprobacion' => $datos['estado_plan'] === 'aprobado' ? now() : null,
+            'aprobado_por' => $datos['estado_plan'] === 'aprobado' ? Auth::id() : null,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Estado del plan actualizado.', 'data' => $this->detalle($plan)]);
+    }
+
+    private function asegurarPeriodoSemanal(PlanAlimentario $plan): void
+    {
+        $inicio = $plan->fecha_inicio
+            ? CarbonImmutable::parse($plan->fecha_inicio)
+            : CarbonImmutable::tomorrow();
+        $nombres = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+
+        $plan->update([
+            'fecha_inicio' => $inicio->toDateString(),
+            'fecha_fin' => $inicio->addDays(6)->toDateString(),
+            'duracion_dias' => 7,
+        ]);
+
+        foreach ($plan->dias()->orderBy('numero_dia')->get() as $indice => $dia) {
+            $fecha = $inicio->addDays($indice);
+            $dia->update([
+                'numero_dia' => $indice + 1,
+                'nombre_dia' => $nombres[$fecha->dayOfWeekIso],
+                'fecha' => $fecha->toDateString(),
+            ]);
+        }
     }
 
     public function actualizarComida(Request $request, ComidaPlanAlimentario $comida): JsonResponse

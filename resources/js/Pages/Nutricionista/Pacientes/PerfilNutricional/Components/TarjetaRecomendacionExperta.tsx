@@ -30,9 +30,17 @@ export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion 
     const [observacion, setObservacion] = useState(recomendacion?.observacion_validacion ?? '');
     const [mensaje, setMensaje] = useState<string | null>(null);
     const [error, setError] = useState(false);
-    const resuelta = ['aprobado', 'validado', 'rechazado'].includes(recomendacion?.estado_validacion_experta ?? '');
+    const estadoActual = recomendacion?.estado_validacion_experta ?? 'pendiente';
 
-    const recargar = () => router.reload({ only: ['recomendacionExperta'] });
+    const recargar = () => router.reload({
+        only: [
+            'recomendacionExperta',
+            'recomendacionExpertaAprobada',
+            'puedeGenerarPlanSemanal',
+            'planAlimentarioPrincipal',
+            'historialPlanes',
+        ],
+    });
 
     const generar = async () => {
         setProcesando('generar'); setMensaje(null); setError(false);
@@ -46,7 +54,9 @@ export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion 
     };
 
     const validar = async (estado: 'aprobado' | 'rechazado') => {
-        if (!recomendacion || resuelta) return;
+        if (!recomendacion || estadoActual === estado) return;
+        const esCambio = ['aprobado', 'validado', 'rechazado'].includes(estadoActual);
+        if (esCambio && !window.confirm(`¿Confirmas cambiar la decisión profesional de ${etiqueta(estadoActual)} a ${etiqueta(estado)}?`)) return;
         setProcesando(estado); setMensaje(null); setError(false);
         try {
             const r = await axios.post<RespuestaApi>(`/nutricionista/recomendaciones-expertas/${recomendacion.id_recomendacion_nutricional_experta}/validar`, { estado_validacion_experta: estado, observacion_validacion: observacion.trim() || null }, { headers: { Accept: 'application/json' } });
@@ -149,36 +159,34 @@ export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion 
                     {/* ── Validación profesional ── */}
                     <div className="rounded-xl border border-surface-border p-4 dark:border-surface-border-dark space-y-3">
                         <h4 className="text-[12px] font-bold text-ink dark:text-ink-dark">Validación profesional</h4>
-                        {resuelta ? (
+                        {['aprobado', 'validado', 'rechazado'].includes(estadoActual) && (
                             <div className={clsx('rounded-xl px-3.5 py-2.5 text-[11.5px]', recomendacion.estado_validacion_experta === 'rechazado' ? 'border border-category-fruits/20 bg-category-fruits/5 text-category-fruits' : 'border border-brand-green/20 bg-brand-green/5 text-brand-green-dark dark:text-brand-green')}>
                                 Estado: <strong className="capitalize">{etiqueta(recomendacion.estado_validacion_experta)}</strong>
                                 {recomendacion.fecha_validacion && ` · ${new Date(recomendacion.fecha_validacion).toLocaleString('es-BO')}`}
                                 {recomendacion.observacion_validacion && ` · ${recomendacion.observacion_validacion}`}
                             </div>
-                        ) : (
-                            <>
-                                <textarea
-                                    className="w-full rounded-xl border border-surface-border bg-[#FAF9F6] px-4 py-3 text-[13px] text-ink placeholder:text-ink-muted/40 outline-none focus:border-brand-green/50 focus:ring-0 resize-y min-h-[70px] dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark"
-                                    maxLength={1000}
-                                    placeholder="Observación profesional opcional"
-                                    value={observacion}
-                                    onChange={(e) => setObservacion(e.target.value)}
-                                    disabled={procesando !== null}
-                                />
-                                <div className="flex flex-wrap gap-3">
-                                    <button type="button" onClick={() => validar('aprobado')} disabled={procesando !== null}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green/25 disabled:opacity-40 dark:text-brand-green">
-                                        {procesando === 'aprobado' ? <LoaderCircle size={13} className="animate-spin" /> : <CheckCircle2 size={13} strokeWidth={1.8} />}
-                                        {procesando === 'aprobado' ? 'Aprobando...' : 'Aprobar recomendación'}
-                                    </button>
-                                    <button type="button" onClick={() => validar('rechazado')} disabled={procesando !== null}
-                                        className="inline-flex items-center gap-2 rounded-lg border border-category-fruits/30 px-4 py-2 text-[11.5px] font-semibold text-category-fruits transition-colors hover:bg-category-fruits/8 disabled:opacity-40">
-                                        {procesando === 'rechazado' ? <LoaderCircle size={13} className="animate-spin" /> : <XCircle size={13} strokeWidth={1.8} />}
-                                        {procesando === 'rechazado' ? 'Rechazando...' : 'Rechazar recomendación'}
-                                    </button>
-                                </div>
-                            </>
                         )}
+                        <textarea
+                            className="w-full rounded-xl border border-surface-border bg-[#FAF9F6] px-4 py-3 text-[13px] text-ink placeholder:text-ink-muted/40 outline-none focus:border-brand-green/50 focus:ring-0 resize-y min-h-[70px] dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark"
+                            maxLength={1000}
+                            placeholder="Observación profesional opcional para fundamentar la decisión"
+                            value={observacion}
+                            onChange={(e) => setObservacion(e.target.value)}
+                            disabled={procesando !== null}
+                        />
+                        <div className="flex flex-wrap items-center gap-3">
+                            <button type="button" onClick={() => validar('aprobado')} disabled={procesando !== null || ['aprobado', 'validado'].includes(estadoActual)}
+                                className="inline-flex items-center gap-2 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green/25 disabled:cursor-not-allowed disabled:opacity-40 dark:text-brand-green">
+                                {procesando === 'aprobado' ? <LoaderCircle size={13} className="animate-spin" /> : <CheckCircle2 size={13} strokeWidth={1.8} />}
+                                {procesando === 'aprobado' ? 'Aprobando...' : ['aprobado', 'validado'].includes(estadoActual) ? 'Recomendación aprobada' : 'Aprobar recomendación'}
+                            </button>
+                            <button type="button" onClick={() => validar('rechazado')} disabled={procesando !== null || estadoActual === 'rechazado'}
+                                className="inline-flex items-center gap-2 rounded-lg border border-category-fruits/30 px-4 py-2 text-[11.5px] font-semibold text-category-fruits transition-colors hover:bg-category-fruits/8 disabled:cursor-not-allowed disabled:opacity-40">
+                                {procesando === 'rechazado' ? <LoaderCircle size={13} className="animate-spin" /> : <XCircle size={13} strokeWidth={1.8} />}
+                                {procesando === 'rechazado' ? 'Rechazando...' : estadoActual === 'rechazado' ? 'Recomendación rechazada' : 'Rechazar recomendación'}
+                            </button>
+                            {['aprobado', 'validado', 'rechazado'].includes(estadoActual) && <span className="text-[10px] text-ink-muted dark:text-ink-muted-dark">Puedes cambiar la decisión; se registrarán la nueva fecha y profesional.</span>}
+                        </div>
                     </div>
                 </>
             )}

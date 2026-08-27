@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, Clock, Activity, Droplets, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Calendar, FileDown, TrendingUp } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
 import clsx from 'clsx';
@@ -22,9 +22,40 @@ interface Props extends PageProps {
 export default function HistorialMenstrual({ paciente, registros }: Props) {
     const id = paciente.id_paciente;
     const [pagina, setPagina] = useState(1);
+    const [regularidad, setRegularidad] = useState('');
+    const [hallazgo, setHallazgo] = useState('');
+    const [desde, setDesde] = useState('');
+    const [hasta, setHasta] = useState('');
     const porPagina = 10;
-    const totalPaginas = Math.ceil(registros.length / porPagina);
-    const registrosPaginados = registros.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+    // Filtrado en cliente
+    const registrosFiltrados = useMemo(() => {
+        return registros.filter(r => {
+            if (regularidad && r.regularidad_ciclo !== regularidad) return false;
+            if (hallazgo && !(r as unknown as Record<string, boolean>)[hallazgo]) return false;
+            const fecha = (r.created_at ?? '').slice(0, 10);
+            if (desde && fecha < desde) return false;
+            if (hasta && fecha > hasta) return false;
+            return true;
+        });
+    }, [registros, regularidad, hallazgo, desde, hasta]);
+
+    const totalPaginas = Math.ceil(registrosFiltrados.length / porPagina);
+    const registrosPaginados = registrosFiltrados.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+    // URL del PDF con filtros aplicados
+    const urlPdf = useMemo(() => {
+        const params = new URLSearchParams();
+        if (regularidad) params.set('regularidad', regularidad);
+        if (hallazgo) params.set('hallazgo', hallazgo);
+        if (desde) params.set('desde', desde);
+        if (hasta) params.set('hasta', hasta);
+        const qs = params.toString();
+        return `/endocrinologo/pacientes/${id}/historia-menstrual/reporte-pdf${qs ? `?${qs}` : ''}`;
+    }, [id, regularidad, hallazgo, desde, hasta]);
+
+    const hayFiltros = regularidad || hallazgo || desde || hasta;
+    const limpiar = () => { setRegularidad(''); setHallazgo(''); setDesde(''); setHasta(''); setPagina(1); };
 
     return (
         <AuthenticatedLayout title="Historial menstrual">
@@ -75,6 +106,61 @@ export default function HistorialMenstrual({ paciente, registros }: Props) {
                     </div>
                 </div>
 
+                {/* Barra de filtros + PDF */}
+                {registros.length > 0 && (
+                    <div className="card-elevated p-4">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[140px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Regularidad</label>
+                                <select value={regularidad} onChange={e => { setRegularidad(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                    <option value="">Todas</option>
+                                    <option value="regular">Regular</option>
+                                    <option value="irregular">Irregular</option>
+                                    <option value="ausente">Ausente</option>
+                                </select>
+                            </div>
+                            <div className="flex-1 min-w-[140px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Hallazgo</label>
+                                <select value={hallazgo} onChange={e => { setHallazgo(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                    <option value="">Todos</option>
+                                    <option value="amenorrea">Amenorrea</option>
+                                    <option value="oligomenorrea">Oligomenorrea</option>
+                                    <option value="sangrado_abundante">Sangrado abundante</option>
+                                    <option value="dolor_menstrual">Dolor menstrual</option>
+                                    <option value="sospecha_anovulacion">Sospecha anovulación</option>
+                                    <option value="confirma_anovulacion_por_progesterona">Anovulación confirmada</option>
+                                </select>
+                            </div>
+                            <div className="min-w-[120px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Desde</label>
+                                <input type="date" value={desde} onChange={e => { setDesde(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            <div className="min-w-[120px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Hasta</label>
+                                <input type="date" value={hasta} onChange={e => { setHasta(e.target.value); setPagina(1); }}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            {hayFiltros && (
+                                <button type="button" onClick={limpiar} className="rounded-lg px-3 py-2 text-[11px] font-semibold text-ink-muted hover:bg-black/[0.03] dark:text-ink-muted-dark dark:hover:bg-white/[0.04]">
+                                    Limpiar
+                                </button>
+                            )}
+                            <a href={urlPdf} target="_blank" rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark hover:bg-brand-green/25 dark:text-brand-green transition-colors">
+                                <FileDown size={14} strokeWidth={1.8} /> Descargar PDF
+                            </a>
+                        </div>
+                        {hayFiltros && (
+                            <p className="mt-2.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                {registrosFiltrados.length} de {registros.length} registros coinciden con los filtros.
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 {registros.length === 0 ? (
                     <div className="card-elevated flex flex-col items-center gap-2 px-5 py-14 text-center">
                         <Calendar size={28} strokeWidth={1.2} className="text-ink-muted/40 dark:text-ink-muted-dark/40" />
@@ -90,12 +176,16 @@ export default function HistorialMenstrual({ paciente, registros }: Props) {
                                 <div className="flex items-center justify-between mb-1">
                                     <p className="text-[12px] font-semibold text-ink dark:text-ink-dark">Registros cronológicos</p>
                                     <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
-                                        Mostrando {registrosPaginados.length} de {registros.length}
+                                        Mostrando {registrosPaginados.length} de {registrosFiltrados.length}
                                     </p>
                                 </div>
 
-                                {registrosPaginados.map((r, idx) => (
-                                    <RegistroCard key={r.id_historia_menstrual} registro={r} numero={registros.length - ((pagina - 1) * porPagina + idx)} />
+                                {registrosFiltrados.length === 0 ? (
+                                    <div className="card-elevated px-5 py-10 text-center">
+                                        <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark">Ningún registro coincide con los filtros.</p>
+                                    </div>
+                                ) : registrosPaginados.map((r, idx) => (
+                                    <RegistroCard key={r.id_historia_menstrual} registro={r} numero={registrosFiltrados.length - ((pagina - 1) * porPagina + idx)} />
                                 ))}
 
                                 {/* Paginación */}

@@ -85,6 +85,36 @@ class RecomendacionNutricionalExpertaControllerTest extends TestCase
             ->assertJsonPath('data.observacion_validacion', 'Se requiere ajustar la distribución.');
     }
 
+    public function test_nutricionista_puede_cambiar_una_recomendacion_aprobada_a_rechazada(): void
+    {
+        $nutricionista = $this->usuarioConRol('nutricionista');
+        $recomendacion = $this->recomendacion($this->paciente());
+        $recomendacion->update(['estado_validacion_experta' => 'aprobado']);
+
+        $this->actingAs($nutricionista)->postJson(
+            route('nutricionista.recomendacion-experta.validar', $recomendacion),
+            ['estado_validacion_experta' => 'rechazado', 'observacion_validacion' => 'Revisión profesional posterior.']
+        )->assertOk()->assertJsonPath('data.estado_validacion_experta', 'rechazado');
+
+        $this->assertSame('rechazado', $recomendacion->fresh()->estado_validacion_experta);
+        $this->assertSame($nutricionista->getKey(), $recomendacion->fresh()->validado_por);
+    }
+
+    public function test_nutricionista_puede_cambiar_una_recomendacion_rechazada_a_aprobada(): void
+    {
+        $nutricionista = $this->usuarioConRol('nutricionista');
+        $recomendacion = $this->recomendacion($this->paciente());
+        $recomendacion->update(['estado_validacion_experta' => 'rechazado']);
+
+        $this->actingAs($nutricionista)->postJson(
+            route('nutricionista.recomendacion-experta.validar', $recomendacion),
+            ['estado_validacion_experta' => 'aprobado', 'observacion_validacion' => 'Datos revisados y conformes.']
+        )->assertOk()->assertJsonPath('data.estado_validacion_experta', 'aprobado');
+
+        $this->assertSame('aprobado', $recomendacion->fresh()->estado_validacion_experta);
+        $this->assertNotNull($recomendacion->fresh()->fecha_validacion);
+    }
+
     public function test_estado_invalido_devuelve_422(): void
     {
         $this->actingAs($this->usuarioConRol('nutricionista'))->postJson(

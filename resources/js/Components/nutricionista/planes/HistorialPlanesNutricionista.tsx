@@ -1,4 +1,4 @@
-import { AlertTriangle, BrainCircuit, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Download, FileText, GitCompare, Sparkles, Target } from 'lucide-react';
+import { AlertTriangle, BrainCircuit, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Download, FileText, Filter, GitCompare, Sparkles, Target, X } from 'lucide-react';
 import { useState } from 'react';
 import clsx from 'clsx';
 import { Badge } from '@/Components/ui/badge';
@@ -10,7 +10,7 @@ interface RecomendacionOrigen {
     fecha_validacion: string | null; reglas_activadas: TextoLista; explicacion: TextoLista;
     recomendaciones: TextoLista; restricciones: TextoLista; alertas: TextoLista;
 }
-interface ComponenteHistorial { tipo_componente: string; nombre: string | null; cantidad: number; unidad: string | null; calorias?: number; proteinas?: number; carbohidratos?: number; grasas?: number; fibra?: number; observaciones?: string | null }
+interface ComponenteHistorial { tipo_componente: string; nombre: string | null; cantidad: number; unidad: string | null; calorias?: number; proteinas?: number; carbohidratos?: number; grasas?: number; fibra?: number; observaciones?: string | null; explicacion_seleccion?: { puntaje_experto:number|null; puntaje_ajustado:number|null; motivos:string[]; advertencias:string[] } }
 interface ComidaHistorial { tipo_comida: string; nombre_comida: string; hora_sugerida: string | null; calorias: number; proteinas?: number; carbohidratos?: number; grasas?: number; fibra?: number; observaciones?: string | null; componentes: ComponenteHistorial[] }
 interface DiaHistorialTipo { numero_dia: number; nombre_dia: string; fecha?: string | null; calorias?: number; proteinas?: number; carbohidratos?: number; grasas?: number; fibra?: number; comidas: ComidaHistorial[] }
 
@@ -32,18 +32,43 @@ const n = (v: unknown) => Number(v ?? 0).toLocaleString('es-BO', { maximumFracti
 const etiqueta = (v?: string | null) => v ? v.replaceAll('_', ' ') : 'No definido';
 const lista = (v?: TextoLista | null) => Array.isArray(v) ? v.filter(Boolean) : [];
 
-export default function HistorialPlanesNutricionista({ historial }: { historial: HistorialPlanes }) {
+export default function HistorialPlanesNutricionista({ historial, pacienteId }: { historial: HistorialPlanes; pacienteId?: number }) {
+    const [estado, setEstado] = useState(''), [origen, setOrigen] = useState(''), [desde, setDesde] = useState(''), [hasta, setHasta] = useState('');
+    const filtrados = historial.planes.filter(plan => {
+        if (estado && plan.estado_plan !== estado) return false;
+        if (origen === 'experto' && !plan.generado_por_sistema_experto) return false;
+        if (origen === 'manual' && plan.generado_por_sistema_experto) return false;
+        if (desde && (!plan.fecha_inicio || plan.fecha_inicio < desde)) return false;
+        if (hasta && (!plan.fecha_inicio || plan.fecha_inicio > hasta)) return false;
+        return true;
+    });
+    const hayFiltros = !!(estado || origen || desde || hasta);
+    const parametros = Object.fromEntries(Object.entries({ paciente: pacienteId, estado, origen, desde, hasta }).filter(([, valor]) => valor));
+    const limpiar = () => { setEstado(''); setOrigen(''); setDesde(''); setHasta('') };
     return <section className="space-y-4">
         <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange"><FileText size={19} /></div>
             <div><h2 className="text-[15px] font-bold text-ink dark:text-ink-dark">Historial y fundamento de planes</h2><p className="text-[11px] text-ink-muted dark:text-ink-muted-dark">{historial.total_planes} plan(es) con trazabilidad clínica, nutricional y experta.</p></div>
         </div>
         <Comparacion datos={historial} />
-        {historial.planes.length === 0
-            ? <div className="rounded-xl border border-dashed border-surface-border py-8 text-center text-[12px] text-ink-muted dark:border-surface-border-dark">Sin planes registrados.</div>
-            : <div className="space-y-3">{historial.planes.map(plan => <PlanItem key={plan.id_plan_alimentario} plan={plan} />)}</div>}
+        <div className="rounded-2xl border border-surface-border bg-black/[0.015] p-4 dark:border-surface-border-dark dark:bg-white/[0.02]">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Filter size={14} className="text-brand-green-dark dark:text-brand-green"/><div><h3 className="text-[12px] font-bold text-ink dark:text-ink-dark">Filtros del historial</h3><p className="text-[9.5px] text-ink-muted">{filtrados.length} de {historial.total_planes} planes seleccionados</p></div></div>{hayFiltros && <button type="button" onClick={limpiar} className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-ink-muted hover:text-ink dark:hover:text-ink-dark"><X size={12}/> Limpiar filtros</button>}</div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <FiltroSelect label="Estado" value={estado} onChange={setEstado} opciones={[['','Todos'],['sugerido','Sugerido'],['en_revision','En revisión'],['aprobado','Aprobado'],['activo','Activo'],['rechazado','Rechazado'],['finalizado','Finalizado']]} />
+                <FiltroSelect label="Origen" value={origen} onChange={setOrigen} opciones={[['','Todos'],['experto','Asistencia experta'],['manual','Elaboración profesional']]} />
+                <FiltroFecha label="Desde" value={desde} onChange={setDesde} max={hasta || undefined}/>
+                <FiltroFecha label="Hasta" value={hasta} onChange={setHasta} min={desde || undefined}/>
+            </div>
+            {pacienteId && <div className="mt-3 flex justify-end"><a href={route('nutricionista.pacientes.planes-alimentarios.historial.reporte-pdf', parametros)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-brand-green/15 px-4 py-2.5 text-[11px] font-bold text-brand-green-dark transition-colors hover:bg-brand-green/25 dark:text-brand-green"><Download size={13}/> Descargar reporte filtrado</a></div>}
+        </div>
+        {filtrados.length === 0
+            ? <div className="rounded-xl border border-dashed border-surface-border py-8 text-center text-[12px] text-ink-muted dark:border-surface-border-dark">No existen planes que coincidan con los filtros.</div>
+            : <div className="space-y-3">{filtrados.map(plan => <PlanItem key={plan.id_plan_alimentario} plan={plan} />)}</div>}
     </section>;
 }
+
+function FiltroSelect({ label, value, onChange, opciones }: { label:string; value:string; onChange:(valor:string)=>void; opciones:[string,string][] }) { return <label><span className="mb-1 block text-[9.5px] font-semibold text-ink-muted">{label}</span><select value={value} onChange={e=>onChange(e.target.value)} className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-[11px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-surface-card-dark dark:text-ink-dark">{opciones.map(([v,t])=><option key={v} value={v}>{t}</option>)}</select></label> }
+function FiltroFecha({ label, value, onChange, min, max }: { label:string; value:string; onChange:(valor:string)=>void; min?:string; max?:string }) { return <label><span className="mb-1 block text-[9.5px] font-semibold text-ink-muted">{label}</span><input type="date" value={value} min={min} max={max} onChange={e=>onChange(e.target.value)} className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-[11px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-surface-card-dark dark:text-ink-dark"/></label> }
 
 function PlanItem({ plan: p }: { plan: HistorialPlan }) {
     const [abierto, setAbierto] = useState(false);
@@ -125,7 +150,16 @@ function ComidaDia({ comida: c }: { comida: ComidaHistorial }) {
     return <article className="rounded-xl border border-surface-border/60 bg-black/[0.015] p-3 dark:border-surface-border-dark/60 dark:bg-white/[0.02]">
         <div className="flex items-start justify-between gap-2"><div><p className="text-[9px] font-bold uppercase tracking-wider text-brand-green-dark dark:text-brand-green">{etiqueta(c.tipo_comida)} {c.hora_sugerida ? `· ${String(c.hora_sugerida).slice(0, 5)}` : ''}</p><h5 className="mt-0.5 text-[11.5px] font-bold text-ink dark:text-ink-dark">{c.nombre_comida}</h5></div><b className="shrink-0 text-[10px] text-ink-muted">{n(c.calorias)} kcal</b></div>
         <div className="mt-2 flex flex-wrap gap-1 text-[9px] text-ink-muted"><span className="rounded bg-category-dairy/10 px-1.5 py-0.5">P {n(c.proteinas)} g</span><span className="rounded bg-brand-orange/10 px-1.5 py-0.5">C {n(c.carbohidratos)} g</span><span className="rounded bg-category-others/10 px-1.5 py-0.5">G {n(c.grasas)} g</span><span className="rounded bg-brand-green/10 px-1.5 py-0.5">Fibra {n(c.fibra)} g</span></div>
-        <ul className="mt-2 space-y-1">{c.componentes.map((x, j) => <li key={j} className="flex justify-between gap-2 text-[10px]"><span className="text-ink/80 dark:text-ink-dark/80">{x.nombre || 'Componente sin nombre'}</span><span className="shrink-0 text-ink-muted">{n(x.cantidad)} {x.unidad}</span></li>)}</ul>
+        <div className="mt-2 space-y-2">{c.componentes.map((x, j) => {
+            const explicacion = x.explicacion_seleccion;
+            return <div key={j} className="rounded-lg border border-surface-border/50 bg-surface-card/50 p-2 dark:border-surface-border-dark/50 dark:bg-surface-card-dark/40">
+                <div className="flex justify-between gap-2 text-[10px]"><span className="font-semibold text-ink/80 dark:text-ink-dark/80">{x.nombre || 'Componente sin nombre'}</span><span className="shrink-0 text-ink-muted">{n(x.cantidad)} {x.unidad}</span></div>
+                {explicacion?.puntaje_experto !== null && explicacion?.puntaje_experto !== undefined && <p className="mt-1 text-[9px] font-bold text-brand-green-dark dark:text-brand-green">Puntaje experto: {n(explicacion.puntaje_experto)}</p>}
+                {!!explicacion?.motivos?.length && <div className="mt-1"><p className="text-[8.5px] font-bold uppercase tracking-wider text-ink-muted">¿Por qué se indicó?</p><ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-[9.5px] text-ink/75 dark:text-ink-dark/75">{explicacion.motivos.map((motivo, indiceMotivo)=><li key={indiceMotivo}>{motivo}</li>)}</ul></div>}
+                {!!explicacion?.advertencias?.length && <p className="mt-1 text-[9px] text-brand-orange">{explicacion.advertencias.join(' ')}</p>}
+                {x.tipo_componente === 'manual' && !explicacion?.motivos?.length && <p className="mt-1 text-[9px] italic text-brand-orange">Selección o ajuste realizado directamente por la nutricionista.</p>}
+            </div>;
+        })}</div>
         {c.observaciones && <p className="mt-2 border-t border-surface-border/50 pt-2 text-[9.5px] italic text-ink-muted dark:border-surface-border-dark/50">{c.observaciones}</p>}
     </article>;
 }

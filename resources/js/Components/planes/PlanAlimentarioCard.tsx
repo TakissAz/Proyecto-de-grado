@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { router } from '@inertiajs/react';
 import { AlertTriangle, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Coffee, FileDown, LoaderCircle, Moon, Pencil, Plus, Sparkles, Sun, Sunrise, Trash2, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Boton } from '@/Components/ui/boton';
 import { Badge } from '@/Components/ui/badge';
@@ -23,15 +23,24 @@ const fechaLegible = (valor: string | null | undefined) => {
         .format(new Date(Date.UTC(Number(anio), Number(mes) - 1, Number(dia))));
 };
 const nombrePlanLegible = (valor: string) => valor.replace(/\s*-\s*\d{4}-\d{2}-\d{2}\s*$/, '').trim() || 'Plan alimentario semanal';
+const manana = () => {
+    const fecha = new Date();
+    fecha.setDate(fecha.getDate() + 1);
+    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+};
 const errorDe = (e: unknown) => { const d = (e as AxiosError<{ message?: string; errors?: Record<string, string[]> }>).response?.data; return Object.values(d?.errors ?? {})[0]?.[0] ?? d?.message ?? 'No se pudo completar la operación.'; };
 
 export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar, alimentos, recetas }: Props) {
-    const [detalle, setDetalle] = useState(false), [cargando, setCargando] = useState(''), [mensaje, setMensaje] = useState(''), [esError, setEsError] = useState(false), [modalCiclo, setModalCiclo] = useState(false), [fechaNuevo, setFechaNuevo] = useState(''), [observacion, setObservacion] = useState('');
+    const [detalle, setDetalle] = useState(false), [cargando, setCargando] = useState(''), [mensaje, setMensaje] = useState(''), [esError, setEsError] = useState(false), [modalCiclo, setModalCiclo] = useState(false), [modalGenerar, setModalGenerar] = useState(false), [fechaInicio, setFechaInicio] = useState(manana), [fechaNuevo, setFechaNuevo] = useState(''), [observacion, setObservacion] = useState('');
     const recargar = () => router.reload({ only: ['planAlimentarioPrincipal', 'recomendacionExpertaAprobada', 'puedeGenerarPlanSemanal', 'historialPlanes', 'analiticaEvolucion', 'seguimientoPaciente'] });
     const accion: Accion = async (clave, fn) => { setCargando(clave); setMensaje(''); try { await fn(); setEsError(false); setMensaje('Operación realizada correctamente.'); recargar() } catch (e) { setEsError(true); setMensaje(errorDe(e)) } finally { setCargando('') } };
-    const generar = () => recomendacion && accion('generar', () => axios.post(`/nutricionista/recomendaciones-expertas/${recomendacion.id_recomendacion_nutricional_experta}/generar-plan`, {}, { headers: { Accept: 'application/json' } }));
+    const generar = () => recomendacion && accion('generar', async () => {
+        await axios.post(`/nutricionista/recomendaciones-expertas/${recomendacion.id_recomendacion_nutricional_experta}/generar-plan`, { fecha_inicio: fechaInicio }, { headers: { Accept: 'application/json' } });
+        setModalGenerar(false);
+    });
     const cambiarEstado = (estado: 'aprobado' | 'rechazado') => plan && accion(estado, () => axios.patch(`/nutricionista/planes-alimentarios/${plan.id_plan_alimentario}/estado`, { estado_plan: estado }, { headers: { Accept: 'application/json' } }));
     const editable = !!plan && ['sugerido', 'en_revision'].includes(plan.estado_plan);
+    const validable = !!plan && ['sugerido', 'en_revision', 'aprobado', 'rechazado'].includes(plan.estado_plan);
     const finalizable = !!plan && ['aprobado', 'activo'].includes(plan.estado_plan);
     const finalizar = () => plan && router.post(route('nutricionista.planes.finalizar-y-generar-siguiente', plan.id_plan_alimentario), { fecha_inicio: fechaNuevo || null, observacion_finalizacion: observacion || null }, { preserveScroll: true, onStart: () => setCargando('finalizar'), onSuccess: () => { setModalCiclo(false); setEsError(false); setMensaje('Plan finalizado y nueva planificación generada.'); recargar() }, onError: e => { setEsError(true); setMensaje(Object.values(e)[0] ?? 'No se pudo finalizar.') }, onFinish: () => setCargando('') });
 
@@ -64,8 +73,8 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                 <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-surface-border py-8 text-center dark:border-surface-border-dark">
                     <Sparkles size={28} strokeWidth={1.2} className="text-brand-green/40" />
                     <p className="text-[12.5px] text-ink-muted dark:text-ink-muted-dark">La recomendación está lista para convertirse en un plan semanal.</p>
-                    <Boton variante="primary" tamano="sm" onClick={generar} disabled={!!cargando}>
-                        {cargando === 'generar' ? <LoaderCircle size={14} className="animate-spin" /> : <Plus size={14} strokeWidth={1.8} />}
+                    <Boton variante="primary" tamano="sm" onClick={() => setModalGenerar(true)} disabled={!!cargando}>
+                        <Plus size={14} strokeWidth={1.8} />
                         Generar plan
                     </Boton>
                 </div>
@@ -104,13 +113,13 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                             href={route('nutricionista.planes.reporte-pdf', plan.id_plan_alimentario)} target="_blank" rel="noreferrer">
                             <FileDown size={13} strokeWidth={1.8} /> PDF
                         </a>
-                        {editable && (
+                        {validable && (
                             <>
-                                <button type="button" onClick={() => cambiarEstado('aprobado')} disabled={!!cargando}
+                                <button type="button" onClick={() => cambiarEstado('aprobado')} disabled={!!cargando || (plan.estado_plan === 'aprobado' && !!plan.fecha_inicio && !!plan.fecha_fin)}
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-brand-green/15 px-4 py-2.5 text-[11.5px] font-bold text-brand-green-dark hover:bg-brand-green/25 dark:text-brand-green disabled:opacity-40 transition-colors">
-                                    {cargando === 'aprobado' ? <LoaderCircle size={13} className="animate-spin" /> : <CheckCircle2 size={13} strokeWidth={1.8} />} Aprobar plan
+                                    {cargando === 'aprobado' ? <LoaderCircle size={13} className="animate-spin" /> : <CheckCircle2 size={13} strokeWidth={1.8} />} {plan.estado_plan === 'aprobado' && (!plan.fecha_inicio || !plan.fecha_fin) ? 'Asignar periodo de 7 días' : 'Aprobar plan'}
                                 </button>
-                                <button type="button" onClick={() => cambiarEstado('rechazado')} disabled={!!cargando}
+                                <button type="button" onClick={() => cambiarEstado('rechazado')} disabled={!!cargando || plan.estado_plan === 'rechazado'}
                                     className="inline-flex items-center gap-1.5 rounded-lg border border-category-fruits/30 bg-category-fruits/5 px-4 py-2.5 text-[11.5px] font-bold text-category-fruits hover:bg-category-fruits/10 disabled:opacity-40 transition-colors">
                                     {cargando === 'rechazado' ? <LoaderCircle size={13} className="animate-spin" /> : <XCircle size={13} strokeWidth={1.8} />} Rechazar plan
                                 </button>
@@ -121,7 +130,7 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                     {!editable && (
                         <div className="flex items-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/5 px-4 py-2.5 dark:bg-brand-green/[0.06]">
                             <CheckCircle2 size={13} strokeWidth={1.8} className="text-brand-green-dark dark:text-brand-green" />
-                            <span className="text-[11.5px] text-ink dark:text-ink-dark">Este plan ya fue validado y no puede editarse.</span>
+                            <span className="text-[11.5px] text-ink dark:text-ink-dark">El contenido del plan ya fue validado y no puede editarse. Su decisión profesional sí puede cambiar entre aprobado y rechazado.</span>
                         </div>
                     )}
 
@@ -134,6 +143,30 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
             {mensaje && (
                 <div className={clsx('rounded-xl px-4 py-2.5 text-[11.5px]', esError ? 'border border-category-fruits/20 bg-category-fruits/5 text-category-fruits' : 'border border-brand-green/20 bg-brand-green/5 text-brand-green-dark dark:text-brand-green')}>
                     {mensaje}
+                </div>
+            )}
+
+            {modalGenerar && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 backdrop-blur-[3px] p-4">
+                    <div className="w-full max-w-md space-y-4 rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl dark:border-surface-border-dark dark:bg-surface-card-dark">
+                        <div>
+                            <h3 className="text-[15px] font-bold text-ink dark:text-ink-dark">Programar plan semanal</h3>
+                            <p className="mt-1 text-[12px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">El inicio automático es mañana. Puedes elegir una fecha posterior; el sistema calculará exactamente 7 días consecutivos.</p>
+                        </div>
+                        <div>
+                            <label className="mb-1.5 block text-[10.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">Fecha de inicio</label>
+                            <input type="date" min={manana()} required value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
+                                className="w-full rounded-xl border border-surface-border bg-[#FAF9F6] px-4 py-3 text-[13px] text-ink outline-none focus:border-brand-green/50 focus:ring-0 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            <p className="mt-1.5 text-[10px] text-ink-muted dark:text-ink-muted-dark">Finaliza el {fechaInicio ? fechaLegible(new Date(`${fechaInicio}T00:00:00`).getTime() ? new Date(new Date(`${fechaInicio}T00:00:00`).getTime() + 6 * 86400000).toISOString().slice(0, 10) : null) : '—'}.</p>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Boton type="button" variante="ghost" tamano="sm" onClick={() => setModalGenerar(false)} disabled={!!cargando}>Cancelar</Boton>
+                            <Boton type="button" variante="primary" tamano="sm" onClick={generar} disabled={!!cargando || !fechaInicio}>
+                                {cargando === 'generar' ? <LoaderCircle size={14} className="animate-spin" /> : <CalendarDays size={14} />}
+                                Generar 7 días
+                            </Boton>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -230,9 +263,22 @@ function Resumen({ plan }: { plan: PlanAlimentario }) {
 function PlanificacionSemanal({ dias, editable, alimentos, recetas, accion, recargar }: { dias: DiaPlan[]; editable: boolean; alimentos: CatalogoAlimento[]; recetas: CatalogoReceta[]; accion: Accion; recargar: () => void }) {
     const [diaActivo, setDiaActivo] = useState(0);
     const dia = dias[diaActivo];
+    useEffect(() => {
+        if (diaActivo >= dias.length) setDiaActivo(Math.max(dias.length - 1, 0));
+    }, [diaActivo, dias.length]);
+
     if (!dia) return null;
 
-    const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const nombreCorto = (d: DiaPlan) => {
+        const fecha = String(d.fecha ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (fecha) {
+            const [, anio, mes, numeroDia] = fecha;
+            const nombre = new Intl.DateTimeFormat('es-BO', { weekday: 'short', timeZone: 'UTC' })
+                .format(new Date(Date.UTC(Number(anio), Number(mes) - 1, Number(numeroDia))));
+            return nombre.replace('.', '').replace(/^./, letra => letra.toUpperCase());
+        }
+        return d.nombre_dia?.slice(0, 3) || `D${d.numero_dia}`;
+    };
 
     return (
         <div className="space-y-3">
@@ -251,7 +297,7 @@ function PlanificacionSemanal({ dias, editable, alimentos, recetas, accion, reca
                         )}
                     >
                         <span className={clsx('text-[10px] font-bold', diaActivo === i ? 'text-brand-green-dark dark:text-brand-green' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                            {DIAS_CORTOS[i] ?? d.nombre_dia?.slice(0, 3)}
+                            {nombreCorto(d)}
                         </span>
                         <span className={clsx('text-[9px]', diaActivo === i ? 'text-ink dark:text-ink-dark' : 'text-ink-muted/60 dark:text-ink-muted-dark/60')}>
                             {n(d.calorias_totales)} kcal
@@ -266,6 +312,7 @@ function PlanificacionSemanal({ dias, editable, alimentos, recetas, accion, reca
                     <div className="flex items-center gap-2">
                         <CalendarDays size={13} strokeWidth={1.8} className="text-brand-green-dark dark:text-brand-green" />
                         <span className="text-[12.5px] font-bold text-ink dark:text-ink-dark">{dia.nombre_dia}</span>
+                        {dia.fecha && <span className="text-[10px] text-ink-muted dark:text-ink-muted-dark">· {fechaLegible(dia.fecha)}</span>}
                     </div>
                     <Badge color="green">{n(dia.calorias_totales)} kcal</Badge>
                 </div>

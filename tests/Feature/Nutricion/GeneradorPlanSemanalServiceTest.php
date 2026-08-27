@@ -112,6 +112,19 @@ class GeneradorPlanSemanalServiceTest extends TestCase
         $this->assertSame('2026-09-07', $plan->dias->last()->fecha?->toDateString());
     }
 
+    public function test_sin_fecha_inicia_manana_y_asigna_siete_fechas_consecutivas(): void
+    {
+        $plan = $this->generar();
+
+        $this->assertSame(today()->addDay()->toDateString(), $plan->fecha_inicio?->toDateString());
+        $this->assertSame(today()->addDays(7)->toDateString(), $plan->fecha_fin?->toDateString());
+        $this->assertSame(
+            collect(range(1, 7))->map(fn (int $dia) => today()->addDays($dia)->toDateString())->all(),
+            $plan->dias->pluck('fecha')->map->toDateString()->all()
+        );
+        $this->assertNotContains('Día 1', $plan->dias->pluck('nombre_dia')->all());
+    }
+
     public function test_recalcula_totales_del_plan_con_cuatro_tiempos(): void
     {
         $plan = $this->generar();

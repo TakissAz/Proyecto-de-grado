@@ -211,6 +211,9 @@ class PacienteService
             'estado' => 'activo',
         ]);
 
+        // Registrada por un profesional autorizado: la cuenta queda lista para ingresar.
+        $user->forceFill(['email_verified_at' => now()])->save();
+
         $this->asegurarRolPaciente($user);
 
         return $user;

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Download, History, Info, Utensils, ClipboardList, Target, BrainCircuit, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Desplegable } from '@/Components/ui/desplegable';
 import EncabezadoPacienteNutricional from './Components/EncabezadoPacienteNutricional';
@@ -38,7 +38,22 @@ const STEPS: { id: StepId; label: string; icono: typeof ClipboardList; desc: str
 
 export default function Index(props: PerfilProps) {
     const [modal, setModal] = useState<Seccion>(null);
-    const [stepActivo, setStepActivo] = useState<StepId>('valoracion');
+
+    // Step activo persistido en la URL (?step=) para mantener la posición al refrescar
+    const stepInicial = ((): StepId => {
+        if (typeof window === 'undefined') return 'valoracion';
+        const s = new URLSearchParams(window.location.search).get('step');
+        return (['valoracion', 'calculo', 'planificacion', 'adherencia'] as const).includes(s as StepId) ? (s as StepId) : 'valoracion';
+    })();
+    const [stepActivo, setStepActivoRaw] = useState<StepId>(stepInicial);
+    const setStepActivo = (id: StepId) => {
+        setStepActivoRaw(id);
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('step', id);
+            window.history.replaceState({}, '', url.toString());
+        }
+    };
     const [tabPrefRest, setTabPrefRest] = useState<'pref' | 'rest'>('pref');
     const [modalEvalEditar, setModalEvalEditar] = useState(false);
     const [modalEvalCrear, setModalEvalCrear] = useState(false);
@@ -54,6 +69,41 @@ export default function Index(props: PerfilProps) {
     const registros = [props.consulta, props.evaluacion, props.habitos, props.preferencias, props.restricciones, props.objetivo];
     const bloqueada = !props.consulta;
     const comunes = { cerrar: () => setModal(null), pacienteId: props.paciente.id_paciente };
+
+    // ── Acordeón controlado de valoración: auto-cierra y abre la siguiente al completar ──
+    type AcordeonId = 'evaluacion' | 'habitos' | 'prefrest' | 'objetivos';
+    const ordenAcordeon: AcordeonId[] = ['evaluacion', 'habitos', 'prefrest', 'objetivos'];
+    // Primera sección sin completar (para arrancar ahí)
+    const completadoPorId: Record<AcordeonId, boolean> = {
+        evaluacion: !!props.evaluacion,
+        habitos: !!props.habitos,
+        prefrest: !!props.preferencias || !!props.restricciones,
+        objetivos: !!props.objetivo,
+    };
+    const primeraPendiente = ordenAcordeon.find(id => !completadoPorId[id]) ?? 'evaluacion';
+    const [acordeonAbierto, setAcordeonAbierto] = useState<AcordeonId | null>(primeraPendiente);
+    const toggleAcordeon = (id: AcordeonId) => setAcordeonAbierto(prev => (prev === id ? null : id));
+
+    // Cuando una sección pasa de pendiente a completada, avanza a la siguiente pendiente
+    const firmaCompletado = ordenAcordeon.map(id => completadoPorId[id] ? '1' : '0').join('');
+    useEffect(() => {
+        const siguiente = ordenAcordeon.find(id => !completadoPorId[id]);
+        if (siguiente) setAcordeonAbierto(siguiente);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [firmaCompletado]);
+
+    // Al entrar, si no hay consulta registrada, abre el modal de consulta
+    useEffect(() => {
+        if (!props.consulta) setModal('consulta');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // ── Acordeón controlado para los demás steps (solo uno abierto, cerradas al entrar) ──
+    const [acordeonCalculo, setAcordeonCalculo] = useState<string | null>(null);
+    const [acordeonPlanificacion, setAcordeonPlanificacion] = useState<string | null>(null);
+    const [acordeonAdherencia, setAcordeonAdherencia] = useState<string | null>(null);
+    const toggle = (setter: React.Dispatch<React.SetStateAction<string | null>>, id: string) =>
+        setter(prev => (prev === id ? null : id));
 
     return (
         <AuthenticatedLayout title="Perfil nutricional">
@@ -111,13 +161,13 @@ export default function Index(props: PerfilProps) {
 
                             {stepActivo === 'valoracion' && (
                                 <>
-                                    <Desplegable titulo="Evaluación nutricional" tiene={!!props.evaluacion}>
+                                    <Desplegable titulo="Evaluación nutricional" tiene={!!props.evaluacion} abierto={acordeonAbierto === 'evaluacion'} onToggle={() => toggleAcordeon('evaluacion')}>
                                         <TarjetaEvaluacion registro={props.evaluacion} onRegistrar={() => setModalEvalCrear(true)} onEditar={() => setModalEvalEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
-                                    <Desplegable titulo="Hábitos alimentarios" tiene={!!props.habitos}>
+                                    <Desplegable titulo="Hábitos alimentarios" tiene={!!props.habitos} abierto={acordeonAbierto === 'habitos'} onToggle={() => toggleAcordeon('habitos')}>
                                         <TarjetaHabitos registro={props.habitos} onRegistrar={() => setModalHabitosCrear(true)} onEditar={() => setModalHabitosEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
-                                    <Desplegable titulo="Preferencias y restricciones" tiene={!!props.preferencias || !!props.restricciones}>
+                                    <Desplegable titulo="Preferencias y restricciones" tiene={!!props.preferencias || !!props.restricciones} abierto={acordeonAbierto === 'prefrest'} onToggle={() => toggleAcordeon('prefrest')}>
                                         <div className="p-5 space-y-4">
                                             {/* Tabs internos */}
                                             <div className="flex gap-1 rounded-lg bg-black/[0.02] p-1 dark:bg-white/[0.03]">
@@ -132,7 +182,7 @@ export default function Index(props: PerfilProps) {
                                             )}
                                         </div>
                                     </Desplegable>
-                                    <Desplegable titulo="Objetivos nutricionales" tiene={!!props.objetivo}>
+                                    <Desplegable titulo="Objetivos nutricionales" tiene={!!props.objetivo} abierto={acordeonAbierto === 'objetivos'} onToggle={() => toggleAcordeon('objetivos')}>
                                         <TarjetaObjetivos registro={props.objetivo} onRegistrar={() => setModalObjCrear(true)} onEditar={() => setModalObjEditar(true)} bloqueada={bloqueada} idPaciente={props.paciente.id_paciente} />
                                     </Desplegable>
                                 </>
@@ -140,12 +190,12 @@ export default function Index(props: PerfilProps) {
 
                             {stepActivo === 'calculo' && (
                                 <>
-                                    <Desplegable titulo="Requerimiento nutricional" tiene={!!props.requerimientoNutricional} defaultAbierto>
+                                    <Desplegable titulo="Requerimiento nutricional" tiene={!!props.requerimientoNutricional} abierto={acordeonCalculo === 'requerimiento'} onToggle={() => toggle(setAcordeonCalculo, 'requerimiento')}>
                                         <div className="p-4">
                                             <TarjetaRequerimientoNutricional pacienteId={props.paciente.id_paciente} requerimiento={props.requerimientoNutricional} evaluacion={props.evaluacion} objetivo={props.objetivo} />
                                         </div>
                                     </Desplegable>
-                                    <Desplegable titulo="Orientación nutricional asistida" tiene={!!props.recomendacionExperta} defaultAbierto>
+                                    <Desplegable titulo="Orientación nutricional asistida" tiene={!!props.recomendacionExperta} abierto={acordeonCalculo === 'orientacion'} onToggle={() => toggle(setAcordeonCalculo, 'orientacion')}>
                                         <div className="p-4">
                                             <TarjetaRecomendacionExperta pacienteId={props.paciente.id_paciente} recomendacion={props.recomendacionExperta} />
                                         </div>
@@ -154,7 +204,7 @@ export default function Index(props: PerfilProps) {
                             )}
 
                             {stepActivo === 'planificacion' && (
-                                <Desplegable titulo="Plan alimentario" tiene={!!props.planAlimentarioPrincipal} defaultAbierto>
+                                <Desplegable titulo="Plan alimentario" tiene={!!props.planAlimentarioPrincipal} abierto={acordeonPlanificacion === 'plan'} onToggle={() => toggle(setAcordeonPlanificacion, 'plan')}>
                                     <div className="p-4 space-y-3">
                                         <PlanAlimentarioCard plan={props.planAlimentarioPrincipal} recomendacion={props.recomendacionExpertaAprobada} puedeGenerar={props.puedeGenerarPlanSemanal} alimentos={props.alimentosPlan} recetas={props.recetasPlan} />
                                         <Link
@@ -182,25 +232,25 @@ export default function Index(props: PerfilProps) {
 
                             {stepActivo === 'adherencia' && (
                                 <>
-                                    <Desplegable titulo="Alertas nutricionales" tiene={!!props.alertasNutricionista}>
+                                    <Desplegable titulo="Alertas nutricionales" tiene={!!props.alertasNutricionista} abierto={acordeonAdherencia === 'alertas'} onToggle={() => toggle(setAcordeonAdherencia, 'alertas')}>
                                         <div className="p-4"><AlertasNutricionistaPanel alertasNutricionista={props.alertasNutricionista} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Predicción riesgo adherencia" tiene={!!props.prediccionRiesgoAdherencia}>
+                                    <Desplegable titulo="Predicción riesgo adherencia" tiene={!!props.prediccionRiesgoAdherencia} abierto={acordeonAdherencia === 'prediccion'} onToggle={() => toggle(setAcordeonAdherencia, 'prediccion')}>
                                         <div className="p-4"><PrediccionRiesgoAdherenciaCard prediccionRiesgoAdherencia={props.prediccionRiesgoAdherencia} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Sugerencias de ajuste" tiene={!!props.sugerenciasAjusteNutricional}>
+                                    <Desplegable titulo="Sugerencias de ajuste" tiene={!!props.sugerenciasAjusteNutricional} abierto={acordeonAdherencia === 'sugerencias'} onToggle={() => toggle(setAcordeonAdherencia, 'sugerencias')}>
                                         <div className="p-4"><SugerenciasAjusteNutricionalPanel datos={props.sugerenciasAjusteNutricional} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Seguimiento del paciente" tiene={!!props.seguimientoPaciente?.plan}>
+                                    <Desplegable titulo="Seguimiento del paciente" tiene={!!props.seguimientoPaciente?.plan} abierto={acordeonAdherencia === 'seguimiento'} onToggle={() => toggle(setAcordeonAdherencia, 'seguimiento')}>
                                         <div className="p-4"><SeguimientoPacientePanel seguimiento={props.seguimientoPaciente} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Analítica de evolución" tiene={!!props.analiticaEvolucion}>
+                                    <Desplegable titulo="Analítica de evolución" tiene={!!props.analiticaEvolucion} abierto={acordeonAdherencia === 'analitica'} onToggle={() => toggle(setAcordeonAdherencia, 'analitica')}>
                                         <div className="p-4"><AnaliticaEvolucionPanel analitica={props.analiticaEvolucion} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Retroalimentación" tiene={(props.retroalimentacionesPaciente?.length ?? 0) > 0}>
+                                    <Desplegable titulo="Retroalimentación" tiene={(props.retroalimentacionesPaciente?.length ?? 0) > 0} abierto={acordeonAdherencia === 'retroalimentacion'} onToggle={() => toggle(setAcordeonAdherencia, 'retroalimentacion')}>
                                         <div className="p-4"><RetroalimentacionPacientePanel pacienteId={props.paciente.id_paciente} planId={props.seguimientoPaciente.plan?.id_plan_alimentario} historial={props.retroalimentacionesPaciente} /></div>
                                     </Desplegable>
-                                    <Desplegable titulo="Resumen ajuste del plan" tiene={!!props.contextoAjustePlan}>
+                                    <Desplegable titulo="Resumen ajuste del plan" tiene={!!props.contextoAjustePlan} abierto={acordeonAdherencia === 'resumen'} onToggle={() => toggle(setAcordeonAdherencia, 'resumen')}>
                                         <div className="p-4"><ResumenAjustePlanCard contexto={props.contextoAjustePlan} /></div>
                                     </Desplegable>
                                 </>

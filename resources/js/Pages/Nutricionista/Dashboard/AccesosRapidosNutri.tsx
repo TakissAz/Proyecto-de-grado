@@ -35,7 +35,7 @@ const accesos: AccesoItem[] = [
     {
         titulo: 'Agenda',
         descripcion: 'Proximas consultas',
-        href: '/nutricionista/calendario',
+        href: '/nutricionista/citas',
         icon: <Calendar size={16} strokeWidth={1.8} />,
         color: 'bg-category-others/10 text-category-others',
     },

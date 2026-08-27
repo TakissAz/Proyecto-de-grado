@@ -38,6 +38,12 @@ export interface RequerimientoNutricional {
         nombre: string;
         tipo_regla: string;
         prioridad: number;
+        descripcion?: string | null;
+        fuente?: string | null;
+        condicion_campo?: string;
+        condicion_operador?: string;
+        condicion_valor?: unknown[] | null;
+        resultado?: Record<string, number | string>;
     }[] | null;
     estado: boolean;
 }

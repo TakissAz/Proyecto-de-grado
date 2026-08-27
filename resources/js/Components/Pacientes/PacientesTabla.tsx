@@ -25,15 +25,18 @@ interface PacientesTablaProps {
   pacientes: PacienteRow[];
   basePath?: string;
   onCambiarEstado: (idPaciente: number, accion: 'activar' | 'inactivar') => void;
+  mostrarEstado?: boolean;
 }
-
-const COLUMNAS = ['Paciente', 'CI', 'Contacto', 'Edad', 'Registro', 'Estado', ''] as const;
 
 export default function PacientesTabla({
   pacientes,
   basePath = '/endocrinologo/pacientes',
   onCambiarEstado,
+  mostrarEstado = true,
 }: PacientesTablaProps) {
+  const columnas = mostrarEstado
+    ? ['Paciente', 'CI', 'Contacto', 'Edad', 'Registro', 'Estado', '']
+    : ['Paciente', 'CI', 'Contacto', 'Edad', 'Registro', ''];
   if (pacientes.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 px-5 py-16 text-center">
@@ -51,10 +54,10 @@ export default function PacientesTabla({
       <table className="w-full min-w-[780px] border-collapse">
         <thead>
           <tr className="border-b border-surface-border text-left text-[11px] font-semibold text-ink-muted dark:border-surface-border-dark dark:text-ink-muted-dark">
-            {COLUMNAS.map((col, i) => (
+            {columnas.map((col, i) => (
               <th
                 key={col || i}
-                className={clsx('px-3 py-2.5', i === 0 && 'px-5', i === COLUMNAS.length - 1 && 'px-5 text-right')}
+                className={clsx('px-3 py-2.5', i === 0 && 'px-5', i === columnas.length - 1 && 'px-5 text-right')}
               >
                 {col}
               </th>
@@ -91,9 +94,9 @@ export default function PacientesTabla({
               <td className="px-3 py-3 text-[12.5px] text-ink-muted dark:text-ink-muted-dark">
                 {p.fecha_registro ?? '—'}
               </td>
-              <td className="px-3 py-3">
+              {mostrarEstado && <td className="px-3 py-3">
                 <EstadoPill activo={p.estado === 'activo'} textoActivo="Activa" textoInactivo="Inactiva" />
-              </td>
+              </td>}
               <td className="px-5 py-3">
                 <PacienteFilaAcciones
                   idPaciente={p.id_paciente}

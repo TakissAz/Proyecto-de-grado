@@ -21,6 +21,16 @@ class GeneradorPlanSemanalService
         'cena' => ['hora' => '19:30', 'proporcion' => 0.20, 'orden' => 4],
     ];
 
+    private const DIAS_SEMANA = [
+        1 => 'Lunes',
+        2 => 'Martes',
+        3 => 'Miércoles',
+        4 => 'Jueves',
+        5 => 'Viernes',
+        6 => 'Sábado',
+        7 => 'Domingo',
+    ];
+
     public function __construct(
         private readonly CalculadoraTotalesPlanAlimentarioService $calculadora,
         private readonly ClasificadorRecetasSistemaExpertoService $clasificadorRecetas,
@@ -41,7 +51,7 @@ class GeneradorPlanSemanalService
         $opciones ??= [];
         $fechaInicio = isset($opciones['fecha_inicio']) && $opciones['fecha_inicio'] !== ''
             ? CarbonImmutable::parse($opciones['fecha_inicio'])->startOfDay()
-            : null;
+            : CarbonImmutable::tomorrow();
         $objetivos = $this->objetivosNutricionales($recomendacion);
         $paciente = Paciente::query()->find($recomendacion->id_paciente);
         $contextoAjuste = is_array($opciones['contexto_ajuste'] ?? null)
@@ -90,11 +100,12 @@ class GeneradorPlanSemanalService
             ]);
 
             foreach (range(1, 7) as $numeroDia) {
+                $fechaDia = $fechaInicio->addDays($numeroDia - 1);
                 $recetasUsadasEnDia = [];
                 $dia = $plan->dias()->create([
                     'numero_dia' => $numeroDia,
-                    'nombre_dia' => "Día {$numeroDia}",
-                    'fecha' => $fechaInicio?->addDays($numeroDia - 1)->toDateString(),
+                    'nombre_dia' => self::DIAS_SEMANA[$fechaDia->dayOfWeekIso],
+                    'fecha' => $fechaDia->toDateString(),
                     'estado' => 'activo',
                 ]);
 

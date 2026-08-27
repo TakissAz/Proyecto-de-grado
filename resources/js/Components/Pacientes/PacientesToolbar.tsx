@@ -8,9 +8,15 @@ interface PacientesToolbarProps {
   onBuscarChange: (value: string) => void;
   onSubmit: () => void;
   onLimpiar: () => void;
+  estado?: '' | 'activo' | 'inactivo';
+  onEstadoChange?: (estado: '' | 'activo' | 'inactivo') => void;
 }
 
-const TABS = ['Todos', 'Activos', 'Inactivos'] as const;
+const TABS = [
+  { label: 'Todos', value: '' },
+  { label: 'Activos', value: 'activo' },
+  { label: 'Inactivos', value: 'inactivo' },
+] as const;
 
 export default function PacientesToolbar({
   total,
@@ -19,6 +25,8 @@ export default function PacientesToolbar({
   onBuscarChange,
   onSubmit,
   onLimpiar,
+  estado = '',
+  onEstadoChange,
 }: PacientesToolbarProps) {
   return (
     <div className="px-5 pb-4 pt-5">
@@ -39,17 +47,19 @@ export default function PacientesToolbar({
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex gap-4 border-b border-surface-border text-[12.5px] dark:border-surface-border-dark">
-          {TABS.map((tab, i) => (
-            <span
-              key={tab}
+          {TABS.map((tab) => (
+            <button
+              type="button"
+              key={tab.value}
+              onClick={() => onEstadoChange?.(tab.value)}
               className={
-                i === 0
+                estado === tab.value
                   ? 'cursor-pointer border-b-2 border-brand-green-dark pb-2 font-semibold text-brand-green-dark dark:text-brand-green'
                   : 'cursor-pointer pb-2 text-ink-muted transition-colors hover:text-ink dark:text-ink-muted-dark dark:hover:text-ink-dark'
               }
             >
-              {tab}
-            </span>
+              {tab.label}
+            </button>
           ))}
         </div>
 
@@ -83,7 +93,7 @@ export default function PacientesToolbar({
           >
             <Filter size={12} strokeWidth={1.8} /> Filtrar
           </button>
-          {buscar ? (
+          {buscar || estado ? (
             <button
               type="button"
               onClick={onLimpiar}

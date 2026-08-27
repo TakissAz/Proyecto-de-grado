@@ -57,10 +57,63 @@ class PlanAlimentarioControllerTest extends TestCase
         $this->actingAs($user)->patchJson(route('nutricionista.planes.estado',$plan),['estado_plan'=>'aprobado'])->assertUnprocessable();
     }
 
+    public function test_no_puede_aprobar_plan_que_no_tenga_siete_dias_y_cuatro_comidas(): void
+    {
+        [$user, $plan] = $this->planAutenticado();
+        $plan->dias()->orderByDesc('numero_dia')->first()->delete();
+
+        $this->actingAs($user)
+            ->patchJson(route('nutricionista.planes.estado', $plan), ['estado_plan' => 'aprobado'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('estado_plan');
+
+        $this->assertSame('sugerido', $plan->fresh()->estado_plan);
+    }
+
     public function test_nutricionista_puede_rechazar_plan(): void
     {
         [$user,$plan]=$this->planAutenticado(); $this->actingAs($user)->patchJson(route('nutricionista.planes.estado',$plan),['estado_plan'=>'rechazado','observaciones'=>'Revisar'])->assertOk();
         $this->assertSame('rechazado',$plan->fresh()->estado_plan);
+    }
+
+    public function test_puede_cambiar_plan_aprobado_a_rechazado_y_volver_a_aprobar(): void
+    {
+        [$user, $plan] = $this->planAutenticado();
+
+        $this->actingAs($user)->patchJson(route('nutricionista.planes.estado', $plan), ['estado_plan' => 'aprobado'])->assertOk();
+        $this->actingAs($user)->patchJson(route('nutricionista.planes.estado', $plan), ['estado_plan' => 'rechazado'])->assertOk();
+        $this->assertSame('rechazado', $plan->fresh()->estado_plan);
+        $this->assertNull($plan->fresh()->fecha_aprobacion);
+        $this->assertNull($plan->fresh()->aprobado_por);
+
+        $this->actingAs($user)->patchJson(route('nutricionista.planes.estado', $plan), ['estado_plan' => 'aprobado'])->assertOk();
+        $this->assertSame('aprobado', $plan->fresh()->estado_plan);
+        $this->assertNotNull($plan->fresh()->fecha_aprobacion);
+    }
+
+    public function test_fecha_inicial_no_puede_ser_anterior_a_manana(): void
+    {
+        $this->actingAs($this->usuarioConRol('nutricionista'))
+            ->postJson(route('nutricionista.planes.generar-desde-recomendacion', $this->recomendacion('aprobado')), ['fecha_inicio' => today()->toDateString()])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('fecha_inicio');
+    }
+
+    public function test_aprobar_plan_antiguo_sin_fechas_le_asigna_periodo_de_siete_dias(): void
+    {
+        [$user, $plan] = $this->planAutenticado();
+        $plan->update(['estado_plan' => 'aprobado', 'fecha_inicio' => null, 'fecha_fin' => null]);
+        $plan->dias()->update(['fecha' => null]);
+
+        $this->actingAs($user)
+            ->patchJson(route('nutricionista.planes.estado', $plan), ['estado_plan' => 'aprobado'])
+            ->assertOk();
+
+        $actualizado = $plan->fresh()->load('dias');
+        $this->assertSame(today()->addDay()->toDateString(), $actualizado->fecha_inicio?->toDateString());
+        $this->assertSame(today()->addDays(7)->toDateString(), $actualizado->fecha_fin?->toDateString());
+        $this->assertCount(7, $actualizado->dias);
+        $this->assertTrue($actualizado->dias->every(fn ($dia) => $dia->fecha !== null));
     }
 
     public function test_nutricionista_puede_editar_comida(): void

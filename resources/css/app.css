@@ -31,12 +31,12 @@
 
   .nav-item {
     @apply flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-ink-muted transition-colors
-      hover:bg-black/[0.03] dark:text-ink-muted-dark dark:hover:bg-white/[0.04];
+      hover:bg-white/60 hover:text-brand-green-dark dark:text-ink-muted-dark dark:hover:bg-white/[0.04] dark:hover:text-ink-dark;
   }
 
   .nav-item-active {
-    @apply bg-brand-green-soft font-semibold text-brand-green-dark
-      dark:bg-brand-green-dark/20 dark:text-brand-green;
+    @apply bg-brand-green font-semibold text-white shadow-[0_2px_8px_rgba(47,174,30,0.25)]
+      dark:bg-brand-green-dark/30 dark:text-brand-green;
   }
 
   .campo-input {

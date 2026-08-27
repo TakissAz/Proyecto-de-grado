@@ -22,9 +22,12 @@ export default {
                 brand: {
                     green: '#2FAE1E',
                     'green-dark': '#1E8A10',
+                    'green-deep': '#14400C',
                     'green-soft': '#D2F5C7',
+                    'green-mist': '#EAEFE3',
                     orange: '#FF8C00',
                     peach: '#F2621A',
+                    cream: '#F7F4EC',
                 },
                 category: {
                     grains: '#22B80D',

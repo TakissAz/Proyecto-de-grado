@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ChevronDown, ChevronRight, Phone, Mail, MapPin, Briefcase, Heart, Calendar, Stethoscope, FlaskConical, Brain, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, Briefcase, Heart, Calendar, Stethoscope, FlaskConical, Brain, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
@@ -22,6 +22,7 @@ import TarjetaDiagnosticoRi from './componentes/TarjetaDiagnosticoRi';
 import FormularioDiagnosticoRi from './componentes/FormularioDiagnosticoRi';
 import SeccionAuditoria from './componentes/SeccionAuditoria';
 
+import { Desplegable } from '@/Components/ui/desplegable';
 import type { PerfilClinicoData } from './tipos';
 import type { PageProps } from '@/types';
 
@@ -90,6 +91,19 @@ export default function PerfilClinico({ perfil }: Props) {
     const [formularioEcografiaCrearAbierto, setFormularioEcografiaCrearAbierto] = useState(false);
     const [formularioDiagnosticoPmosAbierto, setFormularioDiagnosticoPmosAbierto] = useState(false);
     const [formularioDiagnosticoRiAbierto, setFormularioDiagnosticoRiAbierto] = useState(false);
+
+    // ── Acordeón controlado por step (solo uno abierto a la vez) ──
+    const [acordeonEval, setAcordeonEval] = useState<string | null>(null);
+    const [acordeonEstudios, setAcordeonEstudios] = useState<string | null>(null);
+    const [acordeonDiag, setAcordeonDiag] = useState<string | null>(null);
+    const toggleAc = (setter: React.Dispatch<React.SetStateAction<string | null>>, key: string) =>
+        setter(prev => (prev === key ? null : key));
+
+    // Al entrar, si no hay consulta inicial registrada, abre el modal de consulta
+    useEffect(() => {
+        if (!consulta_inicial) setFormularioConsultaAbierto(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Progreso por step
     const stepProgreso: Record<StepId, { completados: number; total: number }> = {
@@ -207,16 +221,16 @@ export default function PerfilClinico({ perfil }: Props) {
                         <div className="space-y-2">
                             {stepActivo === 'evaluacion' && (
                                 <>
-                                    <Desplegable titulo="Historia menstrual" tiene={!!historia_menstrual}>
+                                    <Desplegable titulo="Historia menstrual" tiene={!!historia_menstrual} abierto={acordeonEval === 'historia'} onToggle={() => toggleAc(setAcordeonEval, 'historia')}>
                                         <TarjetaHistoriaMenstrual historia={historia_menstrual} idPaciente={id} onRegistrar={() => setFormularioHistoriaCrearAbierto(true)} onEditar={() => setFormularioHistoriaAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Hiperandrogenismo" tiene={!!hiperandrogenismo}>
+                                    <Desplegable titulo="Hiperandrogenismo" tiene={!!hiperandrogenismo} abierto={acordeonEval === 'hiper'} onToggle={() => toggleAc(setAcordeonEval, 'hiper')}>
                                         <TarjetaHiperandrogenismo hiperandrogenismo={hiperandrogenismo} idPaciente={id} onRegistrar={() => setFormularioHiperandrogenismoCrearAbierto(true)} onEditar={() => setFormularioHiperandrogenismoAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Antecedentes endocrino-metabólicos" tiene={!!antecedentes}>
+                                    <Desplegable titulo="Antecedentes endocrino-metabólicos" tiene={!!antecedentes} abierto={acordeonEval === 'antecedentes'} onToggle={() => toggleAc(setAcordeonEval, 'antecedentes')}>
                                         <TarjetaAntecedentes antecedentes={antecedentes} idPaciente={id} onRegistrar={() => setFormularioAntecedentesCrearAbierto(true)} onEditar={() => setFormularioAntecedentesAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Evaluación física" tiene={!!evaluacion_fisica}>
+                                    <Desplegable titulo="Evaluación física" tiene={!!evaluacion_fisica} abierto={acordeonEval === 'fisica'} onToggle={() => toggleAc(setAcordeonEval, 'fisica')}>
                                         <TarjetaEvaluacionFisica evaluacion={evaluacion_fisica} idPaciente={id} onRegistrar={() => setFormularioEvaluacionFisicaCrearAbierto(true)} onEditar={() => setFormularioEvaluacionFisicaAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -224,7 +238,7 @@ export default function PerfilClinico({ perfil }: Props) {
 
                             {stepActivo === 'estudios' && (
                                 <>
-                                    <Desplegable titulo="Laboratorios" tiene={!!(laboratorios.perfil_androgenico || laboratorios.perfil_gonadotropo || laboratorios.glucosa_insulina)}>
+                                    <Desplegable titulo="Laboratorios" tiene={!!(laboratorios.perfil_androgenico || laboratorios.perfil_gonadotropo || laboratorios.glucosa_insulina)} abierto={acordeonEstudios === 'labs'} onToggle={() => toggleAc(setAcordeonEstudios, 'labs')}>
                                         <TarjetaLaboratorios
                                             laboratorios={laboratorios} idPaciente={id}
                                             onRegistrarPerfilAndrogenico={() => setFormularioPerfilAndrogenicoCrearAbierto(true)} onEditarPerfilAndrogenico={() => setFormularioPerfilAndrogenicoAbierto(true)}
@@ -234,7 +248,7 @@ export default function PerfilClinico({ perfil }: Props) {
                                             onRegistrarPerfilLipidico={() => setFormularioPerfilLipidicoCrearAbierto(true)} onEditarPerfilLipidico={() => setFormularioPerfilLipidicoAbierto(true)}
                                         />
                                     </Desplegable>
-                                    <Desplegable titulo="Ecografía" tiene={!!ecografia}>
+                                    <Desplegable titulo="Ecografía" tiene={!!ecografia} abierto={acordeonEstudios === 'eco'} onToggle={() => toggleAc(setAcordeonEstudios, 'eco')}>
                                         <TarjetaEcografia ecografia={ecografia} idPaciente={id} onRegistrar={() => setFormularioEcografiaCrearAbierto(true)} onEditar={() => setFormularioEcografiaAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -242,10 +256,10 @@ export default function PerfilClinico({ perfil }: Props) {
 
                             {stepActivo === 'diagnostico' && (
                                 <>
-                                    <Desplegable titulo="Diagnóstico PMOS" tiene={!!diagnostico_pmos}>
+                                    <Desplegable titulo="Diagnóstico PMOS" tiene={!!diagnostico_pmos} abierto={acordeonDiag === 'pmos'} onToggle={() => toggleAc(setAcordeonDiag, 'pmos')}>
                                         <TarjetaDiagnosticoPmos idPaciente={id} evaluacion={evaluacion_pmos} diagnostico={diagnostico_pmos} onRegistrar={() => setFormularioDiagnosticoPmosAbierto(true)} onEditar={() => setFormularioDiagnosticoPmosAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Diagnóstico Resistencia a la Insulina" tiene={!!diagnostico_ri}>
+                                    <Desplegable titulo="Diagnóstico Resistencia a la Insulina" tiene={!!diagnostico_ri} abierto={acordeonDiag === 'ri'} onToggle={() => toggleAc(setAcordeonDiag, 'ri')}>
                                         <TarjetaDiagnosticoRi idPaciente={id} evaluacion={evaluacion_ri} diagnostico={diagnostico_ri} onRegistrar={() => setFormularioDiagnosticoRiAbierto(true)} onEditar={() => setFormularioDiagnosticoRiAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -304,47 +318,4 @@ function DatoMini({ icon, label, valor }: { icon: React.ReactNode; label: string
     );
 }
 
-function Desplegable({ titulo, tiene, children }: { titulo: string; tiene: boolean; children: React.ReactNode }) {
-    const [abierto, setAbierto] = useState(tiene);
 
-    return (
-        <div className={clsx('card-elevated overflow-hidden transition-shadow', abierto && 'shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]')}>
-            <button
-                type="button"
-                onClick={() => setAbierto(!abierto)}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-black/[0.015] dark:hover:bg-white/[0.02]"
-            >
-                {/* Indicador */}
-                {tiene ? (
-                    <CheckCircle2 size={16} strokeWidth={1.8} className="shrink-0 text-brand-green-dark dark:text-brand-green" />
-                ) : (
-                    <Circle size={16} strokeWidth={1.8} className="shrink-0 text-ink-muted/40 dark:text-ink-muted-dark/40" />
-                )}
-
-                {/* Título + estado */}
-                <div className="flex-1">
-                    <span className="text-[13px] font-semibold text-ink dark:text-ink-dark">{titulo}</span>
-                    {tiene ? (
-                        <span className="ml-2 text-[10.5px] font-medium text-brand-green-dark dark:text-brand-green">✓ Registrado</span>
-                    ) : (
-                        <span className="ml-2 text-[10.5px] font-medium text-ink-muted/70 dark:text-ink-muted-dark/70">Pendiente</span>
-                    )}
-                </div>
-
-                {/* Flecha */}
-                <ChevronDown
-                    size={15}
-                    strokeWidth={1.8}
-                    className={clsx('shrink-0 text-ink-muted transition-transform duration-200 dark:text-ink-muted-dark', abierto && 'rotate-180')}
-                />
-            </button>
-
-            {/* Contenido desplegable */}
-            <div className={clsx('transition-all duration-200 overflow-hidden', abierto ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0')}>
-                <div className="border-t border-surface-border dark:border-surface-border-dark">
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-}

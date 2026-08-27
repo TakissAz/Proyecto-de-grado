@@ -14,6 +14,7 @@ class HistorialPlanesAlimentariosService
     public function __construct(
         private readonly SeguimientoComidaPacienteService $seguimientos,
         private readonly ReporteCambiosPlanService $reporteCambios,
+        private readonly ExplicacionComponentePlanService $explicadorComponentes,
     ) {}
 
     public function obtenerParaNutricionista(Paciente $paciente): array
@@ -112,7 +113,8 @@ class HistorialPlanesAlimentariosService
                 'grasas' => (float) $c->grasas_totales, 'fibra' => (float) $c->fibra_total, 'observaciones' => $c->observaciones,
                 'componentes' => $c->componentes->map(fn ($x) => ['tipo_componente' => $x->tipo_componente, 'nombre' => $x->receta?->nombre ?? $x->alimento?->nombre ?? $x->nombre_manual,
                     'cantidad' => (float) $x->cantidad, 'unidad' => $x->unidad, 'calorias' => (float) $x->calorias, 'proteinas' => (float) $x->proteinas,
-                    'carbohidratos' => (float) $x->carbohidratos, 'grasas' => (float) $x->grasas, 'fibra' => (float) $x->fibra, 'observaciones' => $x->observaciones])->values()->all()])->values()->all()])->values()->all();
+                    'carbohidratos' => (float) $x->carbohidratos, 'grasas' => (float) $x->grasas, 'fibra' => (float) $x->fibra, 'observaciones' => $x->observaciones,
+                    'explicacion_seleccion' => $this->explicadorComponentes->extraer($x->observaciones)])->values()->all()])->values()->all()])->values()->all();
     }
 
     private function consulta(Paciente $p)

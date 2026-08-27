@@ -4,34 +4,37 @@
     <meta charset="UTF-8">
     <title>Reporte justificativo del plan alimentario semanal</title>
     <style>
-        @page { margin: 28px 32px; }
+        @page { margin: 30px 34px 46px; }
         * { box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; color: #243047; font-size: 9px; line-height: 1.42; }
-        h1 { font-size: 21px; color: #173b57; margin: 5px 0; }
-        h2 { font-size: 13px; color: #075985; border-bottom: 2px solid #bae6fd; padding-bottom: 4px; margin: 18px 0 8px; }
-        h3 { font-size: 11px; color: #155e75; margin: 11px 0 5px; }
+        body { font-family: DejaVu Sans, sans-serif; color: #263238; font-size: 9px; line-height: 1.4; background: #fff; }
+        h1 { font-size: 21px; color: #174d3b; margin: 4px 0; }
+        h2 { font-size: 12px; color: #174d3b; border-bottom: 1px solid #a9c7bc; padding: 0 0 4px; margin: 17px 0 7px; }
+        h3 { font-size: 11px; color: #174d3b; margin: 10px 0 5px; }
         p { margin: 3px 0; }
         table { width: 100%; border-collapse: collapse; margin: 5px 0 9px; }
-        th { background: #e0f2fe; color: #164e63; text-align: left; }
-        th, td { border: 1px solid #cbd5e1; padding: 4px 5px; vertical-align: top; }
-        .header { background: #0f4664; color: white; padding: 15px 18px; border-radius: 5px; }
-        .header h1 { color: white; }
-        .subtitle { color: #bae6fd; font-size: 11px; }
+        th { background: #e8f1ed; color: #174d3b; text-align: left; }
+        th, td { border: 1px solid #d9e1de; padding: 5px 6px; vertical-align: top; }
+        .header { color: #263238; padding-bottom: 11px; border-bottom: 3px solid #2f8066; }
+        .brand { font-size: 9px; font-weight: bold; color: #2f8066; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.2px; }
+        .brand-mark { display: inline-block; color: #2f8066; margin-right: 4px; }
+        .report-type { float: right; color: #607d75; font-size: 8px; text-transform: uppercase; letter-spacing: .6px; padding-top: 2px; }
+        .subtitle { color: #607d75; font-size: 9px; }
         .grid { width: 100%; }
         .grid td { width: 50%; border: 0; padding: 2px 8px 2px 0; }
-        .label { color: #64748b; font-size: 7px; text-transform: uppercase; font-weight: bold; }
+        .label { color: #718078; font-size: 7px; text-transform: uppercase; font-weight: bold; letter-spacing: .35px; }
         .value { font-weight: bold; }
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 8px; background: #e0f2fe; color: #075985; margin: 1px; }
-        .ok { color: #166534; font-weight: bold; }
-        .warn { color: #9a3412; font-weight: bold; }
-        .alert { background: #fff7ed; border-left: 4px solid #f97316; padding: 7px 9px; margin: 5px 0; }
-        .note { background: #f0f9ff; border-left: 4px solid #0284c7; padding: 7px 9px; margin: 6px 0; }
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 8px; background: #e8f1ed; color: #174d3b; margin: 1px; }
+        .ok { color: #2f8066; font-weight: bold; }
+        .warn { color: #ad5c08; font-weight: bold; }
+        .alert { background: #fff7e8; border-left: 4px solid #e49a20; padding: 8px 10px; margin: 6px 0; }
+        .note { background: #f2f7f5; border-left: 3px solid #2f8066; padding: 8px 10px; margin: 7px 0; }
         .day { page-break-inside: avoid; margin-top: 12px; }
         .meal { page-break-inside: avoid; }
-        .small { font-size: 7.5px; color: #475569; }
+        .small { font-size: 7.5px; color: #65736c; }
         .right { text-align: right; }
         .center { text-align: center; }
-        .footer { margin-top: 20px; border-top: 1px solid #94a3b8; padding-top: 8px; color: #64748b; }
+        .footer { position: fixed; left: 0; right: 0; bottom: -32px; border-top: 1px solid #cbd9d0; padding-top: 7px; color: #718078; font-size: 7px; }
+        .footer-brand { color: #2f8066; font-weight: bold; }
         ul { margin: 3px 0 5px 16px; padding: 0; }
     </style>
 </head>
@@ -43,12 +46,14 @@
 @endphp
 
 <header class="header">
-    <div class="subtitle">PLATAFORMA CLÍNICA Y NUTRICIONAL PMOS</div>
+    <div class="report-type">Reporte profesional · {{ $fechaGeneracion->format('d/m/Y') }}</div>
+    <div class="brand"><span class="brand-mark">●</span>Nutrigo · Salud integral</div>
+    <div class="subtitle">PLATAFORMA DE SALUD ENDOCRINOLÓGICA Y NUTRICIONAL</div>
     <h1>Reporte justificativo del plan alimentario semanal</h1>
-    <div class="subtitle">Sistema experto nutricional PMOS/RI · Evidencia de trazabilidad y explicabilidad</div>
+    <div class="subtitle">Planificación personalizada con asistencia experta, trazabilidad clínica y validación profesional</div>
     <table class="grid" style="color:white;margin-top:9px">
-        <tr><td><span class="label" style="color:#bae6fd">Paciente</span><br><b>{{ $nombrePaciente ?: 'Sin registro' }}</b></td><td><span class="label" style="color:#bae6fd">Nutricionista</span><br><b>{{ $nutricionista?->name ?? 'Sin registro' }}</b></td></tr>
-        <tr><td><span class="label" style="color:#bae6fd">Estado y periodo</span><br>{{ $sin($plan->estado_plan) }} · {{ $plan->fecha_inicio?->format('d/m/Y') ?? 'Sin fecha' }} a {{ $plan->fecha_fin?->format('d/m/Y') ?? 'Sin fecha' }}</td><td><span class="label" style="color:#bae6fd">Generado</span><br>{{ $fechaGeneracion->format('d/m/Y H:i') }}</td></tr>
+        <tr><td><span class="label">Paciente</span><br><b>{{ $nombrePaciente ?: 'Sin registro' }}</b></td><td><span class="label">Nutricionista responsable</span><br><b>{{ $nutricionista?->name ?? 'Sin registro' }}</b></td></tr>
+        <tr><td><span class="label">Estado y periodo</span><br>{{ $sin($plan->estado_plan) }} · {{ $plan->fecha_inicio?->format('d/m/Y') ?? 'Sin fecha' }} a {{ $plan->fecha_fin?->format('d/m/Y') ?? 'Sin fecha' }}</td><td><span class="label">Fecha de emisión</span><br>{{ $fechaGeneracion->format('d/m/Y H:i') }}</td></tr>
     </table>
 </header>
 
@@ -160,6 +165,6 @@
 </table>
 <p class="center value">{{ in_array($plan->estado_plan, ['aprobado','finalizado']) ? 'Validado por nutricionista responsable' : 'Pendiente de validación profesional' }}</p>
 
-<footer class="footer">Documento generado por el Sistema Experto Nutricional PMOS/RI. Este reporte conserva la trazabilidad de la recomendación y requiere interpretación profesional.</footer>
+<footer class="footer"><span class="footer-brand">Nutrigo</span> · Documento clínico-nutricional generado con asistencia experta. Requiere interpretación y validación profesional.</footer>
 </body>
 </html>

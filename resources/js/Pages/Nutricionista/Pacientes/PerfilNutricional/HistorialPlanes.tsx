@@ -55,7 +55,7 @@ export default function HistorialPlanes({ paciente, historialPlanes }: Props) {
                 </section>
 
                 <section className="card-elevated p-5">
-                    <HistorialPlanesNutricionista historial={historialPlanes} />
+                    <HistorialPlanesNutricionista historial={historialPlanes} pacienteId={paciente.id_paciente} />
                 </section>
             </main>
         </AuthenticatedLayout>

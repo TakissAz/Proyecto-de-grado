@@ -8,16 +8,29 @@ interface Props {
     icono?: React.ReactNode;
     children: React.ReactNode;
     defaultAbierto?: boolean;
+    /** Controlado: si se pasa, el estado abierto/cerrado lo maneja el padre */
+    abierto?: boolean;
+    onToggle?: () => void;
 }
 
-export function Desplegable({ titulo, tiene, icono, children, defaultAbierto }: Props) {
-    const [abierto, setAbierto] = useState(defaultAbierto ?? tiene);
+export function Desplegable({ titulo, tiene, icono, children, defaultAbierto, abierto: abiertoProp, onToggle }: Props) {
+    const [abiertoInterno, setAbiertoInterno] = useState(defaultAbierto ?? tiene);
+    const controlado = abiertoProp !== undefined;
+    const abierto = controlado ? abiertoProp : abiertoInterno;
+
+    const handleToggle = () => {
+        if (controlado) {
+            onToggle?.();
+        } else {
+            setAbiertoInterno(!abiertoInterno);
+        }
+    };
 
     return (
         <div className={clsx('card-elevated overflow-hidden transition-shadow', abierto && 'shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]')}>
             <button
                 type="button"
-                onClick={() => setAbierto(!abierto)}
+                onClick={handleToggle}
                 className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-black/[0.015] dark:hover:bg-white/[0.02]"
             >
                 {/* Indicador */}

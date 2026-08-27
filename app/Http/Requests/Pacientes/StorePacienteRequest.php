@@ -15,6 +15,7 @@ class StorePacienteRequest extends BasePacienteRequest
 
     protected function prepareForValidation(): void
     {
+        $this->merge(['fecha_registro' => now()->toDateString()]);
         $this->sanitizeInput();
     }
 

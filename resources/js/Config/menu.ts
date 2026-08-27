@@ -13,6 +13,8 @@ import {
   UserCog,
   ShieldCheck,
   DatabaseBackup,
+  BrainCircuit,
+  FileBarChart,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -75,19 +77,24 @@ export const menuNutricionista: MenuItem[] = [
     icon: CookingPot,
   },
   {
+    label: 'Reglas nutricionales',
+    href: '/nutricionista/reglas-nutricionales',
+    icon: BrainCircuit,
+  },
+  {
     label: 'Citas',
     href: '/nutricionista/citas',
     icon: CalendarClock,
   },
   {
-    label: 'Calendario',
-    href: '/nutricionista/calendario',
-    icon: Calendar,
-  },
-  {
     label: 'Progreso',
     href: '/nutricionista/progreso',
     icon: TrendingUp,
+  },
+  {
+    label: 'Reportes',
+    href: '/nutricionista/reportes',
+    icon: FileBarChart,
   },
 ];
 

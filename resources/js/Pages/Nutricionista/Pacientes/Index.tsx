@@ -19,6 +19,7 @@ interface PaginatedPacientes {
 
 interface Filters {
   buscar: string;
+  estado: '' | 'activo' | 'inactivo';
 }
 
 interface Props extends PageProps {
@@ -30,23 +31,32 @@ const BASE_PATH = '/nutricionista/pacientes';
 
 export default function Index({ pacientes, filtros, flash }: Props) {
   const [buscar, setBuscar] = useState(filtros.buscar ?? '');
+  const [estado, setEstado] = useState<'' | 'activo' | 'inactivo'>(filtros.estado ?? '');
   const buscarRef = useRef(buscar);
   buscarRef.current = buscar;
 
   useEffect(() => {
     setBuscar(filtros.buscar ?? '');
-  }, [filtros.buscar]);
+    setEstado(filtros.estado ?? '');
+  }, [filtros.buscar, filtros.estado]);
 
-  function aplicarFiltros(pagina = 1) {
+  function aplicarFiltros(pagina = 1, estadoSeleccionado = estado) {
     const params = new URLSearchParams();
     if (buscarRef.current.trim()) params.set('buscar', buscarRef.current.trim());
+    if (estadoSeleccionado) params.set('estado', estadoSeleccionado);
     params.set('page', String(pagina));
     window.location.href = `${BASE_PATH}?${params.toString()}`;
   }
 
   function limpiarFiltros() {
     setBuscar('');
+    setEstado('');
     window.location.href = BASE_PATH;
+  }
+
+  function filtrarPorEstado(nuevoEstado: '' | 'activo' | 'inactivo') {
+    setEstado(nuevoEstado);
+    aplicarFiltros(1, nuevoEstado);
   }
 
   function cambiarEstado(idPaciente: number, accion: 'activar' | 'inactivar') {
@@ -84,12 +94,15 @@ export default function Index({ pacientes, filtros, flash }: Props) {
             onBuscarChange={setBuscar}
             onSubmit={() => aplicarFiltros(1)}
             onLimpiar={limpiarFiltros}
+            estado={estado}
+            onEstadoChange={filtrarPorEstado}
           />
 
           <PacientesTabla
             pacientes={pacientes.data}
             basePath={BASE_PATH}
             onCambiarEstado={cambiarEstado}
+            mostrarEstado={false}
           />
 
           <PacientesPaginacion

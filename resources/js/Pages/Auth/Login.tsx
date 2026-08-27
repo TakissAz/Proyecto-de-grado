@@ -1,9 +1,20 @@
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, LogIn, Mail } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
+
+function GoogleIcon() {
+    return (
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
+            <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z" />
+            <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.43l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z" />
+            <path fill="#FBBC05" d="M6.39 13.86A6 6 0 0 1 6.08 12c0-.65.11-1.28.31-1.86V7.52H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.48l3.35-2.62Z" />
+            <path fill="#EA4335" d="M12 6.01c1.47 0 2.78.5 3.82 1.49l2.88-2.88A9.66 9.66 0 0 0 12 2a10 10 0 0 0-8.96 5.52l3.35 2.62C7.18 7.77 9.39 6.01 12 6.01Z" />
+        </svg>
+    );
+}
 
 export default function Login({
     status,
@@ -13,6 +24,7 @@ export default function Login({
     canResetPassword: boolean;
 }) {
     const [mostrarPassword, setMostrarPassword] = useState(false);
+    const flash = usePage().props.flash as { error?: string } | undefined;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -46,6 +58,12 @@ export default function Login({
             {status && (
                 <div className="mb-5 rounded-xl border border-brand-green/20 bg-brand-green-soft px-4 py-3 text-xs font-medium text-brand-green-dark dark:bg-brand-green-dark/15 dark:text-brand-green">
                     {status}
+                </div>
+            )}
+
+            {flash?.error && (
+                <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-medium text-red-700 dark:text-red-300">
+                    {flash.error}
                 </div>
             )}
 
@@ -139,7 +157,23 @@ export default function Login({
                 </button>
             </form>
 
-            <div className="mt-8 flex items-center justify-center border-t border-surface-border pt-6 dark:border-surface-border-dark">
+            <div className="my-6 flex items-center gap-3" aria-hidden="true">
+                <span className="h-px flex-1 bg-surface-border dark:bg-surface-border-dark" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted dark:text-ink-muted-dark">
+                    o continúa con
+                </span>
+                <span className="h-px flex-1 bg-surface-border dark:bg-surface-border-dark" />
+            </div>
+
+            <a
+                href={route('auth.google.redirect')}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-surface-border bg-white px-5 text-sm font-bold text-ink shadow-sm transition hover:-translate-y-0.5 hover:border-brand-green/40 hover:bg-brand-green-soft/40 dark:border-surface-border-dark dark:bg-surface-card-dark dark:text-ink-dark dark:hover:border-brand-green/40 dark:hover:bg-brand-green-dark/10"
+            >
+                <GoogleIcon />
+                Continuar con Google
+            </a>
+
+            <div className="mt-7 flex items-center justify-center border-t border-surface-border pt-6 dark:border-surface-border-dark">
                 <Link
                     href="/"
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted transition-colors hover:text-ink dark:text-ink-muted-dark dark:hover:text-ink-dark"

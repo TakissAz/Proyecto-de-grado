@@ -9,6 +9,20 @@
 
 ## About Laravel
 
+## Inicio de sesión con Google
+
+El acceso con Google usa Laravel Socialite y está restringido a correos que ya existen en `users`. El flujo no registra cuentas ni asigna roles; conserva los permisos existentes y no almacena tokens de Google.
+
+Configura estas variables en el entorno:
+
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI="http://127.0.0.1:8000/auth/google/callback"
+```
+
+En Google Cloud Console, la URI autorizada debe coincidir exactamente con `GOOGLE_REDIRECT_URI`. La migración que agrega `google_id` y `avatar` debe aplicarse explícitamente cuando se decida actualizar la base de datos; esta fase no ejecuta migraciones automáticamente.
+
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
 - [Simple, fast routing engine](https://laravel.com/docs/routing).

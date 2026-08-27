@@ -28,6 +28,7 @@ class PacienteController extends Controller
             ),
             'filtros' => [
                 'buscar' => $request->input('buscar', ''),
+                'estado' => $request->input('estado', ''),
             ],
         ]);
     }

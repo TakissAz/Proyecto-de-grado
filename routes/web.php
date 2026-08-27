@@ -13,6 +13,10 @@ use App\Http\Controllers\Endocrinologo\EcografiaController;
 use App\Http\Controllers\Endocrinologo\EvaluacionFisicaController;
 use App\Http\Controllers\Endocrinologo\HiperandrogenismoController;
 use App\Http\Controllers\Endocrinologo\HistoriaMenstrualController;
+use App\Http\Controllers\Endocrinologo\ReporteHistoriaMenstrualPdfController;
+use App\Http\Controllers\Endocrinologo\ReporteHiperandrogenismoPdfController;
+use App\Http\Controllers\Endocrinologo\ReporteAntecedentesPdfController;
+use App\Http\Controllers\Endocrinologo\ReporteEvaluacionFisicaPdfController;
 use App\Http\Controllers\Endocrinologo\LaboratoriosController;
 use App\Http\Controllers\Endocrinologo\PacienteController as EndocrinologoPacienteController;
 use App\Http\Controllers\Endocrinologo\ReporteDiagnosticoController;
@@ -33,6 +37,7 @@ use App\Http\Controllers\Nutricionista\ReporteSeguimientoEvolucionPdfController;
 use App\Http\Controllers\Nutricionista\ReporteCambiosPlanPdfController;
 use App\Http\Controllers\Nutricionista\CicloPlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
+use App\Http\Controllers\Nutricionista\ReglaNutricionalController;
 use App\Http\Controllers\Nutricionista\RetroalimentacionPacienteController as NutricionistaRetroalimentacionController;
 use App\Http\Controllers\Endocrinologo\CitaController as EndocrinologoCitaController;
 use App\Http\Controllers\Endocrinologo\DashboardController as EndocrinologoDashboardController;
@@ -140,6 +145,9 @@ Route::middleware(['auth', 'role:nutricionista'])
     ->name('nutricionista.')
     ->group(function () {
         Route::get('/dashboard', NutricionistaDashboardController::class)->name('dashboard');
+        Route::get('/progreso', \App\Http\Controllers\Nutricionista\ProgresoPacientesController::class)->name('progreso');
+        Route::get('/reportes', \App\Http\Controllers\Nutricionista\ReportesPacientesController::class)->name('reportes.index');
+        Route::get('/reportes/adherencia-pdf', \App\Http\Controllers\Nutricionista\ReporteAdherenciaPacientesPdfController::class)->name('reportes.adherencia.pdf');
 
         Route::get('pacientes', [NutricionistaPacienteController::class, 'index'])
             ->name('pacientes.index');
@@ -186,6 +194,8 @@ Route::middleware(['auth', 'role:nutricionista'])
             Route::post('pacientes/{paciente}/retroalimentaciones', [NutricionistaRetroalimentacionController::class, 'store'])
                 ->name('pacientes.retroalimentaciones.store');
             Route::get('pacientes/{paciente}/planes-alimentarios', [PlanAlimentarioController::class, 'index'])->name('planes.index');
+            Route::get('pacientes/{paciente}/planes-alimentarios/historial/reporte-pdf', \App\Http\Controllers\Nutricionista\ReporteHistorialPlanesPdfController::class)
+                ->name('pacientes.planes-alimentarios.historial.reporte-pdf');
             Route::post('recomendaciones-expertas/{recomendacion}/generar-plan', [PlanAlimentarioController::class, 'generarDesdeRecomendacion'])->name('planes.generar-desde-recomendacion');
             Route::get('planes-alimentarios/{plan}', [PlanAlimentarioController::class, 'show'])->name('planes.show');
             Route::get('planes-alimentarios/{plan}/reporte-pdf', ReportePlanAlimentarioPdfController::class)
@@ -241,6 +251,13 @@ Route::middleware(['auth', 'role:nutricionista'])
             ->name('recetas.activar');
         Route::patch('recetas/{receta}/inactivar', [NutricionistaRecetaController::class, 'inactivar'])
             ->name('recetas.inactivar');
+
+        // Reglas profesionales para el cálculo de requerimientos nutricionales
+        Route::get('reglas-nutricionales', [ReglaNutricionalController::class, 'index'])->name('reglas-nutricionales.index');
+        Route::get('reglas-nutricionales/create', [ReglaNutricionalController::class, 'create'])->name('reglas-nutricionales.create');
+        Route::post('reglas-nutricionales', [ReglaNutricionalController::class, 'store'])->name('reglas-nutricionales.store');
+        Route::get('reglas-nutricionales/{reglaNutricional}/edit', [ReglaNutricionalController::class, 'edit'])->name('reglas-nutricionales.edit');
+        Route::match(['put', 'patch'], 'reglas-nutricionales/{reglaNutricional}', [ReglaNutricionalController::class, 'update'])->name('reglas-nutricionales.update');
 
         // Búsqueda de alimentos (API para autocomplete)
         Route::get('api/alimentos/buscar', AlimentoBusquedaController::class)
@@ -299,6 +316,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.historia-menstrual.update');
         Route::get('pacientes/{paciente}/historia-menstrual/historial', [HistoriaMenstrualController::class, 'historial'])
             ->name('pacientes.historia-menstrual.historial');
+        Route::get('pacientes/{paciente}/historia-menstrual/reporte-pdf', ReporteHistoriaMenstrualPdfController::class)
+            ->name('pacientes.historia-menstrual.reporte-pdf');
 
         // Hiperandrogenismo
         Route::post('pacientes/{paciente}/hiperandrogenismo', [HiperandrogenismoController::class, 'store'])
@@ -307,6 +326,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.hiperandrogenismo.update');
         Route::get('pacientes/{paciente}/hiperandrogenismo/historial', [HiperandrogenismoController::class, 'historial'])
             ->name('pacientes.hiperandrogenismo.historial');
+        Route::get('pacientes/{paciente}/hiperandrogenismo/reporte-pdf', ReporteHiperandrogenismoPdfController::class)
+            ->name('pacientes.hiperandrogenismo.reporte-pdf');
 
         // Antecedentes endocrino-metabólicos
         Route::post('pacientes/{paciente}/antecedentes', [AntecedentesEndocrinoMetabolicosController::class, 'store'])
@@ -315,6 +336,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.antecedentes.update');
         Route::get('pacientes/{paciente}/antecedentes/historial', [AntecedentesEndocrinoMetabolicosController::class, 'historial'])
             ->name('pacientes.antecedentes.historial');
+        Route::get('pacientes/{paciente}/antecedentes/reporte-pdf', ReporteAntecedentesPdfController::class)
+            ->name('pacientes.antecedentes.reporte-pdf');
 
         // Evaluación física endocrina
         Route::post('pacientes/{paciente}/evaluacion-fisica', [EvaluacionFisicaController::class, 'store'])
@@ -323,6 +346,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.evaluacion-fisica.update');
         Route::get('pacientes/{paciente}/evaluacion-fisica/historial', [EvaluacionFisicaController::class, 'historial'])
             ->name('pacientes.evaluacion-fisica.historial');
+        Route::get('pacientes/{paciente}/evaluacion-fisica/reporte-pdf', ReporteEvaluacionFisicaPdfController::class)
+            ->name('pacientes.evaluacion-fisica.reporte-pdf');
 
         // Laboratorios - Perfil androgénico
         Route::post('pacientes/{paciente}/laboratorios/perfil-androgenico', [LaboratoriosController::class, 'storePerfilAndrogenico'])
