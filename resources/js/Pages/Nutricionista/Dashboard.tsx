@@ -6,18 +6,19 @@ import clsx from 'clsx';
 
 interface Resumen { total_pacientes: number; planes_activos: number; consultas_mes: number; adherencia_promedio: number; planes_por_aprobar: number; seguimientos_por_revisar: number; citas_hoy: number }
 interface Cita { id_cita: number; id_paciente: number; paciente: string; fecha: string; hora: string; tipo_cita: string | null; modalidad: string | null; estado: string }
-interface Props extends PageProps { resumen: Resumen; proximasCitas: Cita[] }
+interface Props extends PageProps { resumen: Resumen; proximasCitas: Cita[]; derivaciones:{pendientes:number;en_proceso:number} }
 
 const fecha = (valor: string) => new Date(`${valor}T12:00:00`).toLocaleDateString('es-BO', { weekday: 'short', day: 'numeric', month: 'short' });
 const etiqueta = (valor?: string | null) => valor?.replaceAll('_', ' ') ?? 'Sin definir';
 
-export default function Dashboard({ auth, resumen, proximasCitas }: Props) {
+export default function Dashboard({ auth, resumen, proximasCitas, derivaciones }: Props) {
     const nombre = auth?.user?.name?.trim().replace(/^(lic\.?|dra?\.?|nut\.?)\s+/i, '').split(/\s+/)[0] || 'Nutricionista';
     const tareas = resumen.planes_por_aprobar + resumen.seguimientos_por_revisar;
 
     return <AuthenticatedLayout title="Panel nutricional">
         <Head title="Panel nutricional" />
         <main className="mx-auto max-w-7xl space-y-5">
+            <Link href="/nutricionista/derivaciones" className="card-elevated flex items-center gap-4 border-brand-green/20 p-4"><Icono icon={UserPlus} color="green"/><div className="flex-1"><p className="text-xs font-bold">Derivaciones desde endocrinología</p><p className="text-[10px] text-ink-muted">{derivaciones.pendientes} pendientes · {derivaciones.en_proceso} en proceso</p></div><span className="text-[10px] font-bold text-brand-green">Ver derivaciones →</span></Link>
             <header className="relative overflow-hidden rounded-2xl border border-surface-border bg-white p-6 shadow-[0_8px_30px_rgba(16,24,20,.04)] dark:border-surface-border-dark dark:bg-[#1c2027] dark:shadow-none">
                 <div className="absolute inset-y-0 left-0 w-1 bg-brand-green" />
                 <div className="flex flex-wrap items-center justify-between gap-5">

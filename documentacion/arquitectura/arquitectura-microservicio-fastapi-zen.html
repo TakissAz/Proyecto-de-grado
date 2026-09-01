@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arquitectura del microservicio FastAPI + ZEN Engine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--paper:#2d3142;--paper2:#393e53;--ink:#f5f5f5;--muted:#bfc0c0;--soft:#8e98ac;--rule:rgba(245,245,245,.12);--accent:#f08a59;--accent-tint:rgba(240,138,89,.10);--link:#6a95d8}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Geist,Arial,sans-serif}main{width:min(1440px,100%);margin:auto;padding:48px 32px 64px}
+    .eyebrow{margin:0 0 8px;font:500 8px/1.4 "Geist Mono",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}h1,h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400}h1{font-size:40px;line-height:1.05;margin:0;max-width:920px}h2{font-size:28px;margin:0 0 8px}.lead{max-width:880px;color:var(--muted);font-size:16px;line-height:1.6;margin:16px 0 0}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 40px}.chip{border:1px solid var(--rule);border-radius:4px;padding:8px 12px;font:500 8px/1 "Geist Mono",monospace;letter-spacing:.08em;text-transform:uppercase;background:var(--paper2)}
+    .figure{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--paper2);padding:16px}.figure svg{display:block;width:100%;min-width:1120px;height:auto}
+    section{margin-top:48px}.section-head{display:grid;grid-template-columns:1fr minmax(280px,520px);gap:32px;align-items:end;margin-bottom:24px}.section-head p{margin:0;color:var(--muted);line-height:1.55}
+    .grid{display:grid;grid-template-columns:1.15fr 1fr .85fr;gap:16px}.card{background:var(--paper2);border:1px solid var(--rule);border-radius:6px;padding:20px}.card h3{font-size:16px;margin:4px 0 12px}.card ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.7;font-size:13px}.card code{font-family:"Geist Mono",monospace;color:var(--link);font-size:11px}.accent{color:var(--accent)}
+    .endpoint{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--rule)}.endpoint:first-of-type{border-top:0}.method{font:600 9px/1 "Geist Mono",monospace;color:var(--accent);padding-top:4px}.path{font:500 10px/1.5 "Geist Mono",monospace}.path small{display:block;color:var(--soft);font:400 9px/1.5 Geist,sans-serif;margin-top:4px}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:24px;color:var(--soft);font:400 9px/1.5 "Geist Mono",monospace}
+    @media(max-width:800px){main{padding:32px 16px}.section-head,.grid{grid-template-columns:1fr}h1{font-size:32px}}@media print{main{width:100%;padding:20px}.figure{overflow:visible}.figure svg{min-width:0}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Microservicio experto · Arquitectura interna</p>
+    <h1>FastAPI + ZEN Engine</h1>
+    <p class="lead">Vista exclusiva de <strong>pmos-experto</strong>: cómo recibe hechos, valida solicitudes, selecciona un modelo JDM, ejecuta reglas y entrega resultados con explicación y trazabilidad.</p>
+    <div class="meta"><span class="chip">Python 3.13.6</span><span class="chip">FastAPI</span><span class="chip">Pydantic</span><span class="chip">zen-engine 0.53.0</span><span class="chip">JSON Decision Model</span></div>
+  </header>
+
+  <section>
+    <div class="section-head"><div><p class="eyebrow">Vista principal · Arquitectura</p><h2>Recorrido de una evaluación</h2></div><p>El microservicio no administra usuarios ni persiste datos. Su responsabilidad es transformar hechos validados en una decisión explicable.</p></div>
+    <div class="figure">
+      <svg viewBox="0 0 1280 720" role="img" aria-labelledby="fastapi-zen-title fastapi-zen-desc">
+        <title id="fastapi-zen-title">Arquitectura del microservicio FastAPI y ZEN Engine</title>
+        <desc id="fastapi-zen-desc">Flujo desde una solicitud HTTP hasta una respuesta experta, pasando por FastAPI, Pydantic, servicios clínicos, modelos JDM y ZEN Engine.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bfc0c0"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f08a59"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6a95d8"/></marker>
+        </defs>
+        <rect width="1280" height="720" fill="#2d3142"/>
+        <!-- zonas -->
+        <rect x="32" y="80" width="216" height="488" rx="8" fill="rgba(245,245,245,.02)" stroke="rgba(245,245,245,.12)"/>
+        <rect x="48" y="84" width="72" height="12" rx="2" fill="#2d3142"/><text x="84" y="92" text-anchor="middle" font-family="Geist Mono" font-size="8" letter-spacing="1.2" fill="#8e98ac">INGRESO</text>
+        <rect x="280" y="80" width="608" height="488" rx="8" fill="rgba(245,245,245,.02)" stroke="rgba(245,245,245,.12)"/>
+        <rect x="296" y="84" width="112" height="12" rx="2" fill="#2d3142"/><text x="352" y="92" text-anchor="middle" font-family="Geist Mono" font-size="8" letter-spacing="1.2" fill="#8e98ac">FASTAPI APP</text>
+        <rect x="920" y="80" width="328" height="488" rx="8" fill="rgba(245,245,245,.02)" stroke="rgba(245,245,245,.12)"/>
+        <rect x="936" y="84" width="120" height="12" rx="2" fill="#2d3142"/><text x="996" y="92" text-anchor="middle" font-family="Geist Mono" font-size="8" letter-spacing="1.2" fill="#8e98ac">DECISIÓN JDM</text>
+
+        <!-- conectores -->
+        <line x1="216" y1="272" x2="312" y2="272" stroke="#6a95d8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <line x1="472" y1="272" x2="520" y2="272" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="680" y1="272" x2="728" y2="272" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M808 216 V184 Q808 176 816 176 H952" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M808 328 V360 Q808 368 816 368 H952" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="1072" y1="224" x2="1072" y2="328" stroke="#f08a59" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+        <path d="M1072 448 V488 Q1072 496 1064 496 H872 Q864 496 864 488 V456" fill="none" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <path d="M728 404 H696 Q688 404 688 412 V488 Q688 496 680 496 H216" fill="none" stroke="#6a95d8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-link)"/>
+
+        <!-- etiquetas con máscara -->
+        <rect x="236" y="252" width="60" height="12" rx="2" fill="#2d3142"/><text x="266" y="260" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#6a95d8">JSON</text>
+        <rect x="476" y="252" width="40" height="12" rx="2" fill="#2d3142"/><text x="496" y="260" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">VALIDA</text>
+        <rect x="684" y="252" width="40" height="12" rx="2" fill="#2d3142"/><text x="704" y="260" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">DELEGA</text>
+        <rect x="1028" y="268" width="88" height="12" rx="2" fill="#2d3142"/><text x="1072" y="276" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#f08a59">EVALÚA</text>
+        <rect x="408" y="476" width="80" height="12" rx="2" fill="#2d3142"/><text x="448" y="484" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#6a95d8">RESPUESTA</text>
+
+        <!-- nodos -->
+        <rect x="64" y="216" width="152" height="112" rx="6" fill="#393e53" stroke="#f5f5f5"/><rect x="76" y="228" width="44" height="12" rx="2" fill="none" stroke="rgba(245,245,245,.28)"/><text x="98" y="236" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#bfc0c0">HTTP</text><text x="140" y="268" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">Solicitud externa</text><text x="140" y="288" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">hechos clínicos</text><text x="140" y="304" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">o modelo JDM</text>
+        <rect x="64" y="408" width="152" height="104" rx="6" fill="#393e53" stroke="#6a95d8"/><rect x="76" y="420" width="52" height="12" rx="2" fill="none" stroke="rgba(106,149,216,.50)"/><text x="102" y="428" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#6a95d8">OUTPUT</text><text x="140" y="456" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">Respuesta experta</text><text x="140" y="476" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">resultado · explicación</text><text x="140" y="492" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">trazabilidad · versión</text>
+        <rect x="312" y="216" width="160" height="112" rx="6" fill="#393e53" stroke="#f5f5f5"/><rect x="324" y="228" width="40" height="12" rx="2" fill="none" stroke="rgba(245,245,245,.28)"/><text x="344" y="236" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#bfc0c0">APP</text><text x="392" y="268" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">FastAPI</text><text x="392" y="288" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">app.main:app · v1.0.0</text><text x="392" y="304" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">/health · /docs</text>
+        <rect x="520" y="208" width="160" height="128" rx="6" fill="#393e53" stroke="#f5f5f5"/><rect x="532" y="220" width="52" height="12" rx="2" fill="none" stroke="rgba(245,245,245,.28)"/><text x="558" y="228" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#bfc0c0">ROUTER</text><text x="600" y="256" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">Routers + schemas</text><text x="600" y="280" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">decisiones · PMOS · RI</text><text x="600" y="296" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">nutrición · Pydantic</text><text x="600" y="312" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">HTTPException 422</text>
+        <rect x="728" y="208" width="160" height="128" rx="6" fill="#393e53" stroke="#f5f5f5"/><rect x="740" y="220" width="60" height="12" rx="2" fill="none" stroke="rgba(245,245,245,.28)"/><text x="770" y="228" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#bfc0c0">SERVICE</text><text x="808" y="256" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">Servicios expertos</text><text x="808" y="280" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">PmosService · RiService</text><text x="808" y="296" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">NutricionService</text><text x="808" y="312" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">explicación · confianza</text>
+        <rect x="728" y="376" width="160" height="80" rx="6" fill="#393e53" stroke="#f5f5f5"/><text x="744" y="400" font-family="Geist Mono" font-size="8" fill="#8e98ac">GENÉRICO</text><text x="808" y="428" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">ZenDecisionService</text><text x="808" y="444" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">crear · evaluar · validar result</text>
+        <rect x="952" y="128" width="240" height="96" rx="6" fill="rgba(245,245,245,.05)" stroke="#bfc0c0"/><rect x="964" y="140" width="44" height="12" rx="2" fill="none" stroke="rgba(245,245,245,.28)"/><text x="986" y="148" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#bfc0c0">MODEL</text><text x="1072" y="176" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">Modelos JDM en JSON</text><text x="1072" y="196" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">Rotterdam · HOMA/QUICKI · nutrición</text><text x="1072" y="212" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">+ JDM recibido en /decisiones</text>
+        <rect x="952" y="328" width="240" height="120" rx="6" fill="rgba(240,138,89,.10)" stroke="#f08a59"/><rect x="964" y="340" width="56" height="12" rx="2" fill="none" stroke="rgba(240,138,89,.50)"/><text x="992" y="348" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#f08a59">ENGINE</text><text x="1072" y="380" text-anchor="middle" font-family="Geist" font-size="12" font-weight="600" fill="#f5f5f5">ZEN Engine</text><text x="1072" y="404" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">ZenEngine()</text><text x="1072" y="420" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">create_decision(json)</text><text x="1072" y="436" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#8e98ac">decision.evaluate(hechos)</text>
+
+        <line x1="32" y1="624" x2="1248" y2="624" stroke="rgba(245,245,245,.12)"/><text x="32" y="648" font-family="Geist Mono" font-size="8" letter-spacing="1.2" fill="#bfc0c0">LEYENDA</text><rect x="144" y="640" width="12" height="12" rx="2" fill="#393e53" stroke="#f5f5f5"/><text x="168" y="648" font-family="Geist Mono" font-size="8" fill="#bfc0c0">capa FastAPI</text><rect x="288" y="640" width="12" height="12" rx="2" fill="rgba(240,138,89,.10)" stroke="#f08a59"/><text x="312" y="648" font-family="Geist Mono" font-size="8" fill="#bfc0c0">motor focal</text><line x1="432" y1="648" x2="472" y2="648" stroke="#6a95d8" marker-end="url(#arrow-link)"/><text x="488" y="648" font-family="Geist Mono" font-size="8" fill="#bfc0c0">HTTP/JSON</text><line x1="608" y1="648" x2="648" y2="648" stroke="#bfc0c0" stroke-dasharray="4,3"/><text x="664" y="648" font-family="Geist Mono" font-size="8" fill="#bfc0c0">retorno de resultado</text>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><div><p class="eyebrow">Superficie HTTP</p><h2>Endpoints disponibles</h2></div><p>Todos se registran desde <code>app/main.py</code>. FastAPI genera OpenAPI y Swagger automáticamente en <code>/docs</code>.</p></div>
+    <div class="grid">
+      <article class="card">
+        <h3>Diagnóstico y nutrición</h3>
+        <div class="endpoint"><span class="method">POST</span><div class="path">/api/v1/diagnostico/pmos<small>Rotterdam, fenotipo y trazabilidad PMOS.</small></div></div>
+        <div class="endpoint"><span class="method">POST</span><div class="path">/api/v1/diagnostico/resistencia-insulina<small>HOMA-IR, QUICKI, grado y riesgos.</small></div></div>
+        <div class="endpoint"><span class="method">POST</span><div class="path">/api/v1/nutricion/recomendacion-base<small>Enfoque, macros, restricciones y reglas.</small></div></div>
+      </article>
+      <article class="card">
+        <h3>Motor genérico y operación</h3>
+        <div class="endpoint"><span class="method">POST</span><div class="path">/api/v1/decisiones/evaluar<small>Evalúa cualquier JDM válido enviado en la solicitud.</small></div></div>
+        <div class="endpoint"><span class="method">GET</span><div class="path">/health<small>Estado del servicio y nombre del motor.</small></div></div>
+        <div class="endpoint"><span class="method">GET</span><div class="path">/docs<small>Documentación interactiva Swagger/OpenAPI.</small></div></div>
+      </article>
+      <article class="card">
+        <h3>Contrato de salida</h3>
+        <ul><li><code>resultado</code> de la decisión.</li><li><code>explicacion</code> clínica cuando aplica.</li><li><code>trazabilidad</code>: hechos, reglas, confianza y versión.</li><li><code>engine = zen-engine</code>.</li></ul>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><div><p class="eyebrow">Componentes reales</p><h2>Archivos que sostienen el flujo</h2></div><p>Inventario limitado al directorio <code>pmos-experto</code>; no incluye componentes de la aplicación principal.</p></div>
+    <div class="grid">
+      <article class="card"><h3>Routers y schemas</h3><ul><li><code>routers/decisiones.py</code></li><li><code>routers/diagnostico_pmos.py</code></li><li><code>routers/diagnostico_ri.py</code></li><li><code>routers/nutricion.py</code></li><li><code>schemas/*.py</code> valida entrada y salida.</li></ul></article>
+      <article class="card"><h3>Servicios</h3><ul><li><code>zen_service.py</code> encapsula ZEN.</li><li><code>pmos_service.py</code> arma explicación y trazabilidad.</li><li><code>ri_service.py</code> calcula HOMA-IR/QUICKI.</li><li><code>nutricion_service.py</code> integra contexto alimentario.</li><li><code>explicador.py</code> cubre decisiones genéricas.</li></ul></article>
+      <article class="card"><h3>Modelos JDM</h3><ul><li><code>pmos_rotterdam.json</code></li><li><code>resistencia_insulina.json</code></li><li><code>nutricion_base.json</code></li><li>Se cargan como JSON y no son modelos de base de datos.</li></ul></article>
+    </div>
+  </section>
+  <footer><span>Fuente: pmos-experto/app y pmos-experto/tests</span><span>Arquitectura enfocada · 2026-08-28</span></footer>
+</main>
+</body>
+</html>

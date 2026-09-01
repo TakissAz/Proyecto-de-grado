@@ -58,6 +58,18 @@ class DiagnosticoResistenciaInsulinaController extends Controller
         Request $request,
         DiagnosticoResistenciaInsulina $diagnostico
     ): JsonResponse {
+        $request->merge([
+            'grado_resistencia' => match ($request->input('grado_resistencia')) {
+                'no_aplica', 'sin_resistencia' => 'no_confirmada',
+                default => $request->input('grado_resistencia'),
+            },
+            'estado' => match ($request->input('estado')) {
+                'activo' => 'registrado',
+                'inactivo' => 'en_estudio',
+                default => $request->input('estado'),
+            },
+        ]);
+
         $datos = $request->validate([
             'resistencia_confirmada' => ['required', 'boolean'],
             'grado_resistencia' => ['nullable', 'string', Rule::in(['leve', 'moderada', 'severa', 'no_confirmada'])],

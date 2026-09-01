@@ -81,12 +81,14 @@ export interface ResumenAdherencia { comidas_totales:number; completadas:number;
 export interface SeguimientoComidaNutricionista { id_comida_plan_alimentario:number; tipo_comida:string; hora_sugerida:string|null; nombre_comida:string; componentes:string[]; estado_cumplimiento:string; porcentaje_consumido:number|null; nivel_agrado:string|null; nivel_saciedad:string|null; nivel_hambre_posterior:string|null; ansiedad_posterior:boolean|null; presento_molestia:boolean|null; tipo_molestia:string|null; intensidad_molestia:string|null; consiguio_ingredientes:boolean|null; motivo_no_cumplimiento:string|null; comentario_paciente:string|null; sugerencia_paciente:string|null }
 export interface SeguimientoPacienteNutricionista { plan:{id_plan_alimentario:number;nombre:string;estado_plan:string;fecha_inicio:string|null;fecha_fin:string|null}|null; resumen_adherencia:ResumenAdherencia|null; adherencia_por_tipo_comida:Record<string,ResumenAdherencia>; seguimiento_comidas:{id_dia_plan_alimentario:number;numero_dia:number;nombre_dia:string;fecha:string|null;comidas:SeguimientoComidaNutricionista[]}[]; indicadores_siguiente_plan:{recetas_bien_aceptadas:string[];recetas_a_evitar:string[];alimentos_o_preparaciones_problematicas:string[];horarios_problematicos:Record<string,number>;hambre_frecuente:number;baja_adherencia_por_tipo_comida:Record<string,number>;recomendaciones_para_nutricionista:string[]}; seguimiento_sintomas:{registro_hoy:Registro|null;ultimos_registros:Registro[];indicadores:Record<string,unknown>} }
 export interface PerfilProps {
+    derivacionNutricional: {id_derivacion_nutricional:number;motivo_derivacion:string|null;prioridad:string;estado:string;fecha_derivacion:string|null;endocrinologo?:{name:string}|null}|null;
     paciente: PacienteNutricional; consulta: Registro | null; evaluacion: Registro | null;
     habitos: Registro | null; preferencias: Registro | null; restricciones: Registro | null;
     objetivo: Registro | null; requerimientoNutricional: RequerimientoNutricional | null;
     recomendacionExperta: RecomendacionNutricionalExperta | null; opciones: Opciones;
     planAlimentarioPrincipal: PlanAlimentario|null; recomendacionExpertaAprobada:RecomendacionNutricionalExperta|null;
     puedeGenerarPlanSemanal:boolean; alimentosPlan:CatalogoAlimento[]; recetasPlan:CatalogoReceta[];
+    elegibilidadPlanificacion:{elegible:boolean;pmos_confirmado:boolean;ri_confirmada:boolean;origen:string|null;motivo:string};
     seguimientoPaciente: SeguimientoPacienteNutricionista;
     retroalimentacionesPaciente: import('@/Components/nutricionista/seguimiento/RetroalimentacionPacientePanel').RetroalimentacionHistorial[];
     contextoAjustePlan: import('@/Components/nutricionista/seguimiento/ResumenAjustePlanCard').ContextoAjustePlan;

@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, Download, History, Info, Utensils, ClipboardList, Target, BrainCircuit, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowRight, Download, History, Info, Utensils, ClipboardList, Target, BrainCircuit, TrendingUp, CheckCircle2, Circle, ShieldAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Desplegable } from '@/Components/ui/desplegable';
@@ -22,6 +22,7 @@ import AnaliticaEvolucionPanel from '@/Components/nutricionista/analitica/Analit
 import AlertasNutricionistaPanel from '@/Components/nutricionista/alertas/AlertasNutricionistaPanel';
 import SugerenciasAjusteNutricionalPanel from '@/Components/nutricionista/ajustes/SugerenciasAjusteNutricionalPanel';
 import PrediccionRiesgoAdherenciaCard from '@/Components/nutricionista/prediccion/PrediccionRiesgoAdherenciaCard';
+import CopilotoNutricionalGroq from '@/Components/nutricionista/copiloto/CopilotoNutricionalGroq';
 import FormularioConsultaNutricional from './Components/FormularioConsultaNutricional';
 import type { PerfilProps } from './tipos';
 import type { PageProps } from '@/types';
@@ -69,6 +70,7 @@ export default function Index(props: PerfilProps) {
     const registros = [props.consulta, props.evaluacion, props.habitos, props.preferencias, props.restricciones, props.objetivo];
     const bloqueada = !props.consulta;
     const comunes = { cerrar: () => setModal(null), pacienteId: props.paciente.id_paciente };
+    const elegibleParaPlan = props.elegibilidadPlanificacion.elegible;
 
     // ── Acordeón controlado de valoración: auto-cierra y abre la siguiente al completar ──
     type AcordeonId = 'evaluacion' | 'habitos' | 'prefrest' | 'objetivos';
@@ -112,6 +114,7 @@ export default function Index(props: PerfilProps) {
 
                 {/* Encabezado */}
                 <EncabezadoPacienteNutricional paciente={props.paciente} />
+                {props.derivacionNutricional && <div className="rounded-2xl border border-brand-green/25 bg-brand-green/[0.05] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold text-brand-green">Paciente derivada desde endocrinología</p><p className="mt-1 text-[11px] text-ink-muted">{props.derivacionNutricional.motivo_derivacion || 'Sin motivo adicional'} · Prioridad {props.derivacionNutricional.prioridad} · {props.derivacionNutricional.endocrinologo?.name || 'Endocrinología'}</p></div><div className="flex gap-2"><span className="rounded-lg bg-brand-green/10 px-3 py-1.5 text-[10px] font-bold capitalize">{props.derivacionNutricional.estado.replaceAll('_',' ')}</span>{props.evaluacion && props.derivacionNutricional.estado !== 'atendida' && <button onClick={()=>router.post(`/nutricionista/derivaciones/${props.derivacionNutricional!.id_derivacion_nutricional}/atendida`)} className="rounded-lg bg-brand-green px-3 py-1.5 text-[10px] font-bold text-white">Marcar atendida</button>}</div></div></div>}
 
                 {/* Alertas flash */}
                 {flash?.success && <div className="rounded-xl bg-brand-green/10 border border-brand-green/20 px-4 py-2.5 text-[12px] font-medium text-brand-green-dark dark:bg-brand-green/[0.06] dark:text-brand-green">{flash.success}</div>}
@@ -197,7 +200,9 @@ export default function Index(props: PerfilProps) {
                                     </Desplegable>
                                     <Desplegable titulo="Orientación nutricional asistida" tiene={!!props.recomendacionExperta} abierto={acordeonCalculo === 'orientacion'} onToggle={() => toggle(setAcordeonCalculo, 'orientacion')}>
                                         <div className="p-4">
-                                            <TarjetaRecomendacionExperta pacienteId={props.paciente.id_paciente} recomendacion={props.recomendacionExperta} />
+                                            {elegibleParaPlan
+                                                ? <TarjetaRecomendacionExperta pacienteId={props.paciente.id_paciente} recomendacion={props.recomendacionExperta} />
+                                                : <BloqueoPlanificacion motivo={props.elegibilidadPlanificacion.motivo} />}
                                         </div>
                                     </Desplegable>
                                 </>
@@ -206,7 +211,10 @@ export default function Index(props: PerfilProps) {
                             {stepActivo === 'planificacion' && (
                                 <Desplegable titulo="Plan alimentario" tiene={!!props.planAlimentarioPrincipal} abierto={acordeonPlanificacion === 'plan'} onToggle={() => toggle(setAcordeonPlanificacion, 'plan')}>
                                     <div className="p-4 space-y-3">
-                                        <PlanAlimentarioCard plan={props.planAlimentarioPrincipal} recomendacion={props.recomendacionExpertaAprobada} puedeGenerar={props.puedeGenerarPlanSemanal} alimentos={props.alimentosPlan} recetas={props.recetasPlan} />
+                                        {elegibleParaPlan || props.planAlimentarioPrincipal
+                                            ? <PlanAlimentarioCard plan={props.planAlimentarioPrincipal} recomendacion={props.recomendacionExpertaAprobada} puedeGenerar={props.puedeGenerarPlanSemanal} alimentos={props.alimentosPlan} recetas={props.recetasPlan} />
+                                            : <BloqueoPlanificacion motivo={props.elegibilidadPlanificacion.motivo} />}
+                                        {props.planAlimentarioPrincipal && <CopilotoNutricionalGroq planId={props.planAlimentarioPrincipal.id_plan_alimentario} />}
                                         <Link
                                             href={route('nutricionista.pacientes.planes-alimentarios.historial', props.paciente.id_paciente)}
                                             className="group flex items-center justify-between gap-4 rounded-xl border border-surface-border bg-black/[0.015] p-4 transition-colors hover:border-brand-green/30 hover:bg-brand-green/[0.035] dark:border-surface-border-dark dark:bg-white/[0.02] dark:hover:bg-brand-green/[0.05]"
@@ -297,6 +305,23 @@ export default function Index(props: PerfilProps) {
             <ModalObjetivos abierto={modalObjEditar} cerrar={() => setModalObjEditar(false)} registro={props.objetivo} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
             <ModalObjetivos abierto={modalObjCrear} cerrar={() => setModalObjCrear(false)} registro={null} pacienteId={props.paciente.id_paciente} opciones={props.opciones} />
         </AuthenticatedLayout>
+    );
+}
+
+function BloqueoPlanificacion({ motivo }: { motivo: string }) {
+    return (
+        <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange/[0.055] p-5 dark:bg-brand-orange/[0.07]">
+            <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange">
+                    <ShieldAlert size={19} strokeWidth={1.8} />
+                </div>
+                <div>
+                    <p className="text-[13px] font-bold text-ink dark:text-ink-dark">Planificación nutricional no habilitada</p>
+                    <p className="mt-1 text-[11.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{motivo}</p>
+                    <p className="mt-2 text-[10.5px] font-semibold text-brand-orange">La habilitación se realiza desde el diagnóstico registrado por Endocrinología.</p>
+                </div>
+            </div>
+        </div>
     );
 }
 

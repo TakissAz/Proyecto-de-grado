@@ -38,6 +38,11 @@ class PacienteResource extends JsonResource
             'observaciones' => $this->observaciones,
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
+            'origen_registro' => $this->getAttribute('origen_registro_auditoria'),
+            'creado_por_user' => data_get($this->getAttribute('auditoria_creacion'), 'usuario'),
+            'actualizado_por_user' => data_get($this->getAttribute('auditoria_actualizacion'), 'usuario'),
+            'auditoria_creacion' => $this->getAttribute('auditoria_creacion'),
+            'auditoria_actualizacion' => $this->getAttribute('auditoria_actualizacion'),
             'user' => $this->whenLoaded('user', function () {
                 return [
                     'id' => $this->user?->id,

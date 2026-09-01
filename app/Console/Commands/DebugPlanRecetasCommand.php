@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 
 class DebugPlanRecetasCommand extends Command
 {
-    protected $signature = 'recetas:debug-plan {recomendacion : ID de la recomendación nutricional experta}';
+    protected $signature = 'recetas:debug-plan
+        {recomendacion : ID de la recomendación nutricional experta}
+        {--tipo= : Limita la prueba a desayuno, almuerzo, merienda o cena}';
 
     protected $description = 'Diagnostica, sin guardar datos, las recetas disponibles para un plan semanal';
 
@@ -64,7 +66,17 @@ class DebugPlanRecetasCommand extends Command
             })->all()
         );
 
-        foreach (self::TIPOS as $tipo) {
+        $tipos = $this->option('tipo')
+            ? [$this->normalizar($this->option('tipo'))]
+            : self::TIPOS;
+
+        if (array_diff($tipos, self::TIPOS) !== []) {
+            $this->error('El tipo debe ser desayuno, almuerzo, merienda o cena.');
+
+            return self::FAILURE;
+        }
+
+        foreach ($tipos as $tipo) {
             $resultados = collect($clasificador->clasificarParaRecomendacion($recomendacion, $tipo))
                 ->filter(fn (array $resultado): bool => $this->normalizar($resultado['receta']->tipo_comida) === $tipo)
                 ->values();
@@ -108,9 +120,14 @@ class DebugPlanRecetasCommand extends Command
 
             $this->line('Top 5 compatibles:');
             $this->table(
-                ['ID', 'Receta', 'Puntaje'],
+                ['ID', 'Receta', 'Reglas', 'Groq', 'Híbrido', 'Motivos Groq'],
                 $compatibles->take(5)->map(fn (array $r): array => [
-                    $r['receta']->getKey(), $r['receta']->nombre, $r['puntaje'],
+                    $r['receta']->getKey(),
+                    $r['receta']->nombre,
+                    $r['puntaje'],
+                    $r['puntaje_ia'] ?? '—',
+                    $r['puntaje_hibrido'] ?? '—',
+                    implode(' ', $r['motivos_ia'] ?? []) ?: 'Ranking determinista',
                 ])->all()
             );
 

@@ -52,13 +52,35 @@ class PacienteService
 
     public function auditoriaPacientes(array $filtros = []): LengthAwarePaginator
     {
-        return $this->listar($filtros);
+        $pagina = $this->listar($filtros);
+        $ids = $pagina->getCollection()->pluck('id_paciente');
+
+        $actividades = Activity::query()
+            ->with(['causer' => fn ($query) => $query->with('roles:id_rol,nombre')])
+            ->where('log_name', 'pacientes')
+            ->where('subject_type', Paciente::class)
+            ->whereIn('subject_id', $ids)
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (Activity $actividad) => (int) $actividad->subject_id);
+
+        $pagina->setCollection($pagina->getCollection()->map(function (Paciente $paciente) use ($actividades) {
+            $historial = $actividades->get((int) $paciente->getKey(), collect());
+            $creacion = $historial->first(fn (Activity $a) => in_array($a->event, ['created', 'crear_paciente'], true)) ?? $historial->first();
+            $actualizacion = $historial->last(fn (Activity $a) => in_array($a->event, ['updated', 'actualizar_paciente', 'cambiar_estado_paciente'], true)) ?? $historial->last();
+            $paciente->setAttribute('auditoria_creacion', $this->resumirActividad($creacion));
+            $paciente->setAttribute('auditoria_actualizacion', $this->resumirActividad($actualizacion));
+            $paciente->setAttribute('origen_registro_auditoria', $this->rolOrigen($creacion?->causer));
+            return $paciente;
+        }));
+
+        return $pagina;
     }
 
     public function actividadPacientes(array $filtros = []): LengthAwarePaginator
     {
         $query = Activity::query()
-            ->with(['causer', 'subject'])
+            ->with(['causer.roles', 'subject'])
             ->where('log_name', '=', 'pacientes', 'and');
 
         if (! empty($filtros['paciente'])) {
@@ -83,6 +105,30 @@ class PacienteService
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
+    }
+
+    private function resumirActividad(?Activity $actividad): ?array
+    {
+        if (! $actividad) return null;
+        $actor = $actividad->causer;
+        return [
+            'evento' => $actividad->event,
+            'descripcion' => $actividad->description,
+            'fecha' => $actividad->created_at?->format('Y-m-d H:i:s'),
+            'usuario' => $actor ? [
+                'id' => $actor->getKey(), 'name' => $actor->name, 'email' => $actor->email,
+                'roles' => $actor->relationLoaded('roles') ? $actor->roles->pluck('nombre')->values()->all() : [],
+            ] : null,
+        ];
+    }
+
+    private function rolOrigen(mixed $actor): ?string
+    {
+        if (! $actor) return null;
+        foreach ([self::ORIGEN_NUTRICIONISTA, self::ORIGEN_ENDOCRINOLOGO, self::ORIGEN_ADMINISTRADOR] as $rol) {
+            if ($actor->roles->contains('nombre', $rol)) return $rol;
+        }
+        return $actor->roles->first()?->nombre;
     }
 
     public function cargar(Paciente $paciente): Paciente

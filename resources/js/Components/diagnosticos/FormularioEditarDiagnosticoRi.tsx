@@ -17,7 +17,7 @@ export default function FormularioEditarDiagnosticoRi({ abierto, diagnostico, ev
         riesgo_cardiometabolico: diagnostico.riesgo_cardiometabolico ?? 'no_evaluado',
         conclusion_medica: diagnostico.conclusion_medica ?? '',
         recomendaciones_medicas: diagnostico.recomendaciones_medicas ?? '',
-        estado: diagnostico.estado ?? 'en_estudio',
+        estado: normalizarEstado(diagnostico.estado),
     }));
     const [procesando, setProcesando] = useState(false);
     const [errores, setErrores] = useState<Errores>({});
@@ -31,7 +31,11 @@ export default function FormularioEditarDiagnosticoRi({ abierto, diagnostico, ev
             await axios.put(`/endocrinologo/diagnosticos/resistencia-insulina/${diagnostico.id_diagnostico_ri}`, datos, { headers: { Accept: 'application/json' } });
             setMensaje('Diagnóstico de resistencia a la insulina actualizado.'); onSuccess();
         } catch (error) {
-            const r = (error as AxiosError<{ errors?: Errores }>).response; setErrores(r?.data?.errors ?? {}); setMensaje('No se pudo actualizar el diagnóstico.');
+            const r = (error as AxiosError<{ message?: string; errors?: Errores }>).response;
+            const erroresRespuesta = r?.data?.errors ?? {};
+            setErrores(erroresRespuesta);
+            const detalle = Object.values(erroresRespuesta).flat().filter(Boolean).join(' ');
+            setMensaje(detalle || r?.data?.message || 'No se pudo actualizar el diagnóstico.');
         } finally { setProcesando(false); }
     };
 
@@ -107,6 +111,10 @@ export default function FormularioEditarDiagnosticoRi({ abierto, diagnostico, ev
             </div>
         </div>
     );
+}
+
+function normalizarEstado(valor?: string | null): 'en_estudio' | 'registrado' {
+    return valor === 'activo' || valor === 'registrado' ? 'registrado' : 'en_estudio';
 }
 
 function Dato({ label, valor }: { label: string; valor: number | string | null | undefined }) {

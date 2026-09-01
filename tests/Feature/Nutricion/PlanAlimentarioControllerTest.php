@@ -11,13 +11,29 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Services\Nutricion\GeneradorPlanSemanalService;
+use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Mockery;
 use Tests\TestCase;
 
 class PlanAlimentarioControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $servicio = Mockery::mock(ElegibilidadPlanificacionNutricionalService::class);
+        $servicio->shouldReceive('evaluar')->andReturn([
+            'elegible' => true,
+            'pmos_confirmado' => true,
+            'ri_confirmada' => false,
+            'origen' => 'pmos',
+            'motivo' => 'Diagnóstico confirmado.',
+        ]);
+        $this->app->instance(ElegibilidadPlanificacionNutricionalService::class, $servicio);
+    }
 
     public function test_nutricionista_puede_generar_plan_desde_recomendacion_aprobada(): void
     {

@@ -11,9 +11,11 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Services\Nutricion\PerfilNutricionalService;
+use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
 use App\Services\SistemaExperto\PersistenciaRecomendacionNutricionalExpertaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Mockery;
 use Tests\TestCase;
 
 class RecomendacionNutricionalExpertaControllerTest extends TestCase
@@ -24,6 +26,7 @@ class RecomendacionNutricionalExpertaControllerTest extends TestCase
     {
         parent::setUp();
         config(['services.pmos_experto.url' => 'http://127.0.0.1:8001']);
+        $this->mockElegibilidad(true);
     }
 
     public function test_nutricionista_puede_generar_recomendacion_experta(): void
@@ -39,6 +42,19 @@ class RecomendacionNutricionalExpertaControllerTest extends TestCase
         $this->postJson($ruta)->assertOk();
 
         $this->assertSame(2, RecomendacionNutricionalExperta::query()->count());
+    }
+
+    public function test_no_genera_recomendacion_sin_diagnostico_endocrinologico_confirmado(): void
+    {
+        $this->mockElegibilidad(false);
+        Http::fake($this->respuestaFake());
+
+        $this->actingAs($this->usuarioConRol('nutricionista'))
+            ->postJson(route('nutricionista.recomendacion-experta.generar', $this->paciente()))
+            ->assertUnprocessable()
+            ->assertJsonPath('success', false);
+
+        Http::assertNothingSent();
     }
 
     public function test_usuario_sin_rol_nutricionista_recibe_403(): void
@@ -184,6 +200,19 @@ class RecomendacionNutricionalExpertaControllerTest extends TestCase
         ]);
 
         return $usuario;
+    }
+
+    private function mockElegibilidad(bool $elegible): void
+    {
+        $servicio = Mockery::mock(ElegibilidadPlanificacionNutricionalService::class);
+        $servicio->shouldReceive('evaluar')->andReturn([
+            'elegible' => $elegible,
+            'pmos_confirmado' => $elegible,
+            'ri_confirmada' => false,
+            'origen' => $elegible ? 'pmos' : null,
+            'motivo' => $elegible ? 'Diagnóstico confirmado.' : 'Sin diagnóstico endocrinológico confirmado.',
+        ]);
+        $this->app->instance(ElegibilidadPlanificacionNutricionalService::class, $servicio);
     }
 
     private function paciente(): Paciente

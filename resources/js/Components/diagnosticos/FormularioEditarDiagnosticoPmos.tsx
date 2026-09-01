@@ -18,7 +18,7 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
         tipo_hiperandrogenismo: normalizarTipo(diagnostico.tipo_hiperandrogenismo),
         conclusion_medica: diagnostico.conclusion_medica ?? '',
         recomendaciones_medicas: diagnostico.recomendaciones_medicas ?? '',
-        estado: diagnostico.estado ?? 'en_estudio',
+        estado: normalizarEstado(diagnostico.estado),
     }));
     const [procesando, setProcesando] = useState(false);
     const [errores, setErrores] = useState<Errores>({});
@@ -34,7 +34,11 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
             }, { headers: { Accept: 'application/json' } });
             setMensaje('Diagnóstico clínico PMOS actualizado correctamente.'); onSuccess();
         } catch (error) {
-            const r = (error as AxiosError<{ errors?: Errores }>).response; setErrores(r?.data?.errors ?? {}); setMensaje('No se pudo actualizar el diagnóstico.');
+            const r = (error as AxiosError<{ message?: string; errors?: Errores }>).response;
+            const erroresRespuesta = r?.data?.errors ?? {};
+            setErrores(erroresRespuesta);
+            const detalle = Object.values(erroresRespuesta).flat().filter(Boolean).join(' ');
+            setMensaje(detalle || r?.data?.message || 'No se pudo actualizar el diagnóstico.');
         } finally { setProcesando(false); }
     };
 
@@ -49,8 +53,8 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
                             <Stethoscope size={18} strokeWidth={1.8} />
                         </div>
                         <div>
-                            <h2 className="text-[16px] font-bold text-ink dark:text-ink-dark">Editar diagnóstico clínico PMOS</h2>
-                            <p className="text-[11px] text-ink-muted dark:text-ink-muted-dark">La trazabilidad experta es informativa y no se edita aquí</p>
+                            <h2 className="text-[16px] font-bold text-ink dark:text-ink-dark">Ajustar propuesta clínica PMOS</h2>
+                            <p className="text-[11px] text-ink-muted dark:text-ink-muted-dark">Corrección profesional basada en el criterio del endocrinólogo</p>
                         </div>
                     </div>
                     <button type="button" onClick={onCerrar} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-black/[0.05] dark:text-ink-muted-dark dark:hover:bg-white/[0.06]">
@@ -62,6 +66,12 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
 
                     {/* Contexto clínico */}
                     <div className="rounded-xl border border-brand-green/20 bg-brand-green/[0.03] p-4 dark:bg-brand-green/[0.04] space-y-2">
+                        <div className="pb-1">
+                            <p className="text-[11.5px] font-semibold text-ink dark:text-ink-dark">Evidencia considerada por el sistema experto</p>
+                            <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                Estos criterios y la trazabilidad original se conservan; los campos inferiores representan la decisión final del especialista.
+                            </p>
+                        </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             <Criterio label="Alteración ovulatoria" cumple={diagnostico.cumple_alteracion_ovulatoria} />
                             <Criterio label="Hiperandrogenismo clínico" cumple={diagnostico.cumple_hiperandrogenismo_clinico} />
@@ -104,7 +114,7 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
                         <Boton type="button" variante="ghost" tamano="sm" onClick={onCerrar}>Cancelar</Boton>
                         <Boton type="submit" variante="primary" tamano="md" disabled={procesando}>
                             {procesando ? <LoaderCircle size={14} className="animate-spin" /> : <Save size={14} strokeWidth={1.8} />}
-                            {procesando ? 'Guardando...' : 'Guardar diagnóstico'}
+                            {procesando ? 'Guardando...' : 'Guardar ajuste profesional'}
                         </Boton>
                     </div>
                 </form>
@@ -115,6 +125,7 @@ export default function FormularioEditarDiagnosticoPmos({ abierto, diagnostico, 
 
 function normalizarFenotipo(valor?: string | null): string { const mapa: Record<string, string> = { A_clasico_completo: 'A', B_hiperandrogenico_anovulatorio: 'B', C_ovulatorio: 'C', D_no_hiperandrogenico: 'D' }; return valor ? (mapa[valor] ?? valor) : 'no_clasificado'; }
 function normalizarTipo(valor?: string | null): string { return valor === 'clinico_y_bioquimico' ? 'mixto' : (valor ?? 'ninguno'); }
+function normalizarEstado(valor?: string | null): 'en_estudio' | 'registrado' { return valor === 'activo' || valor === 'registrado' ? 'registrado' : 'en_estudio'; }
 
 function Criterio({ label, cumple }: { label: string; cumple: boolean }) {
     return (

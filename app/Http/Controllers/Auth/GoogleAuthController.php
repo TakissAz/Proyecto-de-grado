@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use RuntimeException;
 use Throwable;
+use App\Services\Auth\AccessLogService;
 
 class GoogleAuthController extends Controller
 {
@@ -18,7 +19,7 @@ class GoogleAuthController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
-    public function callback(Request $request): RedirectResponse
+    public function callback(Request $request, AccessLogService $accessLogService): RedirectResponse
     {
         try {
             $googleUser = Socialite::driver('google')->user();
@@ -62,6 +63,7 @@ class GoogleAuthController extends Controller
 
             Auth::login($user, true);
             $request->session()->regenerate();
+            $accessLogService->registrarIngreso($user, $request, 'google');
 
             return redirect()->intended(route('dashboard', absolute: false));
         } catch (Throwable $exception) {

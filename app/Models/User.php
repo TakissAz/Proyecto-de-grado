@@ -182,6 +182,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(PlanAlimentario::class, 'aprobado_por');
     }
+    public function derivacionesEndocrinologia(): HasMany { return $this->hasMany(DerivacionNutricional::class, 'id_endocrinologo'); }
+    public function derivacionesNutricion(): HasMany { return $this->hasMany(DerivacionNutricional::class, 'id_nutricionista'); }
+    public function notificacionesInternas(): HasMany { return $this->hasMany(NotificacionInterna::class, 'id_usuario_destino'); }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

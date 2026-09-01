@@ -1,8 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import { ArrowLeft, Save, UserPlus } from 'lucide-react';
 import PacienteFormulario, { PacienteFormValues } from '@/Components/Pacientes/PacienteFormulario';
+import { Boton, BotonLink } from '@/Components/ui/boton';
+import Alerta from '@/Components/ui/alerta';
 
 interface Props extends PageProps {}
 
@@ -34,17 +36,22 @@ export default function Create({ flash }: Props) {
         <AuthenticatedLayout header={<h2>Crear paciente</h2>}>
             <Head title="Crear paciente" />
 
-            <div className="space-y-5">
-                <div className="bg-base-100 border border-base-300 rounded-2xl p-5">
-                    <div className="mb-5">
-                        <h2 className="text-xl font-extrabold text-base-content">Nueva paciente</h2>
-                        <p className="text-sm text-base-content/60">Completa los datos de la paciente y su cuenta de acceso al sistema.</p>
+            <div className="mx-auto max-w-4xl space-y-5">
+                {flash?.success ? <Alerta tipo="success">{flash.success}</Alerta> : null}
+                {flash?.error ? <Alerta tipo="error">{flash.error}</Alerta> : null}
+
+                <div className="card-elevated overflow-hidden">
+                    <div className="flex items-center gap-3 border-b border-surface-border bg-brand-green-soft/[0.18] px-5 py-4 dark:border-surface-border-dark dark:bg-brand-green-dark/10">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green-dark dark:text-brand-green">
+                            <UserPlus size={19} strokeWidth={1.8} />
+                        </div>
+                        <div>
+                            <h2 className="text-[15px] font-bold text-ink dark:text-ink-dark">Nueva paciente</h2>
+                            <p className="text-[11.5px] text-ink-muted dark:text-ink-muted-dark">Completa los datos de la paciente y su cuenta de acceso al sistema.</p>
+                        </div>
                     </div>
 
-                    {flash?.success ? <div className="alert alert-success text-sm mb-4">{flash.success}</div> : null}
-                    {flash?.error ? <div className="alert alert-error text-sm mb-4">{flash.error}</div> : null}
-
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="p-5">
                         <PacienteFormulario
                             data={data}
                             setData={setData as (field: keyof PacienteFormValues, value: string) => void}
@@ -52,13 +59,13 @@ export default function Create({ flash }: Props) {
                             mode="create"
                         />
 
-                        <div className="flex gap-2 justify-end mt-5 flex-wrap">
-                            <Link href="/admin/pacientes" className="btn btn-ghost btn-sm gap-1.5">
-                                <ArrowLeft size={14} /> Volver al listado
-                            </Link>
-                            <button type="submit" className="btn btn-primary btn-sm gap-1.5" disabled={processing}>
-                                <Save size={14} /> {processing ? 'Guardando...' : 'Crear paciente'}
-                            </button>
+                        <div className="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-surface-border pt-4 dark:border-surface-border-dark">
+                            <BotonLink href="/admin/pacientes" variante="ghost">
+                                <ArrowLeft size={13} strokeWidth={1.8} /> Volver al listado
+                            </BotonLink>
+                            <Boton type="submit" disabled={processing}>
+                                <Save size={13} strokeWidth={1.8} /> {processing ? 'Guardando...' : 'Crear paciente'}
+                            </Boton>
                         </div>
                     </form>
                 </div>

@@ -9,7 +9,7 @@ use Throwable;
 
 class AccessLogService
 {
-    public function registrarIngreso(User $user, Request $request): void
+    public function registrarIngreso(User $user, Request $request, string $metodo = 'credenciales'): void
     {
         try {
             $fechaAcceso = now();
@@ -28,6 +28,7 @@ class AccessLogService
                 ->withProperties([
                     'ip' => $request->ip(),
                     'user_agent' => $request->userAgent(),
+                    'metodo' => $metodo,
                 ])
                 ->log('Inicio de sesión exitoso.');
         } catch (Throwable $exception) {

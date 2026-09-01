@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\RecomendacionNutricionalExperta;
 use App\Models\User;
 use App\Services\SistemaExperto\OrquestadorNutricionalExpertoService;
+use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,11 +18,20 @@ use Throwable;
 class RecomendacionNutricionalExpertaController extends Controller
 {
     public function __construct(
-        private readonly OrquestadorNutricionalExpertoService $orquestador
+        private readonly OrquestadorNutricionalExpertoService $orquestador,
+        private readonly ElegibilidadPlanificacionNutricionalService $elegibilidadService,
     ) {}
 
     public function generar(Paciente $paciente): JsonResponse
     {
+        $elegibilidad = $this->elegibilidadService->evaluar($paciente);
+        if (! $elegibilidad['elegible']) {
+            return response()->json([
+                'success' => false,
+                'message' => $elegibilidad['motivo'],
+            ], 422);
+        }
+
         try {
             /** @var User $nutricionista */
             $nutricionista = Auth::user();

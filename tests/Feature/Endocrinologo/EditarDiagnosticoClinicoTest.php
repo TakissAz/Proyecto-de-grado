@@ -120,6 +120,38 @@ class EditarDiagnosticoClinicoTest extends TestCase
         $this->assertSame('ri-v1', $this->ri->version_motor_experto);
     }
 
+    public function test_edicion_pmos_normaliza_valores_historicos_del_diagnostico(): void
+    {
+        $this->pmos->shouldReceive('save')->once()->andReturnTrue();
+        $datos = array_merge($this->datosPmos(), [
+            'fenotipo_pmos' => 'A_clasico_completo',
+            'tipo_hiperandrogenismo' => 'clinico_y_bioquimico',
+            'estado' => 'activo',
+        ]);
+
+        $this->actingAs($this->usuarioConRol('endocrinologo'))
+            ->putJson(route('endocrinologo.diagnosticos.pmos.update', 101), $datos)
+            ->assertOk()
+            ->assertJsonPath('data.fenotipo_pmos', 'A')
+            ->assertJsonPath('data.tipo_hiperandrogenismo', 'mixto')
+            ->assertJsonPath('data.estado', 'registrado');
+    }
+
+    public function test_edicion_ri_normaliza_valores_historicos_del_diagnostico(): void
+    {
+        $this->ri->shouldReceive('save')->once()->andReturnTrue();
+        $datos = array_merge($this->datosRi(), [
+            'grado_resistencia' => 'no_aplica',
+            'estado' => 'activo',
+        ]);
+
+        $this->actingAs($this->usuarioConRol('endocrinologo'))
+            ->putJson(route('endocrinologo.diagnosticos.ri.update', 202), $datos)
+            ->assertOk()
+            ->assertJsonPath('data.grado_resistencia', 'no_confirmada')
+            ->assertJsonPath('data.estado', 'registrado');
+    }
+
     private function datosPmos(): array
     {
         return [

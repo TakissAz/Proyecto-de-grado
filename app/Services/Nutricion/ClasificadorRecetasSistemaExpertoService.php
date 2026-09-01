@@ -8,6 +8,10 @@ use Illuminate\Support\Str;
 
 class ClasificadorRecetasSistemaExpertoService
 {
+    public function __construct(
+        private readonly RankingRecetasGroqService $rankingGroq
+    ) {}
+
     /**
      * Clasifica todas las recetas activas según su compatibilidad clínica,
      * alimentaria y nutricional con la recomendación experta.
@@ -15,12 +19,13 @@ class ClasificadorRecetasSistemaExpertoService
     public function clasificarParaRecomendacion(
         RecomendacionNutricionalExperta $recomendacion,
         ?string $tipoComida = null,
-        array $contextoAjuste = []
+        array $contextoAjuste = [],
+        bool $usarGroq = true
     ): array {
         $contexto = $this->construirContexto($recomendacion);
         $tipoSolicitado = $this->normalizar($tipoComida);
 
-        return Receta::query()
+        $clasificaciones = Receta::query()
             ->whereRaw('LOWER(TRIM(estado)) = ?', ['activo'])
             ->with(['alimentos' => fn ($consulta) => $consulta
                 ->whereRaw('LOWER(TRIM(alimentos.estado)) = ?', ['activo'])])
@@ -40,6 +45,12 @@ class ClasificadorRecetasSistemaExpertoService
             })
             ->values()
             ->all();
+
+        return $usarGroq ? $this->rankingGroq->reordenar(
+            $clasificaciones,
+            $recomendacion,
+            $tipoSolicitado
+        ) : $clasificaciones;
     }
 
     private function clasificarReceta(Receta $receta, array $contexto, string $tipoSolicitado, array $ajuste): array

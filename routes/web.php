@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\PacienteController as AdminPacienteController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Admin\RespaldoBaseDatosController;
+use App\Http\Controllers\Admin\LogAccesoController;
 use App\Http\Controllers\Endocrinologo\AntecedentesEndocrinoMetabolicosController;
 use App\Http\Controllers\Endocrinologo\ConsultaEndocrinologicaController;
 use App\Http\Controllers\Endocrinologo\DiagnosticoPmosController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\Endocrinologo\ReporteHistoriaMenstrualPdfController;
 use App\Http\Controllers\Endocrinologo\ReporteHiperandrogenismoPdfController;
 use App\Http\Controllers\Endocrinologo\ReporteAntecedentesPdfController;
 use App\Http\Controllers\Endocrinologo\ReporteEvaluacionFisicaPdfController;
+use App\Http\Controllers\Endocrinologo\ReporteLaboratoriosPdfController;
+use App\Http\Controllers\Endocrinologo\ReporteEcografiaPdfController;
 use App\Http\Controllers\Endocrinologo\LaboratoriosController;
 use App\Http\Controllers\Endocrinologo\PacienteController as EndocrinologoPacienteController;
 use App\Http\Controllers\Endocrinologo\ReporteDiagnosticoController;
@@ -36,6 +39,7 @@ use App\Http\Controllers\Nutricionista\ReportePlanAlimentarioPdfController;
 use App\Http\Controllers\Nutricionista\ReporteSeguimientoEvolucionPdfController;
 use App\Http\Controllers\Nutricionista\ReporteCambiosPlanPdfController;
 use App\Http\Controllers\Nutricionista\CicloPlanAlimentarioController;
+use App\Http\Controllers\Nutricionista\CopilotoNutricionalController;
 use App\Http\Controllers\Nutricionista\RecetaController as NutricionistaRecetaController;
 use App\Http\Controllers\Nutricionista\ReglaNutricionalController;
 use App\Http\Controllers\Nutricionista\RetroalimentacionPacienteController as NutricionistaRetroalimentacionController;
@@ -49,6 +53,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Endocrinologo\DerivacionNutricionalController;
+use App\Http\Controllers\Nutricionista\DerivacionesNutricionalesController;
+use App\Http\Controllers\Notificaciones\NotificacionInternaController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -86,6 +93,11 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::middleware('verified')->group(function () {
+        Route::get('/notificaciones', [NotificacionInternaController::class, 'index'])->name('notificaciones.index');
+        Route::post('/notificaciones/leer-todas', [NotificacionInternaController::class, 'marcarTodasComoLeidas'])->name('notificaciones.leer-todas');
+        Route::post('/notificaciones/{notificacion}/leer', [NotificacionInternaController::class, 'marcarComoLeida'])->name('notificaciones.leer');
+    });
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
@@ -103,6 +115,7 @@ Route::middleware(['auth', 'verified', 'role:administrador'])
         Route::get('/dashboard', DashboardAdminController::class)->name('dashboard');
         Route::get('/base-datos', [RespaldoBaseDatosController::class, 'index'])->name('base-datos.index');
         Route::get('/base-datos/respaldo', [RespaldoBaseDatosController::class, 'descargar'])->name('base-datos.respaldo');
+        Route::get('/logs-acceso', [LogAccesoController::class, 'index'])->name('logs-acceso.index');
 
         Route::resource('users', UserController::class)
             ->except(['show', 'destroy']);
@@ -144,6 +157,13 @@ Route::middleware(['auth', 'role:nutricionista'])
     ->prefix('nutricionista')
     ->name('nutricionista.')
     ->group(function () {
+        Route::middleware('verified')->group(function () {
+            Route::get('/derivaciones', [DerivacionesNutricionalesController::class, 'index'])->name('derivaciones.index');
+            Route::get('/derivaciones/{derivacion}', [DerivacionesNutricionalesController::class, 'show'])->name('derivaciones.show');
+            Route::post('/derivaciones/{derivacion}/vista', [DerivacionesNutricionalesController::class, 'marcarVista'])->name('derivaciones.vista');
+            Route::post('/derivaciones/{derivacion}/en-proceso', [DerivacionesNutricionalesController::class, 'marcarEnProceso'])->name('derivaciones.en-proceso');
+            Route::post('/derivaciones/{derivacion}/atendida', [DerivacionesNutricionalesController::class, 'marcarAtendida'])->name('derivaciones.atendida');
+        });
         Route::get('/dashboard', NutricionistaDashboardController::class)->name('dashboard');
         Route::get('/progreso', \App\Http\Controllers\Nutricionista\ProgresoPacientesController::class)->name('progreso');
         Route::get('/reportes', \App\Http\Controllers\Nutricionista\ReportesPacientesController::class)->name('reportes.index');
@@ -198,6 +218,8 @@ Route::middleware(['auth', 'role:nutricionista'])
                 ->name('pacientes.planes-alimentarios.historial.reporte-pdf');
             Route::post('recomendaciones-expertas/{recomendacion}/generar-plan', [PlanAlimentarioController::class, 'generarDesdeRecomendacion'])->name('planes.generar-desde-recomendacion');
             Route::get('planes-alimentarios/{plan}', [PlanAlimentarioController::class, 'show'])->name('planes.show');
+            Route::post('planes-alimentarios/{plan}/copiloto', CopilotoNutricionalController::class)
+                ->name('planes.copiloto');
             Route::get('planes-alimentarios/{plan}/reporte-pdf', ReportePlanAlimentarioPdfController::class)
                 ->name('planes.reporte-pdf');
             Route::get('planes-alimentarios/{plan}/reporte-cambios-pdf', ReporteCambiosPlanPdfController::class)
@@ -280,6 +302,7 @@ Route::middleware(['auth', 'role:endocrinologo'])
     ->prefix('endocrinologo')
     ->name('endocrinologo.')
     ->group(function () {
+        Route::post('pacientes/{paciente}/derivar-nutricion', [DerivacionNutricionalController::class, 'store'])->middleware('verified')->name('pacientes.derivar-nutricion');
         Route::get('/dashboard', [EndocrinologoDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('pacientes', [EndocrinologoPacienteController::class, 'index'])
@@ -380,6 +403,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.laboratorios.perfil-lipidico.update');
         Route::get('pacientes/{paciente}/laboratorios/historial', [LaboratoriosController::class, 'historial'])
             ->name('pacientes.laboratorios.historial');
+        Route::get('pacientes/{paciente}/laboratorios/reporte-pdf', ReporteLaboratoriosPdfController::class)
+            ->name('pacientes.laboratorios.reporte-pdf');
 
         // Ecografía
         Route::post('pacientes/{paciente}/ecografia', [EcografiaController::class, 'store'])
@@ -388,6 +413,8 @@ Route::middleware(['auth', 'role:endocrinologo'])
             ->name('pacientes.ecografia.update');
         Route::get('pacientes/{paciente}/ecografia/historial', [EcografiaController::class, 'historial'])
             ->name('pacientes.ecografia.historial');
+        Route::get('pacientes/{paciente}/ecografia/reporte-pdf', ReporteEcografiaPdfController::class)
+            ->name('pacientes.ecografia.reporte-pdf');
 
         // Diagnóstico PMOS
         Route::post('pacientes/{paciente}/diagnostico-pmos', [DiagnosticoPmosController::class, 'store'])

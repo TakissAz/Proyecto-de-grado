@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, FlaskConical, TrendingUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Calendar, FlaskConical, TrendingUp, ChevronDown, FileDown } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
 import clsx from 'clsx';
@@ -70,7 +70,22 @@ const PANELES = [
 export default function HistorialLaboratorios({ paciente, historial }: Props) {
     const id = paciente.id_paciente;
     const [tabActivo, setTabActivo] = useState(0);
+    const [alcance, setAlcance] = useState<'panel' | 'todos'>('panel');
+    const [soloAlterados, setSoloAlterados] = useState(false);
+    const [desde, setDesde] = useState('');
+    const [hasta, setHasta] = useState('');
     const totalRegistros = Object.values(historial).reduce((acc, arr) => acc + arr.length, 0);
+
+    // URL del PDF con filtros aplicados
+    const urlPdf = useMemo(() => {
+        const params = new URLSearchParams();
+        if (alcance === 'panel') params.set('panel', PANELES[tabActivo].key);
+        if (soloAlterados) params.set('solo_alterados', '1');
+        if (desde) params.set('desde', desde);
+        if (hasta) params.set('hasta', hasta);
+        const qs = params.toString();
+        return `/endocrinologo/pacientes/${id}/laboratorios/reporte-pdf${qs ? `?${qs}` : ''}`;
+    }, [id, alcance, tabActivo, soloAlterados, desde, hasta]);
 
     return (
         <AuthenticatedLayout title="Historial de laboratorios">
@@ -144,6 +159,47 @@ export default function HistorialLaboratorios({ paciente, historial }: Props) {
                         })}
                     </div>
                 </div>
+
+                {/* Barra de filtros + PDF */}
+                {totalRegistros > 0 && (
+                    <div className="card-elevated p-4">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[180px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Alcance del reporte</label>
+                                <select value={alcance} onChange={(e) => setAlcance(e.target.value as 'panel' | 'todos')}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                    <option value="panel">Solo panel «{PANELES[tabActivo].label}»</option>
+                                    <option value="todos">Todos los paneles</option>
+                                </select>
+                            </div>
+                            <div className="min-w-[130px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Desde</label>
+                                <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            <div className="min-w-[130px]">
+                                <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Hasta</label>
+                                <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)}
+                                    className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                            </div>
+                            <label className="flex items-center gap-2 rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[11.5px] font-medium text-ink cursor-pointer dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                <input type="checkbox" checked={soloAlterados} onChange={(e) => setSoloAlterados(e.target.checked)}
+                                    className="h-3.5 w-3.5 rounded border-surface-border accent-brand-green" />
+                                Solo con hallazgo
+                            </label>
+                            <a href={urlPdf} target="_blank" rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark hover:bg-brand-green/25 dark:text-brand-green transition-colors ml-auto">
+                                <FileDown size={14} strokeWidth={1.8} /> Descargar PDF
+                            </a>
+                        </div>
+                        <p className="mt-2.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                            {alcance === 'panel'
+                                ? `El reporte incluirá únicamente el panel «${PANELES[tabActivo].label}».`
+                                : 'El reporte incluirá los cinco paneles de laboratorio.'}
+                            {soloAlterados && ' Solo resultados con hallazgo relevante.'}
+                        </p>
+                    </div>
+                )}
 
                 {/* Contenido del panel activo */}
                 <PanelContent

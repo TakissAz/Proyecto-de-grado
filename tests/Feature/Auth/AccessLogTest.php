@@ -31,5 +31,6 @@ class AccessLogTest extends TestCase
         $this->assertNotNull($activity);
         $this->assertSame('Inicio de sesión exitoso.', $activity->description);
         $this->assertNotNull($activity->properties->get('ip'));
+        $this->assertSame('credenciales', $activity->properties->get('metodo'));
     }
 }

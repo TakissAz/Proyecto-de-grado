@@ -64,6 +64,25 @@ class DiagnosticoPmosController extends Controller
 
     public function actualizarClinico(Request $request, DiagnosticoPmos $diagnostico): JsonResponse
     {
+        $request->merge([
+            'fenotipo_pmos' => match ($request->input('fenotipo_pmos')) {
+                'A_clasico_completo' => 'A',
+                'B_hiperandrogenico_anovulatorio' => 'B',
+                'C_ovulatorio' => 'C',
+                'D_no_hiperandrogenico' => 'D',
+                default => $request->input('fenotipo_pmos'),
+            },
+            'tipo_hiperandrogenismo' => match ($request->input('tipo_hiperandrogenismo')) {
+                'clinico_y_bioquimico', 'clinico_bioquimico' => 'mixto',
+                default => $request->input('tipo_hiperandrogenismo'),
+            },
+            'estado' => match ($request->input('estado')) {
+                'activo' => 'registrado',
+                'inactivo' => 'en_estudio',
+                default => $request->input('estado'),
+            },
+        ]);
+
         $datos = $request->validate([
             'diagnostico_confirmado' => ['required', 'boolean'],
             'fenotipo_pmos' => ['nullable', 'string', Rule::in(['A', 'B', 'C', 'D', 'no_clasificado', 'no_aplica'])],

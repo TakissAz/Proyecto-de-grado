@@ -267,7 +267,7 @@ class GeneradorPlanSemanalService
             $receta = $resultado['receta'];
             $id = $receta->getKey();
             $usos = count(array_filter($usadasPorTipo, fn (int $usada): bool => $usada === $id));
-            $ajustado = (int) $resultado['puntaje'];
+            $ajustado = (float) ($resultado['puntaje_hibrido'] ?? $resultado['puntaje']);
             if ($usos === 1) $ajustado -= 15;
             if ($usos >= 2) $ajustado -= 50;
             if ($ultimaRecetaPorTipo === $id) $ajustado -= 100;
@@ -311,12 +311,15 @@ class GeneradorPlanSemanalService
         $seguimiento = ($contextoAjuste['resumen_ajuste'] ?? []) !== [] ? ' Ajustado con seguimiento del paciente.' : '';
 
         return sprintf(
-            'Puntaje experto: %d. Puntaje ajustado por diversidad: %d. Motivos: %s%s%s',
+            'Puntaje experto: %d. Puntaje ajustado por diversidad: %.2f. Motivos: %s%s%s%s',
             $seleccion['puntaje'],
             $seleccion['puntaje_ajustado'],
             $detalle,
             $repeticion,
-            $seguimiento
+            $seguimiento,
+            ($seleccion['clasificado_con_ia'] ?? false)
+                ? ' Ranking Groq: '.number_format((float) $seleccion['puntaje_ia'], 2).'/100. '.implode(' ', $seleccion['motivos_ia'] ?? [])
+                : ''
         );
     }
 

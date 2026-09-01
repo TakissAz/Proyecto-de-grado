@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ScanSearch, TrendingUp, CheckCircle2, XCircle, Activity, BarChart3, Eye } from 'lucide-react';
+import { ArrowLeft, ScanSearch, TrendingUp, CheckCircle2, XCircle, Activity, BarChart3, Eye, FileDown } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import AvatarIniciales from '@/Components/ui/avatar-iniciales';
 import clsx from 'clsx';
@@ -33,18 +33,46 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
     const id = paciente.id_paciente;
     const [pagina, setPagina] = useState(1);
     const [registroExpandido, setRegistroExpandido] = useState<number | null>(null);
+    const [tipo, setTipo] = useState('');
+    const [morfologia, setMorfologia] = useState('');
+    const [desde, setDesde] = useState('');
+    const [hasta, setHasta] = useState('');
     const porPagina = 8;
-    const totalPaginas = Math.ceil(registros.length / porPagina);
-    const registrosPaginados = registros.slice((pagina - 1) * porPagina, pagina * porPagina);
 
-    // Estadísticas
-    const compatibles = registros.filter(r => r.morfologia_compatible_pmos).length;
-    const porcCompatible = registros.length > 0 ? Math.round((compatibles / registros.length) * 100) : 0;
-    const ultimaEco = registros[0];
-    const promedioVolOD = calcPromedio(registros.map(r => r.volumen_ovario_derecho));
-    const promedioVolOI = calcPromedio(registros.map(r => r.volumen_ovario_izquierdo));
-    const promedioFolOD = calcPromedio(registros.map(r => r.foliculos_ovario_derecho));
-    const promedioFolOI = calcPromedio(registros.map(r => r.foliculos_ovario_izquierdo));
+    const registrosFiltrados = useMemo(() => {
+        return registros.filter((r) => {
+            if (tipo && r.tipo_ecografia !== tipo) return false;
+            if (morfologia === 'compatible' && !r.morfologia_compatible_pmos) return false;
+            if (morfologia === 'normal' && r.morfologia_compatible_pmos) return false;
+            const fecha = (r.fecha_ecografia ?? '').slice(0, 10);
+            if (desde && fecha < desde) return false;
+            if (hasta && fecha > hasta) return false;
+            return true;
+        });
+    }, [registros, tipo, morfologia, desde, hasta]);
+
+    const totalPaginas = Math.ceil(registrosFiltrados.length / porPagina);
+    const registrosPaginados = registrosFiltrados.slice((pagina - 1) * porPagina, pagina * porPagina);
+
+    const urlPdf = useMemo(() => {
+        const params = new URLSearchParams();
+        if (tipo) params.set('tipo', tipo);
+        if (morfologia) params.set('morfologia', morfologia);
+        if (desde) params.set('desde', desde);
+        if (hasta) params.set('hasta', hasta);
+        const qs = params.toString();
+        return `/endocrinologo/pacientes/${id}/ecografia/reporte-pdf${qs ? `?${qs}` : ''}`;
+    }, [id, tipo, morfologia, desde, hasta]);
+
+    const hayFiltros = tipo || morfologia || desde || hasta;
+    const limpiar = () => { setTipo(''); setMorfologia(''); setDesde(''); setHasta(''); setPagina(1); };
+
+    // Estadísticas (sobre los registros filtrados)
+    const compatibles = registrosFiltrados.filter(r => r.morfologia_compatible_pmos).length;
+    const porcCompatible = registrosFiltrados.length > 0 ? Math.round((compatibles / registrosFiltrados.length) * 100) : 0;
+    const ultimaEco = registrosFiltrados[0];
+    const promedioVolOD = calcPromedio(registrosFiltrados.map(r => r.volumen_ovario_derecho));
+    const promedioVolOI = calcPromedio(registrosFiltrados.map(r => r.volumen_ovario_izquierdo));
 
     return (
         <AuthenticatedLayout title="Historial ecográfico">
@@ -97,12 +125,61 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
                     </div>
                 ) : (
                     <>
+                        {/* ═══ BARRA DE FILTROS + PDF ═══ */}
+                        <div className="card-elevated p-4">
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="flex-1 min-w-[140px]">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Tipo</label>
+                                    <select value={tipo} onChange={(e) => { setTipo(e.target.value); setPagina(1); }}
+                                        className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                        <option value="">Todos</option>
+                                        <option value="transvaginal">Transvaginal</option>
+                                        <option value="abdominal">Abdominal</option>
+                                        <option value="otra">Otra</option>
+                                    </select>
+                                </div>
+                                <div className="flex-1 min-w-[150px]">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Morfología</label>
+                                    <select value={morfologia} onChange={(e) => { setMorfologia(e.target.value); setPagina(1); }}
+                                        className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
+                                        <option value="">Todas</option>
+                                        <option value="compatible">Compatible PMOS</option>
+                                        <option value="normal">Sin criterios</option>
+                                    </select>
+                                </div>
+                                <div className="min-w-[120px]">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Desde</label>
+                                    <input type="date" value={desde} onChange={(e) => { setDesde(e.target.value); setPagina(1); }}
+                                        className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                                </div>
+                                <div className="min-w-[120px]">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Hasta</label>
+                                    <input type="date" value={hasta} onChange={(e) => { setHasta(e.target.value); setPagina(1); }}
+                                        className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
+                                </div>
+                                {hayFiltros && (
+                                    <button type="button" onClick={limpiar} className="rounded-lg px-3 py-2 text-[11px] font-semibold text-ink-muted hover:bg-black/[0.03] dark:text-ink-muted-dark dark:hover:bg-white/[0.04]">
+                                        Limpiar
+                                    </button>
+                                )}
+                                <a href={urlPdf} target="_blank" rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-brand-green/15 px-4 py-2 text-[11.5px] font-semibold text-brand-green-dark hover:bg-brand-green/25 dark:text-brand-green transition-colors">
+                                    <FileDown size={14} strokeWidth={1.8} /> Descargar PDF
+                                </a>
+                            </div>
+                            {hayFiltros && (
+                                <p className="mt-2.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                    {registrosFiltrados.length} de {registros.length} ecografías coinciden con los filtros.
+                                </p>
+                            )}
+                        </div>
+
                         {/* ═══ TARJETAS RESUMEN ═══ */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             <TarjetaResumen
                                 label="Compatibilidad PMOS"
                                 valor={`${porcCompatible}%`}
-                                subtexto={`${compatibles} de ${registros.length} ecografías`}
+                                subtexto={`${compatibles} de ${registrosFiltrados.length} ecografías`}
                                 icono={<Activity size={14} strokeWidth={1.8} />}
                                 color={porcCompatible >= 50 ? 'orange' : 'green'}
                             />
@@ -136,15 +213,19 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
                                 <div className="flex items-center justify-between mb-1">
                                     <p className="text-[12px] font-semibold text-ink dark:text-ink-dark">Evaluaciones ecográficas</p>
                                     <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
-                                        Mostrando {registrosPaginados.length} de {registros.length}
+                                        Mostrando {registrosPaginados.length} de {registrosFiltrados.length}
                                     </p>
                                 </div>
 
-                                {registrosPaginados.map((r, idx) => (
+                                {registrosFiltrados.length === 0 ? (
+                                    <div className="card-elevated px-5 py-10 text-center">
+                                        <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark">Ninguna ecografía coincide con los filtros.</p>
+                                    </div>
+                                ) : registrosPaginados.map((r, idx) => (
                                     <EcografiaCard
                                         key={r.id_ecografia}
                                         registro={r}
-                                        numero={registros.length - ((pagina - 1) * porPagina + idx)}
+                                        numero={registrosFiltrados.length - ((pagina - 1) * porPagina + idx)}
                                         expandido={registroExpandido === r.id_ecografia}
                                         onToggle={() => setRegistroExpandido(registroExpandido === r.id_ecografia ? null : r.id_ecografia)}
                                     />
@@ -174,9 +255,9 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
 
                             {/* Panel lateral derecho con scroll */}
                             <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-1 space-y-4">
-                                <ComparativaOvarios registros={registros} />
-                                {registros.length >= 2 && (
-                                    <GraficoEvolucionEcografia registros={registros} />
+                                <ComparativaOvarios registros={registrosFiltrados} />
+                                {registrosFiltrados.length >= 2 && (
+                                    <GraficoEvolucionEcografia registros={registrosFiltrados} />
                                 )}
                             </aside>
                         </div>

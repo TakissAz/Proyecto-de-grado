@@ -173,6 +173,10 @@ class Paciente extends Model
     {
         return $this->hasMany(PlanAlimentario::class, 'id_paciente', 'id_paciente');
     }
+    public function derivacionesNutricionales(): HasMany
+    {
+        return $this->hasMany(DerivacionNutricional::class, 'id_paciente', 'id_paciente');
+    }
     public function seguimientosComidas(): HasMany
     {
         return $this->hasMany(SeguimientoComida::class, 'id_paciente', 'id_paciente');

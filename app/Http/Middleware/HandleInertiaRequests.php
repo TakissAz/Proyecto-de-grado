@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
+use App\Services\Notificaciones\NotificacionInternaService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -50,6 +51,9 @@ class HandleInertiaRequests extends Middleware
                 'error'                      => $request->session()->get('error'),
                 'nueva_consulta_paciente_id' => $request->session()->get('nueva_consulta_paciente_id'),
             ],
+            'notificaciones' => fn () => $user
+                ? app(NotificacionInternaService::class)->obtenerResumenParaUsuario($user)
+                : ['total_no_leidas' => 0, 'ultimas' => []],
         ];
     }
 }

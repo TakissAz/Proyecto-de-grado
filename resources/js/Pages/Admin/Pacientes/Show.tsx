@@ -1,9 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { ArrowLeft, Pencil, CheckCircle, Ban } from 'lucide-react';
 import PacienteResumen from '@/Components/Pacientes/PacienteResumen';
 import { Badge } from '@/Components/ui/badge';
+import { Boton, BotonLink } from '@/Components/ui/boton';
+import Alerta from '@/Components/ui/alerta';
 
 interface PacienteRow {
     id_paciente: number;
@@ -48,18 +50,18 @@ export default function Show({ paciente, flash }: Props) {
 
     const actions = (
         <>
-            <Link href={`/admin/pacientes/${id}/edit`} className="btn btn-primary btn-sm gap-1.5">
-                <Pencil size={14} /> Editar
-            </Link>
-            <button className="btn btn-outline btn-success btn-sm gap-1.5" disabled={paciente.estado === 'activo'} onClick={() => enviarFormEstado(`/admin/pacientes/${id}/activar`)}>
-                <CheckCircle size={14} /> Activar
-            </button>
-            <button className="btn btn-outline btn-warning btn-sm gap-1.5" disabled={paciente.estado === 'inactivo'} onClick={() => enviarFormEstado(`/admin/pacientes/${id}/inactivar`)}>
-                <Ban size={14} /> Inactivar
-            </button>
-            <Link href="/admin/pacientes" className="btn btn-ghost btn-sm gap-1.5">
-                <ArrowLeft size={14} /> Volver al listado
-            </Link>
+            <BotonLink href={`/admin/pacientes/${id}/edit`}>
+                <Pencil size={13} strokeWidth={1.8} /> Editar
+            </BotonLink>
+            <Boton variante="outline" disabled={paciente.estado === 'activo'} onClick={() => enviarFormEstado(`/admin/pacientes/${id}/activar`)}>
+                <CheckCircle size={13} strokeWidth={1.8} /> Activar
+            </Boton>
+            <Boton variante="outline" disabled={paciente.estado === 'inactivo'} onClick={() => enviarFormEstado(`/admin/pacientes/${id}/inactivar`)}>
+                <Ban size={13} strokeWidth={1.8} /> Inactivar
+            </Boton>
+            <BotonLink href="/admin/pacientes" variante="ghost">
+                <ArrowLeft size={13} strokeWidth={1.8} /> Volver al listado
+            </BotonLink>
         </>
     );
 
@@ -72,8 +74,8 @@ export default function Show({ paciente, flash }: Props) {
             <Head title={`Paciente: ${paciente.ci}`} />
 
             <div className="space-y-4">
-                {flash?.success ? <div className="alert alert-success text-sm">{flash.success}</div> : null}
-                {flash?.error ? <div className="alert alert-error text-sm">{flash.error}</div> : null}
+                {flash?.success ? <Alerta tipo="success">{flash.success}</Alerta> : null}
+                {flash?.error ? <Alerta tipo="error">{flash.error}</Alerta> : null}
 
                 <PacienteResumen paciente={paciente} actions={actions} badges={badges} />
             </div>

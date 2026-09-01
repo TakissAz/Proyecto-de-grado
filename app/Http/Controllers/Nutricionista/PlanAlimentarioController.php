@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Nutricion\CalculadoraTotalesPlanAlimentarioService;
 use App\Services\Nutricion\GeneradorPlanSemanalService;
 use App\Services\Nutricion\PerfilNutricionalService;
+use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class PlanAlimentarioController extends Controller
         private readonly GeneradorPlanSemanalService $generador,
         private readonly CalculadoraTotalesPlanAlimentarioService $calculadora,
         private readonly PerfilNutricionalService $perfil,
+        private readonly ElegibilidadPlanificacionNutricionalService $elegibilidadService,
     ) {}
 
     public function index(Paciente $paciente): JsonResponse
@@ -40,6 +42,13 @@ class PlanAlimentarioController extends Controller
     public function generarDesdeRecomendacion(Request $request, RecomendacionNutricionalExperta $recomendacion): JsonResponse
     {
         $datos = $request->validate(['fecha_inicio' => ['nullable', 'date', 'after_or_equal:tomorrow']]);
+        $paciente = Paciente::query()->findOrFail($recomendacion->id_paciente);
+        $elegibilidad = $this->elegibilidadService->evaluar($paciente);
+        if (! $elegibilidad['elegible']) {
+            throw ValidationException::withMessages([
+                'diagnostico_endocrinologico' => $elegibilidad['motivo'],
+            ]);
+        }
         if (! in_array($recomendacion->estado_validacion_experta, ['aprobado', 'validado'], true)) {
             throw ValidationException::withMessages([
                 'recomendacion' => 'Solo se puede generar el plan desde una recomendación aprobada o validada.',

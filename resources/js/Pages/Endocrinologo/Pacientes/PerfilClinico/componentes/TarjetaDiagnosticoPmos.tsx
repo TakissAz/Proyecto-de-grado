@@ -71,7 +71,7 @@ export default function TarjetaDiagnosticoPmos({ evaluacion, diagnostico, idPaci
                             onClick={() => setEditandoClinico(true)}
                             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-brand-green-dark transition-colors hover:bg-brand-green/10 dark:text-brand-green dark:hover:bg-brand-green-dark/15"
                         >
-                            <Edit size={12} strokeWidth={1.8} /> Editar diagnóstico
+                            <Edit size={12} strokeWidth={1.8} /> Editar valoración médica
                         </button>
                     </div>
                 ) : (
@@ -121,6 +121,17 @@ export default function TarjetaDiagnosticoPmos({ evaluacion, diagnostico, idPaci
                         {tieneAnalisis && mostrarResultados && (
                             <div className="space-y-3 rounded-xl border border-surface-border p-4 dark:border-surface-border-dark">
                                 <TrazabilidadExpertaCard trazabilidad={diagnostico} />
+                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-info/20 bg-info/[0.035] px-4 py-3 dark:bg-info/[0.05]">
+                                    <div>
+                                        <p className="text-[11.5px] font-semibold text-ink dark:text-ink-dark">Revisión profesional de la propuesta</p>
+                                        <p className="mt-0.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                                            Puede corregir la confirmación, fenotipo, severidad, riesgo, conclusión y recomendaciones antes o después de validarla.
+                                        </p>
+                                    </div>
+                                    <Boton variante="ghost" tamano="sm" onClick={() => setEditandoClinico(true)}>
+                                        <Edit size={13} strokeWidth={1.8} /> Ajustar propuesta experta
+                                    </Boton>
+                                </div>
                                 <ValidacionResultadoExperto
                                     url={`/endocrinologo/sistema-experto/pmos/${diagnostico.id_diagnostico_pmos}/validar`}
                                     estadoActual={diagnostico.estado_validacion_experta}
@@ -146,7 +157,10 @@ export default function TarjetaDiagnosticoPmos({ evaluacion, diagnostico, idPaci
                     diagnostico={diagnostico}
                     evaluacion={evaluacion}
                     onCerrar={() => setEditandoClinico(false)}
-                    onSuccess={() => router.reload({ only: ['perfil'] })}
+                    onSuccess={() => {
+                        setEditandoClinico(false);
+                        router.reload({ only: ['perfil'] });
+                    }}
                 />
             )}
         </div>

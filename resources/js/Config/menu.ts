@@ -13,8 +13,10 @@ import {
   UserCog,
   ShieldCheck,
   DatabaseBackup,
+  LogIn,
   BrainCircuit,
   FileBarChart,
+  Send,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -56,6 +58,7 @@ export const menuAdministrador: MenuItem[] = [
   { label: 'Pacientes', href: '/admin/pacientes', icon: Users },
   { label: 'Auditoría', href: '/admin/auditoria/pacientes', icon: ShieldCheck },
   { label: 'Actividad', href: '/admin/auditoria/actividad', icon: Activity },
+  { label: 'Logs de acceso', href: '/admin/logs-acceso', icon: LogIn },
   { label: 'Base de datos', href: '/admin/base-datos', icon: DatabaseBackup },
 ];
 
@@ -76,6 +79,7 @@ export const menuNutricionista: MenuItem[] = [
     href: '/nutricionista/recetas',
     icon: CookingPot,
   },
+  { label: 'Derivaciones', href: '/nutricionista/derivaciones', icon: Send },
   {
     label: 'Reglas nutricionales',
     href: '/nutricionista/reglas-nutricionales',

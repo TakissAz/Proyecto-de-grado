@@ -10,6 +10,7 @@ use App\Http\Resources\PerfilClinicoResource;
 use App\Models\Paciente;
 use App\Services\Pacientes\PacienteService;
 use App\Services\Pacientes\PerfilClinicoService;
+use App\Services\Endocrinologia\PanelClinicoEndocrinologicoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,6 +21,7 @@ class PacienteController extends Controller
     public function __construct(
         private readonly PacienteService $pacienteService,
         private readonly PerfilClinicoService $perfilClinicoService,
+        private readonly PanelClinicoEndocrinologicoService $panelClinicoService,
     ) {
     }
 
@@ -94,6 +96,7 @@ class PacienteController extends Controller
 
         return Inertia::render('Endocrinologo/Pacientes/PerfilClinico/Index', [
             'perfil' => new PerfilClinicoResource($perfil),
+            'panel_endocrinologico' => $this->panelClinicoService->construir($paciente),
         ]);
     }
 }

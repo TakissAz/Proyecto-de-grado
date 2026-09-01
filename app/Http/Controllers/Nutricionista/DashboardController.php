@@ -10,6 +10,8 @@ use App\Models\SeguimientoComida;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\DerivacionNutricional;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -45,6 +47,10 @@ class DashboardController extends Controller
             ->where('revisado_por_nutricionista', false)->where('estado_cumplimiento', '!=', 'pendiente')->count();
 
         return Inertia::render('Nutricionista/Dashboard', [
+            'derivaciones' => Schema::hasTable('derivaciones_nutricionales') ? [
+                'pendientes' => DerivacionNutricional::whereIn('estado', ['pendiente','vista'])->count(),
+                'en_proceso' => DerivacionNutricional::where('estado', 'en_proceso')->count(),
+            ] : ['pendientes'=>0,'en_proceso'=>0],
             'resumen' => [
                 'total_pacientes' => $pacientes->count(),
                 'planes_activos' => (clone $planes)->whereIn('estado_plan', ['aprobado', 'activo'])->count(),

@@ -27,5 +27,6 @@ export type PageProps<
         user: User | null;
     };
     flash: FlashProps;
+    notificaciones?: { total_no_leidas: number; ultimas: { id_notificacion_interna:number; titulo:string; mensaje:string; prioridad:string; leida:boolean; url_destino:string|null; created_at:string|null }[] };
     [key: string]: unknown;
 };

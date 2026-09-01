@@ -29,6 +29,10 @@ const manana = () => {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
 };
 const errorDe = (e: unknown) => { const d = (e as AxiosError<{ message?: string; errors?: Record<string, string[]> }>).response?.data; return Object.values(d?.errors ?? {})[0]?.[0] ?? d?.message ?? 'No se pudo completar la operación.'; };
+const datosGroq = (observaciones?: string | null) => {
+    const coincidencia = observaciones?.match(/Ranking Groq:\s*([\d.]+)\/100\.\s*(.*)$/is);
+    return coincidencia ? { puntaje: Number(coincidencia[1]), motivos: coincidencia[2].trim() } : null;
+};
 
 export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar, alimentos, recetas }: Props) {
     const [detalle, setDetalle] = useState(false), [cargando, setCargando] = useState(''), [mensaje, setMensaje] = useState(''), [esError, setEsError] = useState(false), [modalCiclo, setModalCiclo] = useState(false), [modalGenerar, setModalGenerar] = useState(false), [fechaInicio, setFechaInicio] = useState(manana), [fechaNuevo, setFechaNuevo] = useState(''), [observacion, setObservacion] = useState('');
@@ -42,6 +46,8 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
     const editable = !!plan && ['sugerido', 'en_revision'].includes(plan.estado_plan);
     const validable = !!plan && ['sugerido', 'en_revision', 'aprobado', 'rechazado'].includes(plan.estado_plan);
     const finalizable = !!plan && ['aprobado', 'activo'].includes(plan.estado_plan);
+    const componentesPlan = plan?.dias.flatMap(dia => dia.comidas.flatMap(comida => comida.componentes)) ?? [];
+    const componentesGroq = componentesPlan.filter(componente => datosGroq(componente.observaciones));
     const finalizar = () => plan && router.post(route('nutricionista.planes.finalizar-y-generar-siguiente', plan.id_plan_alimentario), { fecha_inicio: fechaNuevo || null, observacion_finalizacion: observacion || null }, { preserveScroll: true, onStart: () => setCargando('finalizar'), onSuccess: () => { setModalCiclo(false); setEsError(false); setMensaje('Plan finalizado y nueva planificación generada.'); recargar() }, onError: e => { setEsError(true); setMensaje(Object.values(e)[0] ?? 'No se pudo finalizar.') }, onFinish: () => setCargando('') });
 
     return (
@@ -61,6 +67,19 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                 </div>
                 {plan && <Badge color={plan.estado_plan === 'aprobado' || plan.estado_plan === 'activo' ? 'green' : plan.estado_plan === 'rechazado' ? 'red' : 'orange'}>{etiqueta(plan.estado_plan)}</Badge>}
             </div>
+
+            {plan && componentesPlan.length > 0 && (
+                <div className={clsx('flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3', componentesGroq.length > 0 ? 'border-brand-green/25 bg-brand-green/[0.05]' : 'border-brand-orange/25 bg-brand-orange/[0.05]')}>
+                    <div className="flex items-center gap-2.5">
+                        <Sparkles size={16} className={componentesGroq.length > 0 ? 'text-brand-green-dark dark:text-brand-green' : 'text-brand-orange'} />
+                        <div>
+                            <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Selección asistida por Groq</p>
+                            <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">{componentesGroq.length > 0 ? `${componentesGroq.length} de ${componentesPlan.length} recetas recibieron priorización de IA; las demás conservaron el ranking clínico seguro.` : 'Groq no intervino en este plan; se utilizó únicamente el ranking clínico determinista.'}</p>
+                        </div>
+                    </div>
+                    <Badge color={componentesGroq.length > 0 ? 'green' : 'orange'}>{componentesGroq.length > 0 ? 'Groq aplicado' : 'Fallback seguro'}</Badge>
+                </div>
+            )}
 
             {/* Sin plan */}
             {!plan && !puedeGenerar && (
@@ -404,6 +423,7 @@ function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { co
                                 <div key={c.id_componente_comida_plan} className="flex items-center gap-2 py-2 group">
                                     <div className={clsx('h-5 w-1 rounded-full shrink-0', c.tipo_componente === 'receta' ? 'bg-brand-green' : c.tipo_componente === 'alimento' ? 'bg-category-dairy' : 'bg-brand-orange')} />
                                     <span className="flex-1 text-[12px] text-ink dark:text-ink-dark truncate">{c.receta?.nombre ?? c.alimento?.nombre ?? c.nombre_manual}</span>
+                                    {datosGroq(c.observaciones) && <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-green/10 px-1.5 py-0.5 text-[8.5px] font-bold text-brand-green-dark dark:text-brand-green"><Sparkles size={9} /> Groq</span>}
                                     <span className="text-[11px] text-ink-muted dark:text-ink-muted-dark font-medium shrink-0 tabular-nums">{n(c.cantidad)} {c.unidad}</span>
                                     {editable && (
                                         <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -464,7 +484,8 @@ function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { co
                 {verDetalle && (
                     <div className="mt-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] p-3 space-y-2">
                         {comida.componentes.map(c => (
-                            <div key={c.id_componente_comida_plan} className="flex items-center justify-between gap-2">
+                            <div key={c.id_componente_comida_plan} className="space-y-2 rounded-lg border border-surface-border/50 p-2 dark:border-surface-border-dark/50">
+                                <div className="flex items-center justify-between gap-2">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[11px] font-semibold text-ink dark:text-ink-dark truncate">{c.receta?.nombre ?? c.alimento?.nombre ?? c.nombre_manual}</p>
                                     <div className="flex gap-2 mt-0.5">
@@ -475,6 +496,8 @@ function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { co
                                     </div>
                                 </div>
                                 <span className={clsx('text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0', c.tipo_componente === 'receta' ? 'bg-brand-green/10 text-brand-green-dark dark:text-brand-green' : c.tipo_componente === 'alimento' ? 'bg-category-dairy/10 text-category-dairy' : 'bg-brand-orange/10 text-brand-orange')}>{c.tipo_componente}</span>
+                                </div>
+                                {datosGroq(c.observaciones) ? <div className="rounded-lg bg-brand-green/[0.06] px-2.5 py-2"><p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-brand-green-dark dark:text-brand-green"><Sparkles size={10} /> Groq {n(datosGroq(c.observaciones)?.puntaje)}/100</p><p className="mt-1 text-[10px] leading-relaxed text-ink/75 dark:text-ink-dark/75">{datosGroq(c.observaciones)?.motivos}</p></div> : c.tipo_componente === 'receta' && <p className="text-[9.5px] text-ink-muted dark:text-ink-muted-dark">Seleccionada mediante reglas clínicas deterministas.</p>}
                             </div>
                         ))}
                     </div>

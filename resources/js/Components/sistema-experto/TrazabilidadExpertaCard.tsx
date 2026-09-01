@@ -63,8 +63,8 @@ export default function TrazabilidadExpertaCard({ trazabilidad }: Props) {
             {reglas.length > 0 && (
                 <Seccion titulo="Criterios clínicos identificados">
                     <div className="flex flex-wrap gap-1.5">
-                        {reglas.map((regla) => (
-                            <Badge key={regla} color="gray">{regla}</Badge>
+                        {reglas.map((regla, indice) => (
+                            <Badge key={`${indice}-${regla}`} color="gray">{regla}</Badge>
                         ))}
                     </div>
                 </Seccion>

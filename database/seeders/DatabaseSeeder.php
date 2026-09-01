@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
             PerfilNutricionalPacienteSeeder::class,
             OtrosPerfilesNutricionalesSeeder::class,
             RecetasSeeder::class,
+            CatalogoAmpliadoRecetasSeeder::class,
+            DatosClinicosNutricionalesRealistasSeeder::class,
+            PerfilesEndocrinologicosCompletosSeeder::class,
+            ReglasNutricionalesSeeder::class,
+            FlujoOperativoNutricionalRealistaSeeder::class,
+            CompletarTodosLosPacientesSeeder::class,
         ]);
     }
 }

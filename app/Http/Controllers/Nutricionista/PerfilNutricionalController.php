@@ -26,22 +26,26 @@ use App\Models\Alimento;
 use App\Models\Receta;
 use App\Services\Nutricion\PerfilNutricionalService;
 use App\Services\Nutricion\RequerimientoNutricionalService;
+use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
+use Illuminate\Support\Facades\Schema;
 
 class PerfilNutricionalController extends Controller
 {
     public function __construct(
         private readonly PerfilNutricionalService $service,
         private readonly RequerimientoNutricionalService $requerimientoService,
+        private readonly ElegibilidadPlanificacionNutricionalService $elegibilidadService,
     ) {}
 
     public function index(Paciente $paciente): Response
     {
+        $elegibilidad = $this->elegibilidadService->evaluar($paciente);
         $ultima = fn (string $relacion, string $fecha, string $id) => $paciente->{$relacion}()
             ->where('estado', true)->latest($fecha)->latest($id)->first();
 
@@ -71,7 +75,12 @@ class PerfilNutricionalController extends Controller
             'prediccionRiesgoAdherencia' => $this->service->prediccionRiesgoAdherencia($paciente),
             'historialPlanes' => $this->service->historialPlanes($paciente),
             'recomendacionExpertaAprobada' => $this->service->recomendacionExpertaAprobada($paciente),
-            'puedeGenerarPlanSemanal' => $this->service->recomendacionExpertaAprobada($paciente) !== null,
+            'elegibilidadPlanificacion' => $elegibilidad,
+            'derivacionNutricional' => Schema::hasTable('derivaciones_nutricionales')
+                ? $paciente->derivacionesNutricionales()->with('endocrinologo:id,name')->latest('fecha_derivacion')->first()
+                : null,
+            'puedeGenerarPlanSemanal' => $elegibilidad['elegible']
+                && $this->service->recomendacionExpertaAprobada($paciente) !== null,
             'alimentosPlan' => Alimento::query()->where('estado', 'activo')->orderBy('nombre')->limit(200)->get([
                 'id_alimento', 'nombre', 'grupo_alimentario', 'unidad_base', 'cantidad_base', 'calorias', 'proteinas', 'carbohidratos', 'grasas', 'fibra',
             ]),
