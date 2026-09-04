@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1120" role="img" aria-labelledby="db-title db-desc">
+<title id="db-title">Modelo relacional de alto nivel de la base de datos PMOS</title><desc id="db-desc">Mapa de las tablas reales agrupadas en identidad, endocrinologÃ­a, nutriciÃ³n, planificaciÃ³n y seguimiento.</desc><style>
+:root{--ink:#17201b;--muted:#647169;--line:#aeb8b1;--green:#237c3a;--pale:#edf7ef;--amber:#a96500;--blue:#35658d}*{box-sizing:border-box}main{max-width:1500px;margin:auto;padding:48px 36px}h1{font:700 38px/1.1 Georgia,serif;margin:8px 0 10px}svg{width:100%;height:auto;display:block;border:1px solid #d7ddd8;background:#fff}.edge{fill:none;stroke:#718078;stroke-width:2}.edge2{fill:none;stroke:#35658d;stroke-width:2;stroke-dasharray:7 6}.zone{fill:#fbfcfb;stroke:#aeb8b1;stroke-width:1.3}.zone.core{fill:#edf7ef;stroke:#237c3a;stroke-width:2}.zone.expert{fill:#fff8eb;stroke:#a96500;stroke-width:1.6}.zt{font-size:18px;font-weight:700;fill:#17201b}.zs{font-size:11px;font-weight:700;fill:#237c3a;letter-spacing:.11em}.tbl{font:12px Consolas,monospace;fill:#3e4b44}.small{font:10px Consolas,monospace;fill:#647169}.label{font:700 11px Arial,sans-serif;fill:#35658d}.legend{font:11px Consolas,monospace;fill:#647169}
+</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#718078"/></marker><marker id="blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#35658d"/></marker></defs><rect width="1440" height="1120" fill="#fff"/>
+<!-- relaciones, antes de las entidades -->
+<path class="edge" marker-end="url(#arrow)" d="M344 196 H388 Q396 196 396 204 V268 Q396 276 404 276 H448"/>
+<path class="edge" marker-end="url(#arrow)" d="M624 196 H668 Q676 196 676 204 V268 Q676 276 684 276 H728"/>
+<path class="edge" marker-end="url(#arrow)" d="M624 580 H668 Q676 580 676 588 V672 Q676 680 684 680 H728"/>
+<path class="edge" marker-end="url(#arrow)" d="M1016 580 H1060 Q1068 580 1068 588 V672 Q1068 680 1076 680 H1120"/>
+<path class="edge2" marker-end="url(#blue)" d="M624 396 H656 Q664 396 664 404 V812 Q664 820 672 820 H720"/>
+<path class="edge2" marker-end="url(#blue)" d="M1016 396 H1048 Q1056 396 1056 404 V812 Q1056 820 1064 820 H1112"/>
+
+<g><rect class="zone core" x="52" y="72" width="292" height="248" rx="8"/><text class="zs" x="76" y="104">IDENTIDAD Y ACCESO</text><text class="zt" x="76" y="136">Usuarios y pacientes</text>
+<text class="tbl" x="76" y="174">users</text><text class="tbl" x="76" y="198">roles</text><text class="tbl" x="76" y="222">user_roles</text><text class="tbl" x="76" y="246">pacientes</text><text class="tbl" x="76" y="270">sessions</text><text class="small" x="76" y="298">users 1â€”0..1 pacientes Â· roles Nâ€”N users</text></g>
+
+<g><rect class="zone" x="448" y="72" width="176" height="248" rx="8"/><text class="zs" x="472" y="104">COORDINACIÃ“N</text><text class="zt" x="472" y="136">AtenciÃ³n</text><text class="tbl" x="472" y="178">citas</text><text class="tbl" x="472" y="202">derivaciones_</text><text class="tbl" x="472" y="220">nutricionales</text><text class="tbl" x="472" y="252">notificaciones_</text><text class="tbl" x="472" y="270">internas</text><text class="small" x="472" y="298">FK paciente Â· profesional</text></g>
+
+<g><rect class="zone" x="728" y="52" width="636" height="528" rx="8"/><text class="zs" x="752" y="84">DOMINIO ENDOCRINOLÃ“GICO</text><text class="zt" x="752" y="116">Historia, evidencias y diagnÃ³sticos</text>
+<text class="tbl" x="752" y="158">consultas_endocrinologicas</text><text class="small" x="1052" y="158">â† pacientes Â· users</text>
+<line x1="752" y1="178" x2="1340" y2="178" stroke="#d7ddd8"/>
+<text class="tbl" x="752" y="210">historia_menstrual</text><text class="tbl" x="1040" y="210">historia_hiperandrogenica</text>
+<text class="tbl" x="752" y="238">antecedentes_endocrino_metabolicos</text><text class="tbl" x="1040" y="238">evaluaciones_fisicas_endocrinas</text>
+<text class="tbl" x="752" y="266">evaluaciones_ecograficas</text><text class="tbl" x="1040" y="266">resultados_perfil_androgenico</text>
+<text class="tbl" x="752" y="294">resultados_perfil_gonadotropo</text><text class="tbl" x="1040" y="294">resultados_diferenciales_endocrinos</text>
+<text class="tbl" x="752" y="322">resultados_glucosa_insulina</text><text class="tbl" x="1040" y="322">resultados_perfil_lipidico</text>
+<rect x="752" y="362" width="280" height="112" rx="6" fill="#fff8eb" stroke="#a96500"/><text class="zt" x="772" y="394">diagnosticos_pmos</text><text class="small" x="772" y="422">Rotterdam Â· fenotipo Â· confianza</text><text class="small" x="772" y="446">FK evidencias Â· validador</text>
+<rect x="1052" y="362" width="288" height="112" rx="6" fill="#fff8eb" stroke="#a96500"/><text class="zt" x="1072" y="394">diagnosticos_resistencia_</text><text class="zt" x="1072" y="416">insulina</text><text class="small" x="1072" y="446">HOMA-IR Â· QUICKI Â· riesgos</text>
+<text class="small" x="752" y="536">Cada evidencia referencia consulta + paciente; los resultados incluyen profesional.</text></g>
+
+<g><rect class="zone" x="52" y="388" width="572" height="404" rx="8"/><text class="zs" x="76" y="420">DOMINIO NUTRICIONAL</text><text class="zt" x="76" y="452">ValoraciÃ³n y orientaciÃ³n experta</text>
+<text class="tbl" x="76" y="492">consultas_nutricionales</text><text class="small" x="364" y="492">â† paciente Â· nutricionista Â· cita</text><line x1="76" y1="512" x2="600" y2="512" stroke="#d7ddd8"/>
+<text class="tbl" x="76" y="544">evaluaciones_nutricionales</text><text class="tbl" x="348" y="544">habitos_alimentarios</text>
+<text class="tbl" x="76" y="572">preferencias_alimentarias</text><text class="tbl" x="348" y="572">restricciones_alimentarias</text>
+<text class="tbl" x="76" y="600">objetivos_nutricionales</text>
+<rect x="76" y="632" width="244" height="116" rx="6" fill="#fff8eb" stroke="#a96500"/><text class="zt" x="96" y="664">requerimientos_</text><text class="zt" x="96" y="686">nutricionales</text><text class="small" x="96" y="716">calorÃ­as Â· macros Â· fibra</text>
+<rect x="340" y="632" width="236" height="116" rx="6" fill="#fff8eb" stroke="#a96500"/><text class="zt" x="360" y="664">reglas_nutricionales</text><text class="small" x="360" y="692">Nâ€”N requerimientos mediante</text><text class="small" x="360" y="714">regla_requerimiento_nutricional</text>
+<text class="small" x="76" y="772">Salida: recomendaciones_nutricionales_expertas</text></g>
+
+<g><rect class="zone core" x="728" y="640" width="636" height="384" rx="8"/><text class="zs" x="752" y="672">PLANIFICACIÃ“N Y SEGUIMIENTO</text><text class="zt" x="752" y="704">Del plan semanal a la evoluciÃ³n</text>
+<text class="tbl" x="752" y="748">planes_alimentarios</text><text class="small" x="1052" y="748">â† recomendaciÃ³n Â· requerimiento</text>
+<path d="M770 772 H1328" stroke="#d7ddd8"/><text class="tbl" x="752" y="804">dias_plan_alimentario</text><text class="label" x="952" y="804">1â€”N</text><text class="tbl" x="1000" y="804">comidas_plan_alimentario</text>
+<text class="tbl" x="752" y="842">componentes_comida_plan</text><text class="small" x="1032" y="842">â†’ receta o alimento</text>
+<text class="tbl" x="752" y="880">recetas</text><text class="tbl" x="948" y="880">receta_alimentos</text><text class="tbl" x="1160" y="880">alimentos</text>
+<line x1="752" y1="904" x2="1340" y2="904" stroke="#d7ddd8"/>
+<text class="tbl" x="752" y="940">seguimientos_comidas</text><text class="tbl" x="1036" y="940">seguimientos_sintomas_paciente</text>
+<text class="tbl" x="752" y="976">retroalimentaciones_paciente</text><text class="small" x="1036" y="976">FK plan Â· seguimientos Â· emisor</text></g>
+
+<g><rect class="zone" x="52" y="844" width="572" height="180" rx="8"/><text class="zs" x="76" y="876">SOPORTE TÃ‰CNICO Y AUDITORÃA</text><text class="tbl" x="76" y="916">activity_log</text><text class="tbl" x="272" y="916">cache Â· cache_locks</text><text class="tbl" x="76" y="948">jobs Â· job_batches Â· failed_jobs</text><text class="tbl" x="76" y="980">migrations Â· password_reset_tokens</text><text class="small" x="76" y="1004">Tablas operativas; no participan en la inferencia clÃ­nica.</text></g>
+
+<line x1="52" y1="1064" x2="1364" y2="1064" stroke="#d7ddd8"/><text class="legend" x="52" y="1092">VERDE = entidad central / planificaciÃ³n Â· ÃMBAR = conocimiento o resultado experto Â· LÃNEA AZUL = transferencia diagnÃ³stica hacia nutriciÃ³n</text>
+</svg>

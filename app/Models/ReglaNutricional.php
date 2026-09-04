@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -36,6 +37,16 @@ class ReglaNutricional extends Model
         'prioridad' => 'integer',
         'estado' => 'boolean',
     ];
+
+    public function requerimientosNutricionales(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            RequerimientoNutricional::class,
+            'regla_requerimiento_nutricional',
+            'id_regla_nutricional',
+            'id_requerimiento_nutricional'
+        )->withTimestamps();
+    }
 
     public function esActiva(): bool
     {

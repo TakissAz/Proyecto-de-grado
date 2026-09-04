@@ -80,6 +80,14 @@ class RequerimientoNutricionalServiceTest extends TestCase
         $this->assertEqualsWithDelta(25, (float) $requerimiento->fibra_diaria, 0.01);
         $this->assertContains('RN-001', collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all());
         $this->assertContains('RN-008', collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all());
+        $this->assertEqualsCanonicalizing(
+            collect($requerimiento->reglas_aplicadas)->pluck('codigo')->all(),
+            $requerimiento->reglasNutricionales->pluck('codigo')->all(),
+        );
+        $this->assertDatabaseHas('regla_requerimiento_nutricional', [
+            'id_requerimiento_nutricional' => $requerimiento->id_requerimiento_nutricional,
+            'id_regla_nutricional' => $requerimiento->reglasNutricionales->firstWhere('codigo', 'RN-001')?->id_regla_nutricional,
+        ]);
     }
 
     public function test_usa_factor_sedentario_si_nivel_actividad_es_null(): void

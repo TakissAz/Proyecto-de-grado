@@ -90,7 +90,7 @@ class RequerimientoNutricionalService
             $observacionesFinales,
             $reglas,
         ) {
-            return RequerimientoNutricional::create([
+            $requerimiento = RequerimientoNutricional::create([
                 'id_paciente' => $paciente->id_paciente,
                 'id_nutricionista' => $nutricionistaId,
                 'id_consulta_nutricional' => $evaluacion->id_consulta_nutricional,
@@ -118,6 +118,17 @@ class RequerimientoNutricionalService
                 'reglas_aplicadas' => $reglas['reglas_aplicadas'],
                 'estado' => true,
             ]);
+
+            $idsReglasAplicadas = collect($reglas['reglas_aplicadas'])
+                ->pluck('id_regla_nutricional')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $requerimiento->reglasNutricionales()->sync($idsReglasAplicadas);
+
+            return $requerimiento->load('reglasNutricionales');
         });
     }
 

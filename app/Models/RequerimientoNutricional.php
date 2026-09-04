@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -80,6 +81,16 @@ class RequerimientoNutricional extends Model
             'id_requerimiento_nutricional',
             'id_requerimiento_nutricional'
         );
+    }
+
+    public function reglasNutricionales(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ReglaNutricional::class,
+            'regla_requerimiento_nutricional',
+            'id_requerimiento_nutricional',
+            'id_regla_nutricional'
+        )->withTimestamps();
     }
 
     public function getActivitylogOptions(): LogOptions

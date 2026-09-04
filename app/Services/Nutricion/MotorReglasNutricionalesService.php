@@ -44,6 +44,7 @@ class MotorReglasNutricionalesService
             }
 
             $resultado['reglas_aplicadas'][] = [
+                'id_regla_nutricional' => $regla->id_regla_nutricional,
                 'codigo' => $regla->codigo,
                 'nombre' => $regla->nombre,
                 'tipo_regla' => $tipo,

@@ -1,0 +1,1407 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Diagrama físico general PMOS</title><style>body{margin:0;background:#fff;color:#17201b;font-family:Arial,sans-serif}main{padding:32px}h1{font:700 34px Georgia,serif;margin:0 0 8px}p{color:#68746c;max-width:900px;line-height:1.5}figure{margin:28px 0;overflow:auto;border:1px solid #cfd7d1;background:#fff}svg{display:block;min-width:2400px;width:100%;height:auto}</style></head><body><main><h1>Diagrama físico general de la base de datos</h1><p>Esquema PostgreSQL real del proyecto PMOS: tablas, columnas, tipos, restricciones y claves foráneas. Amplía el navegador para inspeccionar cada relación.</p><figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2824 7402" role="img" aria-labelledby="fisico-title fisico-desc">
+<title id="fisico-title">Diagrama físico general de PostgreSQL — PMOS</title><desc id="fisico-desc">Las 49 tablas de la base de datos con columnas, tipos, restricciones y relaciones de claves foráneas.</desc>
+<defs><style>.bg{fill:#fff}.domain{font:700 13px Arial,sans-serif;letter-spacing:1.3px;fill:#237c3a}.box{fill:#fff;stroke:#9da9a1;stroke-width:1}.head{fill:#edf7ef;stroke:#237c3a;stroke-width:1.4}.tn{font:700 12px Arial,sans-serif;fill:#17201b}.cn{font:10px Arial,sans-serif;fill:#27332c}.ct{font:9px Consolas,monospace;fill:#68746c}.chip{font:700 8px Consolas,monospace;fill:#237c3a}.alt{fill:#f8faf8}.fk{fill:none;stroke:#6f7c74;stroke-width:.8;opacity:.38}.fk:hover{stroke:#237c3a;stroke-width:2;opacity:1}.foot{font:10px Consolas,monospace;fill:#68746c}</style></defs><rect class="bg" width="100%" height="100%"/>
+<text class="domain" x="52" y="92">IDENTIDAD</text><line x1="52" y1="106" x2="412" y2="106" stroke="#cfd7d1"/>
+<text class="domain" x="524" y="92">ENDOCRINOLOGÍA</text><line x1="524" y1="106" x2="884" y2="106" stroke="#cfd7d1"/>
+<text class="domain" x="996" y="92">NUTRICIÓN EXPERTA</text><line x1="996" y1="106" x2="1356" y2="106" stroke="#cfd7d1"/>
+<text class="domain" x="1468" y="92">PLANIFICACIÓN</text><line x1="1468" y1="106" x2="1828" y2="106" stroke="#cfd7d1"/>
+<text class="domain" x="1940" y="92">SEGUIMIENTO Y SOPORTE</text><line x1="1940" y1="106" x2="2300" y2="106" stroke="#cfd7d1"/>
+<text class="domain" x="2412" y="92">AUDITORÍA</text><line x1="2412" y1="106" x2="2772" y2="106" stroke="#cfd7d1"/>
+<path class="fk" d="M524 209 H686 V773 H884"><title>antecedentes_endocrino_metabolicos.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 231 H456 V187 H412"><title>antecedentes_endocrino_metabolicos.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 501 H1170 V187 H412"><title>citas.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 523 H1176 V1489 H412"><title>citas.id_profesional → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 787 H1182 V1489 H412"><title>citas.registrada_por → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 977 H2132 V2295 H2300"><title>comidas_plan_alimentario.id_dia_plan_alimentario → dias_plan_alimentario.id_dia_plan_alimentario · ON DELETE CASCADE</title></path>
+<path class="fk" d="M1940 1453 H1902 V187 H1828"><title>componentes_comida_plan.id_alimento → alimentos.id_alimento · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 1409 H2102 V955 H2300"><title>componentes_comida_plan.id_comida_plan_alimentario → comidas_plan_alimentario.id_comida_plan_alimentario · ON DELETE CASCADE</title></path>
+<path class="fk" d="M1940 1475 H1872 V685 H1828"><title>componentes_comida_plan.id_receta → recetas.id_receta · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 795 H462 V187 H412"><title>consultas_endocrinologicas.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 817 H468 V1489 H412"><title>consultas_endocrinologicas.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1356 253 H1654 V479 H1940"><title>consultas_nutricionales.id_cita → citas.id_cita · ON DELETE SET NULL</title></path>
+<path class="fk" d="M996 231 H716 V1489 H412"><title>consultas_nutricionales.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 209 H722 V187 H412"><title>consultas_nutricionales.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 1929 H1158 V1489 H412"><title>derivaciones_nutricionales.id_endocrinologo → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 1907 H1164 V187 H412"><title>derivaciones_nutricionales.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 1951 H1170 V1489 H412"><title>derivaciones_nutricionales.id_nutricionista → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1161 H468 V187 H412"><title>diagnosticos_pmos.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 1139 H710 V773 H884"><title>diagnosticos_pmos.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 1183 H480 V1489 H412"><title>diagnosticos_pmos.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 1205 H722 V4487 H884"><title>diagnosticos_pmos.id_historia_menstrual → historia_menstrual.id_historia_menstrual · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1227 H686 V4033 H884"><title>diagnosticos_pmos.id_historia_hiperandrogenica → historia_hiperandrogenica.id_historia_hiperandrogenica · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1249 H692 V6003 H884"><title>diagnosticos_pmos.id_perfil_androgenico → resultados_perfil_androgenico.id_perfil_androgenico · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1271 H698 V6457 H884"><title>diagnosticos_pmos.id_perfil_gonadotropo → resultados_perfil_gonadotropo.id_perfil_gonadotropo · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1293 H704 V5007 H884"><title>diagnosticos_pmos.id_diferencial_endocrino → resultados_diferenciales_endocrinos.id_diferencial_endocrino · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1315 H710 V2971 H884"><title>diagnosticos_pmos.id_ecografia → evaluaciones_ecograficas.id_ecografia · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 1887 H480 V1489 H412"><title>diagnosticos_pmos.validado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 2209 H722 V5527 H884"><title>diagnosticos_resistencia_insulina.id_glucosa_insulina → resultados_glucosa_insulina.id_glucosa_insulina · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 2165 H450 V187 H412"><title>diagnosticos_resistencia_insulina.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 2187 H456 V1489 H412"><title>diagnosticos_resistencia_insulina.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 2143 H698 V773 H884"><title>diagnosticos_resistencia_insulina.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 2737 H468 V1489 H412"><title>diagnosticos_resistencia_insulina.validado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 2253 H710 V3447 H884"><title>diagnosticos_resistencia_insulina.id_evaluacion_fisica → evaluaciones_fisicas_endocrinas.id_evaluacion_fisica · ON DELETE SET NULL</title></path>
+<path class="fk" d="M524 2231 H716 V6911 H884"><title>diagnosticos_resistencia_insulina.id_perfil_lipidico → resultados_perfil_lipidico.id_perfil_lipidico · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 2317 H2138 V4007 H2300"><title>dias_plan_alimentario.id_plan_alimentario → planes_alimentarios.id_plan_alimentario · ON DELETE CASCADE</title></path>
+<path class="fk" d="M524 3015 H450 V187 H412"><title>evaluaciones_ecograficas.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 3037 H456 V1489 H412"><title>evaluaciones_ecograficas.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 2993 H698 V773 H884"><title>evaluaciones_ecograficas.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 3491 H468 V187 H412"><title>evaluaciones_fisicas_endocrinas.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 3469 H710 V773 H884"><title>evaluaciones_fisicas_endocrinas.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 553 H716 V187 H412"><title>evaluaciones_nutricionales.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 575 H722 V1489 H412"><title>evaluaciones_nutricionales.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 597 H1158 V187 H1356"><title>evaluaciones_nutricionales.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 1073 H692 V1489 H412"><title>habitos_alimentarios.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 1051 H698 V187 H412"><title>habitos_alimentarios.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 1095 H1176 V187 H1356"><title>habitos_alimentarios.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 4055 H710 V773 H884"><title>historia_hiperandrogenica.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 4077 H480 V187 H412"><title>historia_hiperandrogenica.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 4531 H486 V187 H412"><title>historia_menstrual.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 4509 H686 V773 H884"><title>historia_menstrual.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 3641 H1164 V1489 H412"><title>notificaciones_internas.id_usuario_destino → users.id · ON DELETE CASCADE</title></path>
+<path class="fk" d="M996 1637 H1170 V187 H1356"><title>objetivos_nutricionales.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 1615 H704 V1489 H412"><title>objetivos_nutricionales.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 1593 H710 V187 H412"><title>objetivos_nutricionales.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M52 209 H244 V1489 H412"><title>pacientes.user_id → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 4029 H1194 V187 H412"><title>planes_alimentarios.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 4051 H1158 V1489 H412"><title>planes_alimentarios.id_nutricionista → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 4073 H1636 V2413 H1356"><title>planes_alimentarios.id_recomendacion_nutricional_experta → recomendaciones_nutricionales_expertas.id_recomendacion_nutricional_experta · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 4095 H1642 V3775 H1356"><title>planes_alimentarios.id_requerimiento_nutricional → requerimientos_nutricionales.id_requerimiento_nutricional · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 4535 H1176 V1489 H412"><title>planes_alimentarios.aprobado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M996 2047 H710 V1489 H412"><title>preferencias_alimentarias.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 2069 H1188 V187 H1356"><title>preferencias_alimentarias.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 2025 H722 V187 H412"><title>preferencias_alimentarias.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 4769 H1866 V187 H1828"><title>receta_alimentos.id_alimento → alimentos.id_alimento · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 4747 H1872 V685 H1828"><title>receta_alimentos.id_receta → recetas.id_receta · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 2457 H698 V1489 H412"><title>recomendaciones_nutricionales_expertas.id_nutricionista → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M996 2435 H704 V187 H412"><title>recomendaciones_nutricionales_expertas.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 2479 H1182 V3775 H1356"><title>recomendaciones_nutricionales_expertas.id_requerimiento_nutricional → requerimientos_nutricionales.id_requerimiento_nutricional · ON DELETE SET NULL</title></path>
+<path class="fk" d="M996 2941 H716 V1489 H412"><title>recomendaciones_nutricionales_expertas.validado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M996 3219 H1194 V3775 H1356"><title>regla_requerimiento_nutricional.id_requerimiento_nutricional → requerimientos_nutricionales.id_requerimiento_nutricional · ON DELETE CASCADE</title></path>
+<path class="fk" d="M996 3197 H1158 V3365 H1356"><title>regla_requerimiento_nutricional.id_regla_nutricional → reglas_nutricionales.id_regla_nutricional · ON DELETE CASCADE</title></path>
+<path class="fk" d="M996 3819 H692 V1489 H412"><title>requerimientos_nutricionales.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 3841 H1170 V187 H1356"><title>requerimientos_nutricionales.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 3797 H704 V187 H412"><title>requerimientos_nutricionales.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 3863 H1182 V531 H1356"><title>requerimientos_nutricionales.id_evaluacion_nutricional → evaluaciones_nutricionales.id_evaluacion_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 3885 H1188 V1571 H1356"><title>requerimientos_nutricionales.id_objetivo_nutricional → objetivos_nutricionales.id_objetivo_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 4581 H1194 V187 H1356"><title>restricciones_alimentarias.id_consulta_nutricional → consultas_nutricionales.id_consulta_nutricional · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 4559 H686 V1489 H412"><title>restricciones_alimentarias.id_nutricionista → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M996 4537 H692 V187 H412"><title>restricciones_alimentarias.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5051 H462 V187 H412"><title>resultados_diferenciales_endocrinos.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5029 H704 V773 H884"><title>resultados_diferenciales_endocrinos.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5073 H474 V1489 H412"><title>resultados_diferenciales_endocrinos.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5593 H480 V1489 H412"><title>resultados_glucosa_insulina.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5571 H486 V187 H412"><title>resultados_glucosa_insulina.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 5549 H686 V773 H884"><title>resultados_glucosa_insulina.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6025 H692 V773 H884"><title>resultados_perfil_androgenico.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6069 H462 V1489 H412"><title>resultados_perfil_androgenico.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6047 H468 V187 H412"><title>resultados_perfil_androgenico.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6501 H474 V187 H412"><title>resultados_perfil_gonadotropo.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6479 H716 V773 H884"><title>resultados_perfil_gonadotropo.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6523 H486 V1489 H412"><title>resultados_perfil_gonadotropo.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6955 H450 V187 H412"><title>resultados_perfil_lipidico.id_paciente → pacientes.id_paciente · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6933 H692 V773 H884"><title>resultados_perfil_lipidico.id_consulta_endocrinologica → consultas_endocrinologicas.id_consulta_endocrinologica · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M524 6977 H462 V1489 H412"><title>resultados_perfil_lipidico.id_endocrinologo → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 5179 H2120 V5567 H2300"><title>retroalimentaciones_paciente.id_seguimiento_comida → seguimientos_comidas.id_seguimiento_comida · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 5223 H1182 V1489 H412"><title>retroalimentaciones_paciente.id_usuario_emisor → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M1940 5201 H2132 V6307 H2300"><title>retroalimentaciones_paciente.id_seguimiento_sintoma_paciente → seguimientos_sintomas_paciente.id_seguimiento_sintoma_paciente · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 5135 H1194 V187 H412"><title>retroalimentaciones_paciente.id_paciente → pacientes.id_paciente · ON DELETE CASCADE</title></path>
+<path class="fk" d="M1940 5157 H2102 V4007 H2300"><title>retroalimentaciones_paciente.id_plan_alimentario → planes_alimentarios.id_plan_alimentario · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 5655 H2108 V955 H2300"><title>seguimientos_comidas.id_comida_plan_alimentario → comidas_plan_alimentario.id_comida_plan_alimentario · ON DELETE NO ACTION</title></path>
+<path class="fk" d="M1940 5633 H2114 V2295 H2300"><title>seguimientos_comidas.id_dia_plan_alimentario → dias_plan_alimentario.id_dia_plan_alimentario · ON DELETE NO ACTION</title></path>
+<path class="fk" d="M1940 5611 H2120 V4007 H2300"><title>seguimientos_comidas.id_plan_alimentario → planes_alimentarios.id_plan_alimentario · ON DELETE NO ACTION</title></path>
+<path class="fk" d="M1940 5589 H1182 V187 H412"><title>seguimientos_comidas.id_paciente → pacientes.id_paciente · ON DELETE NO ACTION</title></path>
+<path class="fk" d="M1940 6095 H1188 V1489 H412"><title>seguimientos_comidas.registrado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 6769 H1194 V1489 H412"><title>seguimientos_sintomas_paciente.registrado_por → users.id · ON DELETE SET NULL</title></path>
+<path class="fk" d="M1940 6329 H1158 V187 H412"><title>seguimientos_sintomas_paciente.id_paciente → pacientes.id_paciente · ON DELETE CASCADE</title></path>
+<path class="fk" d="M52 1277 H220 V1489 H412"><title>user_roles.user_id → users.id · ON DELETE RESTRICT</title></path>
+<path class="fk" d="M52 1299 H226 V809 H412"><title>user_roles.id_rol → roles.id_rol · ON DELETE RESTRICT</title></path>
+<g><rect class="box" x="52" y="132" width="360" height="448" rx="5"/><rect class="head" x="52" y="132" width="360" height="44" rx="5"/><text class="tn" x="64" y="159">public.pacientes</text>
+<text class="cn" x="62" y="191">id_paciente</text><text class="chip" x="262" y="191">PK</text><text class="ct" text-anchor="end" x="402" y="191">bigint(64,0)</text>
+<rect class="alt" x="53" y="198" width="358" height="22"/>
+<text class="cn" x="62" y="213">user_id</text><text class="chip" x="262" y="213">FK NN</text><text class="ct" text-anchor="end" x="402" y="213">bigint(64,0)</text>
+<text class="cn" x="62" y="235">nombres</text><text class="chip" x="262" y="235">NN</text><text class="ct" text-anchor="end" x="402" y="235">character varying(150)</text>
+<rect class="alt" x="53" y="242" width="358" height="22"/>
+<text class="cn" x="62" y="257">apellido_paterno</text><text class="chip" x="262" y="257">NN</text><text class="ct" text-anchor="end" x="402" y="257">character varying(100)</text>
+<text class="cn" x="62" y="279">apellido_materno</text><text class="chip" x="262" y="279"></text><text class="ct" text-anchor="end" x="402" y="279">character varying(100)</text>
+<rect class="alt" x="53" y="286" width="358" height="22"/>
+<text class="cn" x="62" y="301">ci</text><text class="chip" x="262" y="301">UQ NN</text><text class="ct" text-anchor="end" x="402" y="301">character varying(30)</text>
+<text class="cn" x="62" y="323">fecha_nacimiento</text><text class="chip" x="262" y="323">NN</text><text class="ct" text-anchor="end" x="402" y="323">date</text>
+<rect class="alt" x="53" y="330" width="358" height="22"/>
+<text class="cn" x="62" y="345">sexo</text><text class="chip" x="262" y="345">NN</text><text class="ct" text-anchor="end" x="402" y="345">character varying(255)</text>
+<text class="cn" x="62" y="367">telefono</text><text class="chip" x="262" y="367"></text><text class="ct" text-anchor="end" x="402" y="367">character varying(30)</text>
+<rect class="alt" x="53" y="374" width="358" height="22"/>
+<text class="cn" x="62" y="389">direccion</text><text class="chip" x="262" y="389"></text><text class="ct" text-anchor="end" x="402" y="389">character varying(255)</text>
+<text class="cn" x="62" y="411">ocupacion</text><text class="chip" x="262" y="411"></text><text class="ct" text-anchor="end" x="402" y="411">character varying(255)</text>
+<rect class="alt" x="53" y="418" width="358" height="22"/>
+<text class="cn" x="62" y="433">estado_civil</text><text class="chip" x="262" y="433"></text><text class="ct" text-anchor="end" x="402" y="433">character varying(255)</text>
+<text class="cn" x="62" y="455">fecha_registro</text><text class="chip" x="262" y="455"></text><text class="ct" text-anchor="end" x="402" y="455">date</text>
+<rect class="alt" x="53" y="462" width="358" height="22"/>
+<text class="cn" x="62" y="477">estado</text><text class="chip" x="262" y="477">NN</text><text class="ct" text-anchor="end" x="402" y="477">character varying(255)</text>
+<text class="cn" x="62" y="499">observaciones</text><text class="chip" x="262" y="499"></text><text class="ct" text-anchor="end" x="402" y="499">text</text>
+<rect class="alt" x="53" y="506" width="358" height="22"/>
+<text class="cn" x="62" y="521">created_at</text><text class="chip" x="262" y="521"></text><text class="ct" text-anchor="end" x="402" y="521">timestamp without time zone</text>
+<text class="cn" x="62" y="543">updated_at</text><text class="chip" x="262" y="543"></text><text class="ct" text-anchor="end" x="402" y="543">timestamp without time zone</text>
+<rect class="alt" x="53" y="550" width="358" height="22"/>
+<text class="cn" x="62" y="565">deleted_at</text><text class="chip" x="262" y="565"></text><text class="ct" text-anchor="end" x="402" y="565">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="52" y="608" width="360" height="118" rx="5"/><rect class="head" x="52" y="608" width="360" height="44" rx="5"/><text class="tn" x="64" y="635">public.password_reset_tokens</text>
+<text class="cn" x="62" y="667">email</text><text class="chip" x="262" y="667">PK</text><text class="ct" text-anchor="end" x="402" y="667">character varying(255)</text>
+<rect class="alt" x="53" y="674" width="358" height="22"/>
+<text class="cn" x="62" y="689">token</text><text class="chip" x="262" y="689">NN</text><text class="ct" text-anchor="end" x="402" y="689">character varying(255)</text>
+<text class="cn" x="62" y="711">created_at</text><text class="chip" x="262" y="711"></text><text class="ct" text-anchor="end" x="402" y="711">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="52" y="754" width="360" height="206" rx="5"/><rect class="head" x="52" y="754" width="360" height="44" rx="5"/><text class="tn" x="64" y="781">public.roles</text>
+<text class="cn" x="62" y="813">id_rol</text><text class="chip" x="262" y="813">PK</text><text class="ct" text-anchor="end" x="402" y="813">bigint(64,0)</text>
+<rect class="alt" x="53" y="820" width="358" height="22"/>
+<text class="cn" x="62" y="835">nombre</text><text class="chip" x="262" y="835">UQ NN</text><text class="ct" text-anchor="end" x="402" y="835">character varying(255)</text>
+<text class="cn" x="62" y="857">descripcion</text><text class="chip" x="262" y="857"></text><text class="ct" text-anchor="end" x="402" y="857">character varying(255)</text>
+<rect class="alt" x="53" y="864" width="358" height="22"/>
+<text class="cn" x="62" y="879">estado</text><text class="chip" x="262" y="879">NN</text><text class="ct" text-anchor="end" x="402" y="879">character varying(255)</text>
+<text class="cn" x="62" y="901">created_at</text><text class="chip" x="262" y="901"></text><text class="ct" text-anchor="end" x="402" y="901">timestamp without time zone</text>
+<rect class="alt" x="53" y="908" width="358" height="22"/>
+<text class="cn" x="62" y="923">updated_at</text><text class="chip" x="262" y="923"></text><text class="ct" text-anchor="end" x="402" y="923">timestamp without time zone</text>
+<text class="cn" x="62" y="945">deleted_at</text><text class="chip" x="262" y="945"></text><text class="ct" text-anchor="end" x="402" y="945">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="52" y="988" width="360" height="184" rx="5"/><rect class="head" x="52" y="988" width="360" height="44" rx="5"/><text class="tn" x="64" y="1015">public.sessions</text>
+<text class="cn" x="62" y="1047">id</text><text class="chip" x="262" y="1047">PK</text><text class="ct" text-anchor="end" x="402" y="1047">character varying(255)</text>
+<rect class="alt" x="53" y="1054" width="358" height="22"/>
+<text class="cn" x="62" y="1069">user_id</text><text class="chip" x="262" y="1069"></text><text class="ct" text-anchor="end" x="402" y="1069">bigint(64,0)</text>
+<text class="cn" x="62" y="1091">ip_address</text><text class="chip" x="262" y="1091"></text><text class="ct" text-anchor="end" x="402" y="1091">character varying(45)</text>
+<rect class="alt" x="53" y="1098" width="358" height="22"/>
+<text class="cn" x="62" y="1113">user_agent</text><text class="chip" x="262" y="1113"></text><text class="ct" text-anchor="end" x="402" y="1113">text</text>
+<text class="cn" x="62" y="1135">payload</text><text class="chip" x="262" y="1135">NN</text><text class="ct" text-anchor="end" x="402" y="1135">text</text>
+<rect class="alt" x="53" y="1142" width="358" height="22"/>
+<text class="cn" x="62" y="1157">last_activity</text><text class="chip" x="262" y="1157">NN</text><text class="ct" text-anchor="end" x="402" y="1157">integer(32,0)</text>
+</g>
+<g><rect class="box" x="52" y="1200" width="360" height="206" rx="5"/><rect class="head" x="52" y="1200" width="360" height="44" rx="5"/><text class="tn" x="64" y="1227">public.user_roles</text>
+<text class="cn" x="62" y="1259">id_user_rol</text><text class="chip" x="262" y="1259">PK</text><text class="ct" text-anchor="end" x="402" y="1259">bigint(64,0)</text>
+<rect class="alt" x="53" y="1266" width="358" height="22"/>
+<text class="cn" x="62" y="1281">user_id</text><text class="chip" x="262" y="1281">FK NN</text><text class="ct" text-anchor="end" x="402" y="1281">bigint(64,0)</text>
+<text class="cn" x="62" y="1303">id_rol</text><text class="chip" x="262" y="1303">FK NN</text><text class="ct" text-anchor="end" x="402" y="1303">bigint(64,0)</text>
+<rect class="alt" x="53" y="1310" width="358" height="22"/>
+<text class="cn" x="62" y="1325">estado</text><text class="chip" x="262" y="1325">NN</text><text class="ct" text-anchor="end" x="402" y="1325">character varying(255)</text>
+<text class="cn" x="62" y="1347">created_at</text><text class="chip" x="262" y="1347"></text><text class="ct" text-anchor="end" x="402" y="1347">timestamp without time zone</text>
+<rect class="alt" x="53" y="1354" width="358" height="22"/>
+<text class="cn" x="62" y="1369">updated_at</text><text class="chip" x="262" y="1369"></text><text class="ct" text-anchor="end" x="402" y="1369">timestamp without time zone</text>
+<text class="cn" x="62" y="1391">deleted_at</text><text class="chip" x="262" y="1391"></text><text class="ct" text-anchor="end" x="402" y="1391">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="52" y="1434" width="360" height="338" rx="5"/><rect class="head" x="52" y="1434" width="360" height="44" rx="5"/><text class="tn" x="64" y="1461">public.users</text>
+<text class="cn" x="62" y="1493">id</text><text class="chip" x="262" y="1493">PK</text><text class="ct" text-anchor="end" x="402" y="1493">bigint(64,0)</text>
+<rect class="alt" x="53" y="1500" width="358" height="22"/>
+<text class="cn" x="62" y="1515">name</text><text class="chip" x="262" y="1515">NN</text><text class="ct" text-anchor="end" x="402" y="1515">character varying(255)</text>
+<text class="cn" x="62" y="1537">email</text><text class="chip" x="262" y="1537">UQ NN</text><text class="ct" text-anchor="end" x="402" y="1537">character varying(255)</text>
+<rect class="alt" x="53" y="1544" width="358" height="22"/>
+<text class="cn" x="62" y="1559">email_verified_at</text><text class="chip" x="262" y="1559"></text><text class="ct" text-anchor="end" x="402" y="1559">timestamp without time zone</text>
+<text class="cn" x="62" y="1581">password</text><text class="chip" x="262" y="1581">NN</text><text class="ct" text-anchor="end" x="402" y="1581">character varying(255)</text>
+<rect class="alt" x="53" y="1588" width="358" height="22"/>
+<text class="cn" x="62" y="1603">estado</text><text class="chip" x="262" y="1603">NN</text><text class="ct" text-anchor="end" x="402" y="1603">character varying(255)</text>
+<text class="cn" x="62" y="1625">ultimo_acceso</text><text class="chip" x="262" y="1625"></text><text class="ct" text-anchor="end" x="402" y="1625">timestamp without time zone</text>
+<rect class="alt" x="53" y="1632" width="358" height="22"/>
+<text class="cn" x="62" y="1647">remember_token</text><text class="chip" x="262" y="1647"></text><text class="ct" text-anchor="end" x="402" y="1647">character varying(100)</text>
+<text class="cn" x="62" y="1669">created_at</text><text class="chip" x="262" y="1669"></text><text class="ct" text-anchor="end" x="402" y="1669">timestamp without time zone</text>
+<rect class="alt" x="53" y="1676" width="358" height="22"/>
+<text class="cn" x="62" y="1691">updated_at</text><text class="chip" x="262" y="1691"></text><text class="ct" text-anchor="end" x="402" y="1691">timestamp without time zone</text>
+<text class="cn" x="62" y="1713">deleted_at</text><text class="chip" x="262" y="1713"></text><text class="ct" text-anchor="end" x="402" y="1713">timestamp without time zone</text>
+<rect class="alt" x="53" y="1720" width="358" height="22"/>
+<text class="cn" x="62" y="1735">google_id</text><text class="chip" x="262" y="1735">UQ</text><text class="ct" text-anchor="end" x="402" y="1735">character varying(255)</text>
+<text class="cn" x="62" y="1757">avatar</text><text class="chip" x="262" y="1757"></text><text class="ct" text-anchor="end" x="402" y="1757">character varying(2048)</text>
+</g>
+<g><rect class="box" x="524" y="132" width="360" height="558" rx="5"/><rect class="head" x="524" y="132" width="360" height="44" rx="5"/><text class="tn" x="536" y="159">public.antecedentes_endocrino_metabolicos</text>
+<text class="cn" x="534" y="191">id_antecedente</text><text class="chip" x="734" y="191">PK</text><text class="ct" text-anchor="end" x="874" y="191">bigint(64,0)</text>
+<rect class="alt" x="525" y="198" width="358" height="22"/>
+<text class="cn" x="534" y="213">id_consulta_endocrinologica</text><text class="chip" x="734" y="213">FK NN</text><text class="ct" text-anchor="end" x="874" y="213">bigint(64,0)</text>
+<text class="cn" x="534" y="235">id_paciente</text><text class="chip" x="734" y="235">FK NN</text><text class="ct" text-anchor="end" x="874" y="235">bigint(64,0)</text>
+<rect class="alt" x="525" y="242" width="358" height="22"/>
+<text class="cn" x="534" y="257">diabetes_familiar</text><text class="chip" x="734" y="257">NN</text><text class="ct" text-anchor="end" x="874" y="257">boolean</text>
+<text class="cn" x="534" y="279">diabetes_personal</text><text class="chip" x="734" y="279">NN</text><text class="ct" text-anchor="end" x="874" y="279">boolean</text>
+<rect class="alt" x="525" y="286" width="358" height="22"/>
+<text class="cn" x="534" y="301">hipertension_familiar</text><text class="chip" x="734" y="301">NN</text><text class="ct" text-anchor="end" x="874" y="301">boolean</text>
+<text class="cn" x="534" y="323">hipertension_personal</text><text class="chip" x="734" y="323">NN</text><text class="ct" text-anchor="end" x="874" y="323">boolean</text>
+<rect class="alt" x="525" y="330" width="358" height="22"/>
+<text class="cn" x="534" y="345">dislipidemia_familiar</text><text class="chip" x="734" y="345">NN</text><text class="ct" text-anchor="end" x="874" y="345">boolean</text>
+<text class="cn" x="534" y="367">dislipidemia_personal</text><text class="chip" x="734" y="367">NN</text><text class="ct" text-anchor="end" x="874" y="367">boolean</text>
+<rect class="alt" x="525" y="374" width="358" height="22"/>
+<text class="cn" x="534" y="389">enfermedad_tiroidea</text><text class="chip" x="734" y="389">NN</text><text class="ct" text-anchor="end" x="874" y="389">boolean</text>
+<text class="cn" x="534" y="411">hiperprolactinemia_previa</text><text class="chip" x="734" y="411">NN</text><text class="ct" text-anchor="end" x="874" y="411">boolean</text>
+<rect class="alt" x="525" y="418" width="358" height="22"/>
+<text class="cn" x="534" y="433">uso_anticonceptivos</text><text class="chip" x="734" y="433">NN</text><text class="ct" text-anchor="end" x="874" y="433">boolean</text>
+<text class="cn" x="534" y="455">uso_metformina</text><text class="chip" x="734" y="455">NN</text><text class="ct" text-anchor="end" x="874" y="455">boolean</text>
+<rect class="alt" x="525" y="462" width="358" height="22"/>
+<text class="cn" x="534" y="477">uso_corticoides</text><text class="chip" x="734" y="477">NN</text><text class="ct" text-anchor="end" x="874" y="477">boolean</text>
+<text class="cn" x="534" y="499">otros_medicamentos</text><text class="chip" x="734" y="499"></text><text class="ct" text-anchor="end" x="874" y="499">text</text>
+<rect class="alt" x="525" y="506" width="358" height="22"/>
+<text class="cn" x="534" y="521">antecedentes_personales_detalle</text><text class="chip" x="734" y="521"></text><text class="ct" text-anchor="end" x="874" y="521">json</text>
+<text class="cn" x="534" y="543">antecedentes_familiares_detalle</text><text class="chip" x="734" y="543"></text><text class="ct" text-anchor="end" x="874" y="543">json</text>
+<rect class="alt" x="525" y="550" width="358" height="22"/>
+<text class="cn" x="534" y="565">medicamentos_detalle</text><text class="chip" x="734" y="565"></text><text class="ct" text-anchor="end" x="874" y="565">json</text>
+<text class="cn" x="534" y="587">observaciones</text><text class="chip" x="734" y="587"></text><text class="ct" text-anchor="end" x="874" y="587">text</text>
+<rect class="alt" x="525" y="594" width="358" height="22"/>
+<text class="cn" x="534" y="609">estado</text><text class="chip" x="734" y="609">NN</text><text class="ct" text-anchor="end" x="874" y="609">character varying(255)</text>
+<text class="cn" x="534" y="631">created_at</text><text class="chip" x="734" y="631"></text><text class="ct" text-anchor="end" x="874" y="631">timestamp without time zone</text>
+<rect class="alt" x="525" y="638" width="358" height="22"/>
+<text class="cn" x="534" y="653">updated_at</text><text class="chip" x="734" y="653"></text><text class="ct" text-anchor="end" x="874" y="653">timestamp without time zone</text>
+<text class="cn" x="534" y="675">deleted_at</text><text class="chip" x="734" y="675"></text><text class="ct" text-anchor="end" x="874" y="675">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="718" width="360" height="316" rx="5"/><rect class="head" x="524" y="718" width="360" height="44" rx="5"/><text class="tn" x="536" y="745">public.consultas_endocrinologicas</text>
+<text class="cn" x="534" y="777">id_consulta_endocrinologica</text><text class="chip" x="734" y="777">PK</text><text class="ct" text-anchor="end" x="874" y="777">bigint(64,0)</text>
+<rect class="alt" x="525" y="784" width="358" height="22"/>
+<text class="cn" x="534" y="799">id_paciente</text><text class="chip" x="734" y="799">FK NN</text><text class="ct" text-anchor="end" x="874" y="799">bigint(64,0)</text>
+<text class="cn" x="534" y="821">id_endocrinologo</text><text class="chip" x="734" y="821">FK NN</text><text class="ct" text-anchor="end" x="874" y="821">bigint(64,0)</text>
+<rect class="alt" x="525" y="828" width="358" height="22"/>
+<text class="cn" x="534" y="843">fecha_consulta</text><text class="chip" x="734" y="843">NN</text><text class="ct" text-anchor="end" x="874" y="843">date</text>
+<text class="cn" x="534" y="865">motivo_consulta</text><text class="chip" x="734" y="865">NN</text><text class="ct" text-anchor="end" x="874" y="865">character varying(255)</text>
+<rect class="alt" x="525" y="872" width="358" height="22"/>
+<text class="cn" x="534" y="887">sospecha_pmos</text><text class="chip" x="734" y="887">NN</text><text class="ct" text-anchor="end" x="874" y="887">boolean</text>
+<text class="cn" x="534" y="909">sospecha_resistencia_insulina</text><text class="chip" x="734" y="909">NN</text><text class="ct" text-anchor="end" x="874" y="909">boolean</text>
+<rect class="alt" x="525" y="916" width="358" height="22"/>
+<text class="cn" x="534" y="931">observaciones_generales</text><text class="chip" x="734" y="931"></text><text class="ct" text-anchor="end" x="874" y="931">text</text>
+<text class="cn" x="534" y="953">estado</text><text class="chip" x="734" y="953">NN</text><text class="ct" text-anchor="end" x="874" y="953">character varying(255)</text>
+<rect class="alt" x="525" y="960" width="358" height="22"/>
+<text class="cn" x="534" y="975">created_at</text><text class="chip" x="734" y="975"></text><text class="ct" text-anchor="end" x="874" y="975">timestamp without time zone</text>
+<text class="cn" x="534" y="997">updated_at</text><text class="chip" x="734" y="997"></text><text class="ct" text-anchor="end" x="874" y="997">timestamp without time zone</text>
+<rect class="alt" x="525" y="1004" width="358" height="22"/>
+<text class="cn" x="534" y="1019">deleted_at</text><text class="chip" x="734" y="1019"></text><text class="ct" text-anchor="end" x="874" y="1019">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="1062" width="360" height="976" rx="5"/><rect class="head" x="524" y="1062" width="360" height="44" rx="5"/><text class="tn" x="536" y="1089">public.diagnosticos_pmos</text>
+<text class="cn" x="534" y="1121">id_diagnostico_pmos</text><text class="chip" x="734" y="1121">PK</text><text class="ct" text-anchor="end" x="874" y="1121">bigint(64,0)</text>
+<rect class="alt" x="525" y="1128" width="358" height="22"/>
+<text class="cn" x="534" y="1143">id_consulta_endocrinologica</text><text class="chip" x="734" y="1143">FK NN</text><text class="ct" text-anchor="end" x="874" y="1143">bigint(64,0)</text>
+<text class="cn" x="534" y="1165">id_paciente</text><text class="chip" x="734" y="1165">FK NN</text><text class="ct" text-anchor="end" x="874" y="1165">bigint(64,0)</text>
+<rect class="alt" x="525" y="1172" width="358" height="22"/>
+<text class="cn" x="534" y="1187">id_endocrinologo</text><text class="chip" x="734" y="1187">FK NN</text><text class="ct" text-anchor="end" x="874" y="1187">bigint(64,0)</text>
+<text class="cn" x="534" y="1209">id_historia_menstrual</text><text class="chip" x="734" y="1209">FK</text><text class="ct" text-anchor="end" x="874" y="1209">bigint(64,0)</text>
+<rect class="alt" x="525" y="1216" width="358" height="22"/>
+<text class="cn" x="534" y="1231">id_historia_hiperandrogenica</text><text class="chip" x="734" y="1231">FK</text><text class="ct" text-anchor="end" x="874" y="1231">bigint(64,0)</text>
+<text class="cn" x="534" y="1253">id_perfil_androgenico</text><text class="chip" x="734" y="1253">FK</text><text class="ct" text-anchor="end" x="874" y="1253">bigint(64,0)</text>
+<rect class="alt" x="525" y="1260" width="358" height="22"/>
+<text class="cn" x="534" y="1275">id_perfil_gonadotropo</text><text class="chip" x="734" y="1275">FK</text><text class="ct" text-anchor="end" x="874" y="1275">bigint(64,0)</text>
+<text class="cn" x="534" y="1297">id_diferencial_endocrino</text><text class="chip" x="734" y="1297">FK</text><text class="ct" text-anchor="end" x="874" y="1297">bigint(64,0)</text>
+<rect class="alt" x="525" y="1304" width="358" height="22"/>
+<text class="cn" x="534" y="1319">id_ecografia</text><text class="chip" x="734" y="1319">FK</text><text class="ct" text-anchor="end" x="874" y="1319">bigint(64,0)</text>
+<text class="cn" x="534" y="1341">fecha_diagnostico</text><text class="chip" x="734" y="1341">NN</text><text class="ct" text-anchor="end" x="874" y="1341">date</text>
+<rect class="alt" x="525" y="1348" width="358" height="22"/>
+<text class="cn" x="534" y="1363">cumple_alteracion_ovulatoria</text><text class="chip" x="734" y="1363">NN</text><text class="ct" text-anchor="end" x="874" y="1363">boolean</text>
+<text class="cn" x="534" y="1385">cumple_hiperandrogenismo_clinico</text><text class="chip" x="734" y="1385">NN</text><text class="ct" text-anchor="end" x="874" y="1385">boolean</text>
+<rect class="alt" x="525" y="1392" width="358" height="22"/>
+<text class="cn" x="534" y="1407">cumple_hiperandrogenismo_bioquimico</text><text class="chip" x="734" y="1407">NN</text><text class="ct" text-anchor="end" x="874" y="1407">boolean</text>
+<text class="cn" x="534" y="1429">cumple_hiperandrogenismo</text><text class="chip" x="734" y="1429">NN</text><text class="ct" text-anchor="end" x="874" y="1429">boolean</text>
+<rect class="alt" x="525" y="1436" width="358" height="22"/>
+<text class="cn" x="534" y="1451">tipo_hiperandrogenismo</text><text class="chip" x="734" y="1451">NN</text><text class="ct" text-anchor="end" x="874" y="1451">character varying(255)</text>
+<text class="cn" x="534" y="1473">cumple_morfologia_ovarica</text><text class="chip" x="734" y="1473">NN</text><text class="ct" text-anchor="end" x="874" y="1473">boolean</text>
+<rect class="alt" x="525" y="1480" width="358" height="22"/>
+<text class="cn" x="534" y="1495">total_criterios_rotterdam</text><text class="chip" x="734" y="1495">NN</text><text class="ct" text-anchor="end" x="874" y="1495">smallint(16,0)</text>
+<text class="cn" x="534" y="1517">fenotipo_pmos</text><text class="chip" x="734" y="1517">NN</text><text class="ct" text-anchor="end" x="874" y="1517">character varying(255)</text>
+<rect class="alt" x="525" y="1524" width="358" height="22"/>
+<text class="cn" x="534" y="1539">diagnostico_confirmado</text><text class="chip" x="734" y="1539">NN</text><text class="ct" text-anchor="end" x="874" y="1539">boolean</text>
+<text class="cn" x="534" y="1561">diagnosticos_diferenciales_descartados</text><text class="chip" x="734" y="1561">NN</text><text class="ct" text-anchor="end" x="874" y="1561">boolean</text>
+<rect class="alt" x="525" y="1568" width="358" height="22"/>
+<text class="cn" x="534" y="1583">severidad_clinica</text><text class="chip" x="734" y="1583">NN</text><text class="ct" text-anchor="end" x="874" y="1583">character varying(255)</text>
+<text class="cn" x="534" y="1605">riesgo_metabolico</text><text class="chip" x="734" y="1605">NN</text><text class="ct" text-anchor="end" x="874" y="1605">character varying(255)</text>
+<rect class="alt" x="525" y="1612" width="358" height="22"/>
+<text class="cn" x="534" y="1627">conclusion_medica</text><text class="chip" x="734" y="1627"></text><text class="ct" text-anchor="end" x="874" y="1627">text</text>
+<text class="cn" x="534" y="1649">recomendaciones_medicas</text><text class="chip" x="734" y="1649"></text><text class="ct" text-anchor="end" x="874" y="1649">text</text>
+<rect class="alt" x="525" y="1656" width="358" height="22"/>
+<text class="cn" x="534" y="1671">generado_por_motor_experto</text><text class="chip" x="734" y="1671">NN</text><text class="ct" text-anchor="end" x="874" y="1671">boolean</text>
+<text class="cn" x="534" y="1693">criterios_rotterdam_cumplidos</text><text class="chip" x="734" y="1693"></text><text class="ct" text-anchor="end" x="874" y="1693">json</text>
+<rect class="alt" x="525" y="1700" width="358" height="22"/>
+<text class="cn" x="534" y="1715">hechos_utilizados</text><text class="chip" x="734" y="1715"></text><text class="ct" text-anchor="end" x="874" y="1715">json</text>
+<text class="cn" x="534" y="1737">reglas_activadas</text><text class="chip" x="734" y="1737"></text><text class="ct" text-anchor="end" x="874" y="1737">json</text>
+<rect class="alt" x="525" y="1744" width="358" height="22"/>
+<text class="cn" x="534" y="1759">explicacion_experta</text><text class="chip" x="734" y="1759"></text><text class="ct" text-anchor="end" x="874" y="1759">text</text>
+<text class="cn" x="534" y="1781">recomendaciones_expertas</text><text class="chip" x="734" y="1781"></text><text class="ct" text-anchor="end" x="874" y="1781">json</text>
+<rect class="alt" x="525" y="1788" width="358" height="22"/>
+<text class="cn" x="534" y="1803">confianza_experta</text><text class="chip" x="734" y="1803"></text><text class="ct" text-anchor="end" x="874" y="1803">numeric(5,2)</text>
+<text class="cn" x="534" y="1825">version_motor_experto</text><text class="chip" x="734" y="1825"></text><text class="ct" text-anchor="end" x="874" y="1825">character varying(30)</text>
+<rect class="alt" x="525" y="1832" width="358" height="22"/>
+<text class="cn" x="534" y="1847">evaluado_por_motor_experto_en</text><text class="chip" x="734" y="1847"></text><text class="ct" text-anchor="end" x="874" y="1847">timestamp without time zone</text>
+<text class="cn" x="534" y="1869">estado_validacion_experta</text><text class="chip" x="734" y="1869">NN</text><text class="ct" text-anchor="end" x="874" y="1869">character varying(30)</text>
+<rect class="alt" x="525" y="1876" width="358" height="22"/>
+<text class="cn" x="534" y="1891">validado_por</text><text class="chip" x="734" y="1891">FK</text><text class="ct" text-anchor="end" x="874" y="1891">bigint(64,0)</text>
+<text class="cn" x="534" y="1913">fecha_validacion</text><text class="chip" x="734" y="1913"></text><text class="ct" text-anchor="end" x="874" y="1913">timestamp without time zone</text>
+<rect class="alt" x="525" y="1920" width="358" height="22"/>
+<text class="cn" x="534" y="1935">observacion_validacion</text><text class="chip" x="734" y="1935"></text><text class="ct" text-anchor="end" x="874" y="1935">text</text>
+<text class="cn" x="534" y="1957">estado</text><text class="chip" x="734" y="1957">NN</text><text class="ct" text-anchor="end" x="874" y="1957">character varying(255)</text>
+<rect class="alt" x="525" y="1964" width="358" height="22"/>
+<text class="cn" x="534" y="1979">created_at</text><text class="chip" x="734" y="1979"></text><text class="ct" text-anchor="end" x="874" y="1979">timestamp without time zone</text>
+<text class="cn" x="534" y="2001">updated_at</text><text class="chip" x="734" y="2001"></text><text class="ct" text-anchor="end" x="874" y="2001">timestamp without time zone</text>
+<rect class="alt" x="525" y="2008" width="358" height="22"/>
+<text class="cn" x="534" y="2023">deleted_at</text><text class="chip" x="734" y="2023"></text><text class="ct" text-anchor="end" x="874" y="2023">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="2066" width="360" height="822" rx="5"/><rect class="head" x="524" y="2066" width="360" height="44" rx="5"/><text class="tn" x="536" y="2093">public.diagnosticos_resistencia_insulina</text>
+<text class="cn" x="534" y="2125">id_diagnostico_ri</text><text class="chip" x="734" y="2125">PK</text><text class="ct" text-anchor="end" x="874" y="2125">bigint(64,0)</text>
+<rect class="alt" x="525" y="2132" width="358" height="22"/>
+<text class="cn" x="534" y="2147">id_consulta_endocrinologica</text><text class="chip" x="734" y="2147">FK NN</text><text class="ct" text-anchor="end" x="874" y="2147">bigint(64,0)</text>
+<text class="cn" x="534" y="2169">id_paciente</text><text class="chip" x="734" y="2169">FK NN</text><text class="ct" text-anchor="end" x="874" y="2169">bigint(64,0)</text>
+<rect class="alt" x="525" y="2176" width="358" height="22"/>
+<text class="cn" x="534" y="2191">id_endocrinologo</text><text class="chip" x="734" y="2191">FK NN</text><text class="ct" text-anchor="end" x="874" y="2191">bigint(64,0)</text>
+<text class="cn" x="534" y="2213">id_glucosa_insulina</text><text class="chip" x="734" y="2213">FK</text><text class="ct" text-anchor="end" x="874" y="2213">bigint(64,0)</text>
+<rect class="alt" x="525" y="2220" width="358" height="22"/>
+<text class="cn" x="534" y="2235">id_perfil_lipidico</text><text class="chip" x="734" y="2235">FK</text><text class="ct" text-anchor="end" x="874" y="2235">bigint(64,0)</text>
+<text class="cn" x="534" y="2257">id_evaluacion_fisica</text><text class="chip" x="734" y="2257">FK</text><text class="ct" text-anchor="end" x="874" y="2257">bigint(64,0)</text>
+<rect class="alt" x="525" y="2264" width="358" height="22"/>
+<text class="cn" x="534" y="2279">fecha_diagnostico</text><text class="chip" x="734" y="2279">NN</text><text class="ct" text-anchor="end" x="874" y="2279">date</text>
+<text class="cn" x="534" y="2301">homa_ir</text><text class="chip" x="734" y="2301"></text><text class="ct" text-anchor="end" x="874" y="2301">numeric(8,2)</text>
+<rect class="alt" x="525" y="2308" width="358" height="22"/>
+<text class="cn" x="534" y="2323">glucosa_ayunas</text><text class="chip" x="734" y="2323"></text><text class="ct" text-anchor="end" x="874" y="2323">numeric(8,2)</text>
+<text class="cn" x="534" y="2345">insulina_ayunas</text><text class="chip" x="734" y="2345"></text><text class="ct" text-anchor="end" x="874" y="2345">numeric(8,2)</text>
+<rect class="alt" x="525" y="2352" width="358" height="22"/>
+<text class="cn" x="534" y="2367">hemoglobina_glicosilada</text><text class="chip" x="734" y="2367"></text><text class="ct" text-anchor="end" x="874" y="2367">numeric(8,2)</text>
+<text class="cn" x="534" y="2389">resistencia_confirmada</text><text class="chip" x="734" y="2389">NN</text><text class="ct" text-anchor="end" x="874" y="2389">boolean</text>
+<rect class="alt" x="525" y="2396" width="358" height="22"/>
+<text class="cn" x="534" y="2411">grado_resistencia</text><text class="chip" x="734" y="2411">NN</text><text class="ct" text-anchor="end" x="874" y="2411">character varying(255)</text>
+<text class="cn" x="534" y="2433">riesgo_diabetes</text><text class="chip" x="734" y="2433">NN</text><text class="ct" text-anchor="end" x="874" y="2433">character varying(255)</text>
+<rect class="alt" x="525" y="2440" width="358" height="22"/>
+<text class="cn" x="534" y="2455">riesgo_cardiometabolico</text><text class="chip" x="734" y="2455">NN</text><text class="ct" text-anchor="end" x="874" y="2455">character varying(255)</text>
+<text class="cn" x="534" y="2477">conclusion_medica</text><text class="chip" x="734" y="2477"></text><text class="ct" text-anchor="end" x="874" y="2477">text</text>
+<rect class="alt" x="525" y="2484" width="358" height="22"/>
+<text class="cn" x="534" y="2499">recomendaciones_medicas</text><text class="chip" x="734" y="2499"></text><text class="ct" text-anchor="end" x="874" y="2499">text</text>
+<text class="cn" x="534" y="2521">generado_por_motor_experto</text><text class="chip" x="734" y="2521">NN</text><text class="ct" text-anchor="end" x="874" y="2521">boolean</text>
+<rect class="alt" x="525" y="2528" width="358" height="22"/>
+<text class="cn" x="534" y="2543">quicki</text><text class="chip" x="734" y="2543"></text><text class="ct" text-anchor="end" x="874" y="2543">numeric(8,4)</text>
+<text class="cn" x="534" y="2565">hechos_utilizados</text><text class="chip" x="734" y="2565"></text><text class="ct" text-anchor="end" x="874" y="2565">json</text>
+<rect class="alt" x="525" y="2572" width="358" height="22"/>
+<text class="cn" x="534" y="2587">reglas_activadas</text><text class="chip" x="734" y="2587"></text><text class="ct" text-anchor="end" x="874" y="2587">json</text>
+<text class="cn" x="534" y="2609">explicacion_experta</text><text class="chip" x="734" y="2609"></text><text class="ct" text-anchor="end" x="874" y="2609">text</text>
+<rect class="alt" x="525" y="2616" width="358" height="22"/>
+<text class="cn" x="534" y="2631">recomendaciones_expertas</text><text class="chip" x="734" y="2631"></text><text class="ct" text-anchor="end" x="874" y="2631">json</text>
+<text class="cn" x="534" y="2653">confianza_experta</text><text class="chip" x="734" y="2653"></text><text class="ct" text-anchor="end" x="874" y="2653">numeric(5,2)</text>
+<rect class="alt" x="525" y="2660" width="358" height="22"/>
+<text class="cn" x="534" y="2675">version_motor_experto</text><text class="chip" x="734" y="2675"></text><text class="ct" text-anchor="end" x="874" y="2675">character varying(30)</text>
+<text class="cn" x="534" y="2697">evaluado_por_motor_experto_en</text><text class="chip" x="734" y="2697"></text><text class="ct" text-anchor="end" x="874" y="2697">timestamp without time zone</text>
+<rect class="alt" x="525" y="2704" width="358" height="22"/>
+<text class="cn" x="534" y="2719">estado_validacion_experta</text><text class="chip" x="734" y="2719">NN</text><text class="ct" text-anchor="end" x="874" y="2719">character varying(30)</text>
+<text class="cn" x="534" y="2741">validado_por</text><text class="chip" x="734" y="2741">FK</text><text class="ct" text-anchor="end" x="874" y="2741">bigint(64,0)</text>
+<rect class="alt" x="525" y="2748" width="358" height="22"/>
+<text class="cn" x="534" y="2763">fecha_validacion</text><text class="chip" x="734" y="2763"></text><text class="ct" text-anchor="end" x="874" y="2763">timestamp without time zone</text>
+<text class="cn" x="534" y="2785">observacion_validacion</text><text class="chip" x="734" y="2785"></text><text class="ct" text-anchor="end" x="874" y="2785">text</text>
+<rect class="alt" x="525" y="2792" width="358" height="22"/>
+<text class="cn" x="534" y="2807">estado</text><text class="chip" x="734" y="2807">NN</text><text class="ct" text-anchor="end" x="874" y="2807">character varying(255)</text>
+<text class="cn" x="534" y="2829">created_at</text><text class="chip" x="734" y="2829"></text><text class="ct" text-anchor="end" x="874" y="2829">timestamp without time zone</text>
+<rect class="alt" x="525" y="2836" width="358" height="22"/>
+<text class="cn" x="534" y="2851">updated_at</text><text class="chip" x="734" y="2851"></text><text class="ct" text-anchor="end" x="874" y="2851">timestamp without time zone</text>
+<text class="cn" x="534" y="2873">deleted_at</text><text class="chip" x="734" y="2873"></text><text class="ct" text-anchor="end" x="874" y="2873">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="2916" width="360" height="448" rx="5"/><rect class="head" x="524" y="2916" width="360" height="44" rx="5"/><text class="tn" x="536" y="2943">public.evaluaciones_ecograficas</text>
+<text class="cn" x="534" y="2975">id_ecografia</text><text class="chip" x="734" y="2975">PK</text><text class="ct" text-anchor="end" x="874" y="2975">bigint(64,0)</text>
+<rect class="alt" x="525" y="2982" width="358" height="22"/>
+<text class="cn" x="534" y="2997">id_consulta_endocrinologica</text><text class="chip" x="734" y="2997">FK NN</text><text class="ct" text-anchor="end" x="874" y="2997">bigint(64,0)</text>
+<text class="cn" x="534" y="3019">id_paciente</text><text class="chip" x="734" y="3019">FK NN</text><text class="ct" text-anchor="end" x="874" y="3019">bigint(64,0)</text>
+<rect class="alt" x="525" y="3026" width="358" height="22"/>
+<text class="cn" x="534" y="3041">id_endocrinologo</text><text class="chip" x="734" y="3041">FK NN</text><text class="ct" text-anchor="end" x="874" y="3041">bigint(64,0)</text>
+<text class="cn" x="534" y="3063">fecha_ecografia</text><text class="chip" x="734" y="3063">NN</text><text class="ct" text-anchor="end" x="874" y="3063">date</text>
+<rect class="alt" x="525" y="3070" width="358" height="22"/>
+<text class="cn" x="534" y="3085">tipo_ecografia</text><text class="chip" x="734" y="3085"></text><text class="ct" text-anchor="end" x="874" y="3085">character varying(255)</text>
+<text class="cn" x="534" y="3107">volumen_ovario_derecho</text><text class="chip" x="734" y="3107"></text><text class="ct" text-anchor="end" x="874" y="3107">numeric(8,2)</text>
+<rect class="alt" x="525" y="3114" width="358" height="22"/>
+<text class="cn" x="534" y="3129">volumen_ovario_izquierdo</text><text class="chip" x="734" y="3129"></text><text class="ct" text-anchor="end" x="874" y="3129">numeric(8,2)</text>
+<text class="cn" x="534" y="3151">foliculos_ovario_derecho</text><text class="chip" x="734" y="3151"></text><text class="ct" text-anchor="end" x="874" y="3151">smallint(16,0)</text>
+<rect class="alt" x="525" y="3158" width="358" height="22"/>
+<text class="cn" x="534" y="3173">foliculos_ovario_izquierdo</text><text class="chip" x="734" y="3173"></text><text class="ct" text-anchor="end" x="874" y="3173">smallint(16,0)</text>
+<text class="cn" x="534" y="3195">morfologia_compatible_pmos</text><text class="chip" x="734" y="3195">NN</text><text class="ct" text-anchor="end" x="874" y="3195">boolean</text>
+<rect class="alt" x="525" y="3202" width="358" height="22"/>
+<text class="cn" x="534" y="3217">distribucion_periferica</text><text class="chip" x="734" y="3217">NN</text><text class="ct" text-anchor="end" x="874" y="3217">boolean</text>
+<text class="cn" x="534" y="3239">archivo_informe</text><text class="chip" x="734" y="3239"></text><text class="ct" text-anchor="end" x="874" y="3239">character varying(255)</text>
+<rect class="alt" x="525" y="3246" width="358" height="22"/>
+<text class="cn" x="534" y="3261">observaciones</text><text class="chip" x="734" y="3261"></text><text class="ct" text-anchor="end" x="874" y="3261">text</text>
+<text class="cn" x="534" y="3283">estado</text><text class="chip" x="734" y="3283">NN</text><text class="ct" text-anchor="end" x="874" y="3283">character varying(255)</text>
+<rect class="alt" x="525" y="3290" width="358" height="22"/>
+<text class="cn" x="534" y="3305">created_at</text><text class="chip" x="734" y="3305"></text><text class="ct" text-anchor="end" x="874" y="3305">timestamp without time zone</text>
+<text class="cn" x="534" y="3327">updated_at</text><text class="chip" x="734" y="3327"></text><text class="ct" text-anchor="end" x="874" y="3327">timestamp without time zone</text>
+<rect class="alt" x="525" y="3334" width="358" height="22"/>
+<text class="cn" x="534" y="3349">deleted_at</text><text class="chip" x="734" y="3349"></text><text class="ct" text-anchor="end" x="874" y="3349">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="3392" width="360" height="558" rx="5"/><rect class="head" x="524" y="3392" width="360" height="44" rx="5"/><text class="tn" x="536" y="3419">public.evaluaciones_fisicas_endocrinas</text>
+<text class="cn" x="534" y="3451">id_evaluacion_fisica</text><text class="chip" x="734" y="3451">PK</text><text class="ct" text-anchor="end" x="874" y="3451">bigint(64,0)</text>
+<rect class="alt" x="525" y="3458" width="358" height="22"/>
+<text class="cn" x="534" y="3473">id_consulta_endocrinologica</text><text class="chip" x="734" y="3473">FK NN</text><text class="ct" text-anchor="end" x="874" y="3473">bigint(64,0)</text>
+<text class="cn" x="534" y="3495">id_paciente</text><text class="chip" x="734" y="3495">FK NN</text><text class="ct" text-anchor="end" x="874" y="3495">bigint(64,0)</text>
+<rect class="alt" x="525" y="3502" width="358" height="22"/>
+<text class="cn" x="534" y="3517">peso</text><text class="chip" x="734" y="3517"></text><text class="ct" text-anchor="end" x="874" y="3517">numeric(6,2)</text>
+<text class="cn" x="534" y="3539">talla</text><text class="chip" x="734" y="3539"></text><text class="ct" text-anchor="end" x="874" y="3539">numeric(5,2)</text>
+<rect class="alt" x="525" y="3546" width="358" height="22"/>
+<text class="cn" x="534" y="3561">imc</text><text class="chip" x="734" y="3561"></text><text class="ct" text-anchor="end" x="874" y="3561">numeric(5,2)</text>
+<text class="cn" x="534" y="3583">circunferencia_cintura</text><text class="chip" x="734" y="3583"></text><text class="ct" text-anchor="end" x="874" y="3583">numeric(6,2)</text>
+<rect class="alt" x="525" y="3590" width="358" height="22"/>
+<text class="cn" x="534" y="3605">circunferencia_cadera</text><text class="chip" x="734" y="3605"></text><text class="ct" text-anchor="end" x="874" y="3605">numeric(6,2)</text>
+<text class="cn" x="534" y="3627">indice_cintura_cadera</text><text class="chip" x="734" y="3627"></text><text class="ct" text-anchor="end" x="874" y="3627">numeric(5,2)</text>
+<rect class="alt" x="525" y="3634" width="358" height="22"/>
+<text class="cn" x="534" y="3649">presion_sistolica</text><text class="chip" x="734" y="3649"></text><text class="ct" text-anchor="end" x="874" y="3649">smallint(16,0)</text>
+<text class="cn" x="534" y="3671">presion_diastolica</text><text class="chip" x="734" y="3671"></text><text class="ct" text-anchor="end" x="874" y="3671">smallint(16,0)</text>
+<rect class="alt" x="525" y="3678" width="358" height="22"/>
+<text class="cn" x="534" y="3693">acantosis_nigricans</text><text class="chip" x="734" y="3693">NN</text><text class="ct" text-anchor="end" x="874" y="3693">boolean</text>
+<text class="cn" x="534" y="3715">skin_tags</text><text class="chip" x="734" y="3715">NN</text><text class="ct" text-anchor="end" x="874" y="3715">boolean</text>
+<rect class="alt" x="525" y="3722" width="358" height="22"/>
+<text class="cn" x="534" y="3737">galactorrea</text><text class="chip" x="734" y="3737">NN</text><text class="ct" text-anchor="end" x="874" y="3737">boolean</text>
+<text class="cn" x="534" y="3759">hirsutismo_visible</text><text class="chip" x="734" y="3759">NN</text><text class="ct" text-anchor="end" x="874" y="3759">boolean</text>
+<rect class="alt" x="525" y="3766" width="358" height="22"/>
+<text class="cn" x="534" y="3781">puntaje_ferriman_gallwey</text><text class="chip" x="734" y="3781"></text><text class="ct" text-anchor="end" x="874" y="3781">smallint(16,0)</text>
+<text class="cn" x="534" y="3803">acne_visible</text><text class="chip" x="734" y="3803">NN</text><text class="ct" text-anchor="end" x="874" y="3803">boolean</text>
+<rect class="alt" x="525" y="3810" width="358" height="22"/>
+<text class="cn" x="534" y="3825">alopecia_visible</text><text class="chip" x="734" y="3825">NN</text><text class="ct" text-anchor="end" x="874" y="3825">boolean</text>
+<text class="cn" x="534" y="3847">observaciones</text><text class="chip" x="734" y="3847"></text><text class="ct" text-anchor="end" x="874" y="3847">text</text>
+<rect class="alt" x="525" y="3854" width="358" height="22"/>
+<text class="cn" x="534" y="3869">estado</text><text class="chip" x="734" y="3869">NN</text><text class="ct" text-anchor="end" x="874" y="3869">character varying(255)</text>
+<text class="cn" x="534" y="3891">created_at</text><text class="chip" x="734" y="3891"></text><text class="ct" text-anchor="end" x="874" y="3891">timestamp without time zone</text>
+<rect class="alt" x="525" y="3898" width="358" height="22"/>
+<text class="cn" x="534" y="3913">updated_at</text><text class="chip" x="734" y="3913"></text><text class="ct" text-anchor="end" x="874" y="3913">timestamp without time zone</text>
+<text class="cn" x="534" y="3935">deleted_at</text><text class="chip" x="734" y="3935"></text><text class="ct" text-anchor="end" x="874" y="3935">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="3978" width="360" height="426" rx="5"/><rect class="head" x="524" y="3978" width="360" height="44" rx="5"/><text class="tn" x="536" y="4005">public.historia_hiperandrogenica</text>
+<text class="cn" x="534" y="4037">id_historia_hiperandrogenica</text><text class="chip" x="734" y="4037">PK</text><text class="ct" text-anchor="end" x="874" y="4037">bigint(64,0)</text>
+<rect class="alt" x="525" y="4044" width="358" height="22"/>
+<text class="cn" x="534" y="4059">id_consulta_endocrinologica</text><text class="chip" x="734" y="4059">FK NN</text><text class="ct" text-anchor="end" x="874" y="4059">bigint(64,0)</text>
+<text class="cn" x="534" y="4081">id_paciente</text><text class="chip" x="734" y="4081">FK NN</text><text class="ct" text-anchor="end" x="874" y="4081">bigint(64,0)</text>
+<rect class="alt" x="525" y="4088" width="358" height="22"/>
+<text class="cn" x="534" y="4103">acne</text><text class="chip" x="734" y="4103">NN</text><text class="ct" text-anchor="end" x="874" y="4103">boolean</text>
+<text class="cn" x="534" y="4125">acne_grado</text><text class="chip" x="734" y="4125">NN</text><text class="ct" text-anchor="end" x="874" y="4125">character varying(255)</text>
+<rect class="alt" x="525" y="4132" width="358" height="22"/>
+<text class="cn" x="534" y="4147">hirsutismo</text><text class="chip" x="734" y="4147">NN</text><text class="ct" text-anchor="end" x="874" y="4147">boolean</text>
+<text class="cn" x="534" y="4169">hirsutismo_zona</text><text class="chip" x="734" y="4169"></text><text class="ct" text-anchor="end" x="874" y="4169">character varying(255)</text>
+<rect class="alt" x="525" y="4176" width="358" height="22"/>
+<text class="cn" x="534" y="4191">puntaje_ferriman_gallwey</text><text class="chip" x="734" y="4191"></text><text class="ct" text-anchor="end" x="874" y="4191">smallint(16,0)</text>
+<text class="cn" x="534" y="4213">alopecia_androgenica</text><text class="chip" x="734" y="4213">NN</text><text class="ct" text-anchor="end" x="874" y="4213">boolean</text>
+<rect class="alt" x="525" y="4220" width="358" height="22"/>
+<text class="cn" x="534" y="4235">seborrea</text><text class="chip" x="734" y="4235">NN</text><text class="ct" text-anchor="end" x="874" y="4235">boolean</text>
+<text class="cn" x="534" y="4257">inicio_sintomas</text><text class="chip" x="734" y="4257"></text><text class="ct" text-anchor="end" x="874" y="4257">character varying(255)</text>
+<rect class="alt" x="525" y="4264" width="358" height="22"/>
+<text class="cn" x="534" y="4279">progresion_sintomas</text><text class="chip" x="734" y="4279"></text><text class="ct" text-anchor="end" x="874" y="4279">character varying(255)</text>
+<text class="cn" x="534" y="4301">observaciones</text><text class="chip" x="734" y="4301"></text><text class="ct" text-anchor="end" x="874" y="4301">text</text>
+<rect class="alt" x="525" y="4308" width="358" height="22"/>
+<text class="cn" x="534" y="4323">estado</text><text class="chip" x="734" y="4323">NN</text><text class="ct" text-anchor="end" x="874" y="4323">character varying(255)</text>
+<text class="cn" x="534" y="4345">created_at</text><text class="chip" x="734" y="4345"></text><text class="ct" text-anchor="end" x="874" y="4345">timestamp without time zone</text>
+<rect class="alt" x="525" y="4352" width="358" height="22"/>
+<text class="cn" x="534" y="4367">updated_at</text><text class="chip" x="734" y="4367"></text><text class="ct" text-anchor="end" x="874" y="4367">timestamp without time zone</text>
+<text class="cn" x="534" y="4389">deleted_at</text><text class="chip" x="734" y="4389"></text><text class="ct" text-anchor="end" x="874" y="4389">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="4432" width="360" height="492" rx="5"/><rect class="head" x="524" y="4432" width="360" height="44" rx="5"/><text class="tn" x="536" y="4459">public.historia_menstrual</text>
+<text class="cn" x="534" y="4491">id_historia_menstrual</text><text class="chip" x="734" y="4491">PK</text><text class="ct" text-anchor="end" x="874" y="4491">bigint(64,0)</text>
+<rect class="alt" x="525" y="4498" width="358" height="22"/>
+<text class="cn" x="534" y="4513">id_consulta_endocrinologica</text><text class="chip" x="734" y="4513">FK NN</text><text class="ct" text-anchor="end" x="874" y="4513">bigint(64,0)</text>
+<text class="cn" x="534" y="4535">id_paciente</text><text class="chip" x="734" y="4535">FK NN</text><text class="ct" text-anchor="end" x="874" y="4535">bigint(64,0)</text>
+<rect class="alt" x="525" y="4542" width="358" height="22"/>
+<text class="cn" x="534" y="4557">fecha_ultima_menstruacion</text><text class="chip" x="734" y="4557"></text><text class="ct" text-anchor="end" x="874" y="4557">date</text>
+<text class="cn" x="534" y="4579">edad_menarquia</text><text class="chip" x="734" y="4579"></text><text class="ct" text-anchor="end" x="874" y="4579">smallint(16,0)</text>
+<rect class="alt" x="525" y="4586" width="358" height="22"/>
+<text class="cn" x="534" y="4601">regularidad_ciclo</text><text class="chip" x="734" y="4601"></text><text class="ct" text-anchor="end" x="874" y="4601">character varying(255)</text>
+<text class="cn" x="534" y="4623">duracion_ciclo_dias</text><text class="chip" x="734" y="4623"></text><text class="ct" text-anchor="end" x="874" y="4623">smallint(16,0)</text>
+<rect class="alt" x="525" y="4630" width="358" height="22"/>
+<text class="cn" x="534" y="4645">intervalo_entre_ciclos_dias</text><text class="chip" x="734" y="4645"></text><text class="ct" text-anchor="end" x="874" y="4645">smallint(16,0)</text>
+<text class="cn" x="534" y="4667">amenorrea</text><text class="chip" x="734" y="4667">NN</text><text class="ct" text-anchor="end" x="874" y="4667">boolean</text>
+<rect class="alt" x="525" y="4674" width="358" height="22"/>
+<text class="cn" x="534" y="4689">oligomenorrea</text><text class="chip" x="734" y="4689">NN</text><text class="ct" text-anchor="end" x="874" y="4689">boolean</text>
+<text class="cn" x="534" y="4711">sangrado_abundante</text><text class="chip" x="734" y="4711">NN</text><text class="ct" text-anchor="end" x="874" y="4711">boolean</text>
+<rect class="alt" x="525" y="4718" width="358" height="22"/>
+<text class="cn" x="534" y="4733">dolor_menstrual</text><text class="chip" x="734" y="4733">NN</text><text class="ct" text-anchor="end" x="874" y="4733">boolean</text>
+<text class="cn" x="534" y="4755">sospecha_anovulacion</text><text class="chip" x="734" y="4755">NN</text><text class="ct" text-anchor="end" x="874" y="4755">boolean</text>
+<rect class="alt" x="525" y="4762" width="358" height="22"/>
+<text class="cn" x="534" y="4777">progesterona_lutea</text><text class="chip" x="734" y="4777"></text><text class="ct" text-anchor="end" x="874" y="4777">numeric(8,2)</text>
+<text class="cn" x="534" y="4799">confirma_anovulacion_por_progesterona</text><text class="chip" x="734" y="4799">NN</text><text class="ct" text-anchor="end" x="874" y="4799">boolean</text>
+<rect class="alt" x="525" y="4806" width="358" height="22"/>
+<text class="cn" x="534" y="4821">observaciones</text><text class="chip" x="734" y="4821"></text><text class="ct" text-anchor="end" x="874" y="4821">text</text>
+<text class="cn" x="534" y="4843">estado</text><text class="chip" x="734" y="4843">NN</text><text class="ct" text-anchor="end" x="874" y="4843">character varying(255)</text>
+<rect class="alt" x="525" y="4850" width="358" height="22"/>
+<text class="cn" x="534" y="4865">created_at</text><text class="chip" x="734" y="4865"></text><text class="ct" text-anchor="end" x="874" y="4865">timestamp without time zone</text>
+<text class="cn" x="534" y="4887">updated_at</text><text class="chip" x="734" y="4887"></text><text class="ct" text-anchor="end" x="874" y="4887">timestamp without time zone</text>
+<rect class="alt" x="525" y="4894" width="358" height="22"/>
+<text class="cn" x="534" y="4909">deleted_at</text><text class="chip" x="734" y="4909"></text><text class="ct" text-anchor="end" x="874" y="4909">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="4952" width="360" height="492" rx="5"/><rect class="head" x="524" y="4952" width="360" height="44" rx="5"/><text class="tn" x="536" y="4979">public.resultados_diferenciales_endocrinos</text>
+<text class="cn" x="534" y="5011">id_diferencial_endocrino</text><text class="chip" x="734" y="5011">PK</text><text class="ct" text-anchor="end" x="874" y="5011">bigint(64,0)</text>
+<rect class="alt" x="525" y="5018" width="358" height="22"/>
+<text class="cn" x="534" y="5033">id_consulta_endocrinologica</text><text class="chip" x="734" y="5033">FK NN</text><text class="ct" text-anchor="end" x="874" y="5033">bigint(64,0)</text>
+<text class="cn" x="534" y="5055">id_paciente</text><text class="chip" x="734" y="5055">FK NN</text><text class="ct" text-anchor="end" x="874" y="5055">bigint(64,0)</text>
+<rect class="alt" x="525" y="5062" width="358" height="22"/>
+<text class="cn" x="534" y="5077">id_endocrinologo</text><text class="chip" x="734" y="5077">FK NN</text><text class="ct" text-anchor="end" x="874" y="5077">bigint(64,0)</text>
+<text class="cn" x="534" y="5099">fecha_resultado</text><text class="chip" x="734" y="5099">NN</text><text class="ct" text-anchor="end" x="874" y="5099">date</text>
+<rect class="alt" x="525" y="5106" width="358" height="22"/>
+<text class="cn" x="534" y="5121">tsh</text><text class="chip" x="734" y="5121"></text><text class="ct" text-anchor="end" x="874" y="5121">numeric(8,2)</text>
+<text class="cn" x="534" y="5143">t3_libre</text><text class="chip" x="734" y="5143"></text><text class="ct" text-anchor="end" x="874" y="5143">numeric(8,2)</text>
+<rect class="alt" x="525" y="5150" width="358" height="22"/>
+<text class="cn" x="534" y="5165">t4_libre</text><text class="chip" x="734" y="5165"></text><text class="ct" text-anchor="end" x="874" y="5165">numeric(8,2)</text>
+<text class="cn" x="534" y="5187">prolactina</text><text class="chip" x="734" y="5187"></text><text class="ct" text-anchor="end" x="874" y="5187">numeric(8,2)</text>
+<rect class="alt" x="525" y="5194" width="358" height="22"/>
+<text class="cn" x="534" y="5209">diecisiete_oh_progesterona</text><text class="chip" x="734" y="5209"></text><text class="ct" text-anchor="end" x="874" y="5209">numeric(8,2)</text>
+<text class="cn" x="534" y="5231">cortisol</text><text class="chip" x="734" y="5231"></text><text class="ct" text-anchor="end" x="874" y="5231">numeric(8,2)</text>
+<rect class="alt" x="525" y="5238" width="358" height="22"/>
+<text class="cn" x="534" y="5253">alteracion_tiroidea_descartada</text><text class="chip" x="734" y="5253">NN</text><text class="ct" text-anchor="end" x="874" y="5253">boolean</text>
+<text class="cn" x="534" y="5275">hiperprolactinemia_descartada</text><text class="chip" x="734" y="5275">NN</text><text class="ct" text-anchor="end" x="874" y="5275">boolean</text>
+<rect class="alt" x="525" y="5282" width="358" height="22"/>
+<text class="cn" x="534" y="5297">hiperplasia_suprarrenal_descartada</text><text class="chip" x="734" y="5297">NN</text><text class="ct" text-anchor="end" x="874" y="5297">boolean</text>
+<text class="cn" x="534" y="5319">cushing_descartado</text><text class="chip" x="734" y="5319">NN</text><text class="ct" text-anchor="end" x="874" y="5319">boolean</text>
+<rect class="alt" x="525" y="5326" width="358" height="22"/>
+<text class="cn" x="534" y="5341">interpretacion</text><text class="chip" x="734" y="5341"></text><text class="ct" text-anchor="end" x="874" y="5341">text</text>
+<text class="cn" x="534" y="5363">estado</text><text class="chip" x="734" y="5363">NN</text><text class="ct" text-anchor="end" x="874" y="5363">character varying(255)</text>
+<rect class="alt" x="525" y="5370" width="358" height="22"/>
+<text class="cn" x="534" y="5385">created_at</text><text class="chip" x="734" y="5385"></text><text class="ct" text-anchor="end" x="874" y="5385">timestamp without time zone</text>
+<text class="cn" x="534" y="5407">updated_at</text><text class="chip" x="734" y="5407"></text><text class="ct" text-anchor="end" x="874" y="5407">timestamp without time zone</text>
+<rect class="alt" x="525" y="5414" width="358" height="22"/>
+<text class="cn" x="534" y="5429">deleted_at</text><text class="chip" x="734" y="5429"></text><text class="ct" text-anchor="end" x="874" y="5429">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="5472" width="360" height="448" rx="5"/><rect class="head" x="524" y="5472" width="360" height="44" rx="5"/><text class="tn" x="536" y="5499">public.resultados_glucosa_insulina</text>
+<text class="cn" x="534" y="5531">id_glucosa_insulina</text><text class="chip" x="734" y="5531">PK</text><text class="ct" text-anchor="end" x="874" y="5531">bigint(64,0)</text>
+<rect class="alt" x="525" y="5538" width="358" height="22"/>
+<text class="cn" x="534" y="5553">id_consulta_endocrinologica</text><text class="chip" x="734" y="5553">FK NN</text><text class="ct" text-anchor="end" x="874" y="5553">bigint(64,0)</text>
+<text class="cn" x="534" y="5575">id_paciente</text><text class="chip" x="734" y="5575">FK NN</text><text class="ct" text-anchor="end" x="874" y="5575">bigint(64,0)</text>
+<rect class="alt" x="525" y="5582" width="358" height="22"/>
+<text class="cn" x="534" y="5597">id_endocrinologo</text><text class="chip" x="734" y="5597">FK NN</text><text class="ct" text-anchor="end" x="874" y="5597">bigint(64,0)</text>
+<text class="cn" x="534" y="5619">fecha_resultado</text><text class="chip" x="734" y="5619">NN</text><text class="ct" text-anchor="end" x="874" y="5619">date</text>
+<rect class="alt" x="525" y="5626" width="358" height="22"/>
+<text class="cn" x="534" y="5641">glucosa_ayunas</text><text class="chip" x="734" y="5641"></text><text class="ct" text-anchor="end" x="874" y="5641">numeric(8,2)</text>
+<text class="cn" x="534" y="5663">insulina_ayunas</text><text class="chip" x="734" y="5663"></text><text class="ct" text-anchor="end" x="874" y="5663">numeric(8,2)</text>
+<rect class="alt" x="525" y="5670" width="358" height="22"/>
+<text class="cn" x="534" y="5685">homa_ir</text><text class="chip" x="734" y="5685"></text><text class="ct" text-anchor="end" x="874" y="5685">numeric(8,2)</text>
+<text class="cn" x="534" y="5707">hemoglobina_glicosilada</text><text class="chip" x="734" y="5707"></text><text class="ct" text-anchor="end" x="874" y="5707">numeric(8,2)</text>
+<rect class="alt" x="525" y="5714" width="358" height="22"/>
+<text class="cn" x="534" y="5729">glucosa_2h_ogtt</text><text class="chip" x="734" y="5729"></text><text class="ct" text-anchor="end" x="874" y="5729">numeric(8,2)</text>
+<text class="cn" x="534" y="5751">insulina_2h_ogtt</text><text class="chip" x="734" y="5751"></text><text class="ct" text-anchor="end" x="874" y="5751">numeric(8,2)</text>
+<rect class="alt" x="525" y="5758" width="358" height="22"/>
+<text class="cn" x="534" y="5773">hiperinsulinemia</text><text class="chip" x="734" y="5773">NN</text><text class="ct" text-anchor="end" x="874" y="5773">boolean</text>
+<text class="cn" x="534" y="5795">resistencia_insulina_sugerida</text><text class="chip" x="734" y="5795">NN</text><text class="ct" text-anchor="end" x="874" y="5795">boolean</text>
+<rect class="alt" x="525" y="5802" width="358" height="22"/>
+<text class="cn" x="534" y="5817">interpretacion</text><text class="chip" x="734" y="5817"></text><text class="ct" text-anchor="end" x="874" y="5817">text</text>
+<text class="cn" x="534" y="5839">estado</text><text class="chip" x="734" y="5839">NN</text><text class="ct" text-anchor="end" x="874" y="5839">character varying(255)</text>
+<rect class="alt" x="525" y="5846" width="358" height="22"/>
+<text class="cn" x="534" y="5861">created_at</text><text class="chip" x="734" y="5861"></text><text class="ct" text-anchor="end" x="874" y="5861">timestamp without time zone</text>
+<text class="cn" x="534" y="5883">updated_at</text><text class="chip" x="734" y="5883"></text><text class="ct" text-anchor="end" x="874" y="5883">timestamp without time zone</text>
+<rect class="alt" x="525" y="5890" width="358" height="22"/>
+<text class="cn" x="534" y="5905">deleted_at</text><text class="chip" x="734" y="5905"></text><text class="ct" text-anchor="end" x="874" y="5905">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="5948" width="360" height="426" rx="5"/><rect class="head" x="524" y="5948" width="360" height="44" rx="5"/><text class="tn" x="536" y="5975">public.resultados_perfil_androgenico</text>
+<text class="cn" x="534" y="6007">id_perfil_androgenico</text><text class="chip" x="734" y="6007">PK</text><text class="ct" text-anchor="end" x="874" y="6007">bigint(64,0)</text>
+<rect class="alt" x="525" y="6014" width="358" height="22"/>
+<text class="cn" x="534" y="6029">id_consulta_endocrinologica</text><text class="chip" x="734" y="6029">FK NN</text><text class="ct" text-anchor="end" x="874" y="6029">bigint(64,0)</text>
+<text class="cn" x="534" y="6051">id_paciente</text><text class="chip" x="734" y="6051">FK NN</text><text class="ct" text-anchor="end" x="874" y="6051">bigint(64,0)</text>
+<rect class="alt" x="525" y="6058" width="358" height="22"/>
+<text class="cn" x="534" y="6073">id_endocrinologo</text><text class="chip" x="734" y="6073">FK NN</text><text class="ct" text-anchor="end" x="874" y="6073">bigint(64,0)</text>
+<text class="cn" x="534" y="6095">fecha_resultado</text><text class="chip" x="734" y="6095">NN</text><text class="ct" text-anchor="end" x="874" y="6095">date</text>
+<rect class="alt" x="525" y="6102" width="358" height="22"/>
+<text class="cn" x="534" y="6117">testosterona_total</text><text class="chip" x="734" y="6117"></text><text class="ct" text-anchor="end" x="874" y="6117">numeric(8,2)</text>
+<text class="cn" x="534" y="6139">testosterona_libre</text><text class="chip" x="734" y="6139"></text><text class="ct" text-anchor="end" x="874" y="6139">numeric(8,2)</text>
+<rect class="alt" x="525" y="6146" width="358" height="22"/>
+<text class="cn" x="534" y="6161">shbg</text><text class="chip" x="734" y="6161"></text><text class="ct" text-anchor="end" x="874" y="6161">numeric(8,2)</text>
+<text class="cn" x="534" y="6183">indice_androgenico_libre</text><text class="chip" x="734" y="6183"></text><text class="ct" text-anchor="end" x="874" y="6183">numeric(8,2)</text>
+<rect class="alt" x="525" y="6190" width="358" height="22"/>
+<text class="cn" x="534" y="6205">dhea_s</text><text class="chip" x="734" y="6205"></text><text class="ct" text-anchor="end" x="874" y="6205">numeric(8,2)</text>
+<text class="cn" x="534" y="6227">androstenediona</text><text class="chip" x="734" y="6227"></text><text class="ct" text-anchor="end" x="874" y="6227">numeric(8,2)</text>
+<rect class="alt" x="525" y="6234" width="358" height="22"/>
+<text class="cn" x="534" y="6249">hiperandrogenismo_bioquimico</text><text class="chip" x="734" y="6249">NN</text><text class="ct" text-anchor="end" x="874" y="6249">boolean</text>
+<text class="cn" x="534" y="6271">interpretacion</text><text class="chip" x="734" y="6271"></text><text class="ct" text-anchor="end" x="874" y="6271">text</text>
+<rect class="alt" x="525" y="6278" width="358" height="22"/>
+<text class="cn" x="534" y="6293">estado</text><text class="chip" x="734" y="6293">NN</text><text class="ct" text-anchor="end" x="874" y="6293">character varying(255)</text>
+<text class="cn" x="534" y="6315">created_at</text><text class="chip" x="734" y="6315"></text><text class="ct" text-anchor="end" x="874" y="6315">timestamp without time zone</text>
+<rect class="alt" x="525" y="6322" width="358" height="22"/>
+<text class="cn" x="534" y="6337">updated_at</text><text class="chip" x="734" y="6337"></text><text class="ct" text-anchor="end" x="874" y="6337">timestamp without time zone</text>
+<text class="cn" x="534" y="6359">deleted_at</text><text class="chip" x="734" y="6359"></text><text class="ct" text-anchor="end" x="874" y="6359">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="6402" width="360" height="426" rx="5"/><rect class="head" x="524" y="6402" width="360" height="44" rx="5"/><text class="tn" x="536" y="6429">public.resultados_perfil_gonadotropo</text>
+<text class="cn" x="534" y="6461">id_perfil_gonadotropo</text><text class="chip" x="734" y="6461">PK</text><text class="ct" text-anchor="end" x="874" y="6461">bigint(64,0)</text>
+<rect class="alt" x="525" y="6468" width="358" height="22"/>
+<text class="cn" x="534" y="6483">id_consulta_endocrinologica</text><text class="chip" x="734" y="6483">FK NN</text><text class="ct" text-anchor="end" x="874" y="6483">bigint(64,0)</text>
+<text class="cn" x="534" y="6505">id_paciente</text><text class="chip" x="734" y="6505">FK NN</text><text class="ct" text-anchor="end" x="874" y="6505">bigint(64,0)</text>
+<rect class="alt" x="525" y="6512" width="358" height="22"/>
+<text class="cn" x="534" y="6527">id_endocrinologo</text><text class="chip" x="734" y="6527">FK NN</text><text class="ct" text-anchor="end" x="874" y="6527">bigint(64,0)</text>
+<text class="cn" x="534" y="6549">fecha_resultado</text><text class="chip" x="734" y="6549">NN</text><text class="ct" text-anchor="end" x="874" y="6549">date</text>
+<rect class="alt" x="525" y="6556" width="358" height="22"/>
+<text class="cn" x="534" y="6571">lh</text><text class="chip" x="734" y="6571"></text><text class="ct" text-anchor="end" x="874" y="6571">numeric(8,2)</text>
+<text class="cn" x="534" y="6593">fsh</text><text class="chip" x="734" y="6593"></text><text class="ct" text-anchor="end" x="874" y="6593">numeric(8,2)</text>
+<rect class="alt" x="525" y="6600" width="358" height="22"/>
+<text class="cn" x="534" y="6615">relacion_lh_fsh</text><text class="chip" x="734" y="6615"></text><text class="ct" text-anchor="end" x="874" y="6615">numeric(8,2)</text>
+<text class="cn" x="534" y="6637">estradiol</text><text class="chip" x="734" y="6637"></text><text class="ct" text-anchor="end" x="874" y="6637">numeric(8,2)</text>
+<rect class="alt" x="525" y="6644" width="358" height="22"/>
+<text class="cn" x="534" y="6659">progesterona</text><text class="chip" x="734" y="6659"></text><text class="ct" text-anchor="end" x="874" y="6659">numeric(8,2)</text>
+<text class="cn" x="534" y="6681">progesterona_dia_ciclo</text><text class="chip" x="734" y="6681"></text><text class="ct" text-anchor="end" x="874" y="6681">smallint(16,0)</text>
+<rect class="alt" x="525" y="6688" width="358" height="22"/>
+<text class="cn" x="534" y="6703">progesterona_fase_ciclo</text><text class="chip" x="734" y="6703"></text><text class="ct" text-anchor="end" x="874" y="6703">character varying(255)</text>
+<text class="cn" x="534" y="6725">interpretacion</text><text class="chip" x="734" y="6725"></text><text class="ct" text-anchor="end" x="874" y="6725">text</text>
+<rect class="alt" x="525" y="6732" width="358" height="22"/>
+<text class="cn" x="534" y="6747">estado</text><text class="chip" x="734" y="6747">NN</text><text class="ct" text-anchor="end" x="874" y="6747">character varying(255)</text>
+<text class="cn" x="534" y="6769">created_at</text><text class="chip" x="734" y="6769"></text><text class="ct" text-anchor="end" x="874" y="6769">timestamp without time zone</text>
+<rect class="alt" x="525" y="6776" width="358" height="22"/>
+<text class="cn" x="534" y="6791">updated_at</text><text class="chip" x="734" y="6791"></text><text class="ct" text-anchor="end" x="874" y="6791">timestamp without time zone</text>
+<text class="cn" x="534" y="6813">deleted_at</text><text class="chip" x="734" y="6813"></text><text class="ct" text-anchor="end" x="874" y="6813">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="524" y="6856" width="360" height="426" rx="5"/><rect class="head" x="524" y="6856" width="360" height="44" rx="5"/><text class="tn" x="536" y="6883">public.resultados_perfil_lipidico</text>
+<text class="cn" x="534" y="6915">id_perfil_lipidico</text><text class="chip" x="734" y="6915">PK</text><text class="ct" text-anchor="end" x="874" y="6915">bigint(64,0)</text>
+<rect class="alt" x="525" y="6922" width="358" height="22"/>
+<text class="cn" x="534" y="6937">id_consulta_endocrinologica</text><text class="chip" x="734" y="6937">FK NN</text><text class="ct" text-anchor="end" x="874" y="6937">bigint(64,0)</text>
+<text class="cn" x="534" y="6959">id_paciente</text><text class="chip" x="734" y="6959">FK NN</text><text class="ct" text-anchor="end" x="874" y="6959">bigint(64,0)</text>
+<rect class="alt" x="525" y="6966" width="358" height="22"/>
+<text class="cn" x="534" y="6981">id_endocrinologo</text><text class="chip" x="734" y="6981">FK NN</text><text class="ct" text-anchor="end" x="874" y="6981">bigint(64,0)</text>
+<text class="cn" x="534" y="7003">fecha_resultado</text><text class="chip" x="734" y="7003">NN</text><text class="ct" text-anchor="end" x="874" y="7003">date</text>
+<rect class="alt" x="525" y="7010" width="358" height="22"/>
+<text class="cn" x="534" y="7025">colesterol_total</text><text class="chip" x="734" y="7025"></text><text class="ct" text-anchor="end" x="874" y="7025">numeric(8,2)</text>
+<text class="cn" x="534" y="7047">hdl</text><text class="chip" x="734" y="7047"></text><text class="ct" text-anchor="end" x="874" y="7047">numeric(8,2)</text>
+<rect class="alt" x="525" y="7054" width="358" height="22"/>
+<text class="cn" x="534" y="7069">ldl</text><text class="chip" x="734" y="7069"></text><text class="ct" text-anchor="end" x="874" y="7069">numeric(8,2)</text>
+<text class="cn" x="534" y="7091">vldl</text><text class="chip" x="734" y="7091"></text><text class="ct" text-anchor="end" x="874" y="7091">numeric(8,2)</text>
+<rect class="alt" x="525" y="7098" width="358" height="22"/>
+<text class="cn" x="534" y="7113">trigliceridos</text><text class="chip" x="734" y="7113"></text><text class="ct" text-anchor="end" x="874" y="7113">numeric(8,2)</text>
+<text class="cn" x="534" y="7135">colesterol_no_hdl</text><text class="chip" x="734" y="7135"></text><text class="ct" text-anchor="end" x="874" y="7135">numeric(8,2)</text>
+<rect class="alt" x="525" y="7142" width="358" height="22"/>
+<text class="cn" x="534" y="7157">dislipidemia_sugerida</text><text class="chip" x="734" y="7157">NN</text><text class="ct" text-anchor="end" x="874" y="7157">boolean</text>
+<text class="cn" x="534" y="7179">interpretacion</text><text class="chip" x="734" y="7179"></text><text class="ct" text-anchor="end" x="874" y="7179">text</text>
+<rect class="alt" x="525" y="7186" width="358" height="22"/>
+<text class="cn" x="534" y="7201">estado</text><text class="chip" x="734" y="7201">NN</text><text class="ct" text-anchor="end" x="874" y="7201">character varying(255)</text>
+<text class="cn" x="534" y="7223">created_at</text><text class="chip" x="734" y="7223"></text><text class="ct" text-anchor="end" x="874" y="7223">timestamp without time zone</text>
+<rect class="alt" x="525" y="7230" width="358" height="22"/>
+<text class="cn" x="534" y="7245">updated_at</text><text class="chip" x="734" y="7245"></text><text class="ct" text-anchor="end" x="874" y="7245">timestamp without time zone</text>
+<text class="cn" x="534" y="7267">deleted_at</text><text class="chip" x="734" y="7267"></text><text class="ct" text-anchor="end" x="874" y="7267">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="132" width="360" height="316" rx="5"/><rect class="head" x="996" y="132" width="360" height="44" rx="5"/><text class="tn" x="1008" y="159">public.consultas_nutricionales</text>
+<text class="cn" x="1006" y="191">id_consulta_nutricional</text><text class="chip" x="1206" y="191">PK</text><text class="ct" text-anchor="end" x="1346" y="191">bigint(64,0)</text>
+<rect class="alt" x="997" y="198" width="358" height="22"/>
+<text class="cn" x="1006" y="213">id_paciente</text><text class="chip" x="1206" y="213">FK NN</text><text class="ct" text-anchor="end" x="1346" y="213">bigint(64,0)</text>
+<text class="cn" x="1006" y="235">id_nutricionista</text><text class="chip" x="1206" y="235">FK NN</text><text class="ct" text-anchor="end" x="1346" y="235">bigint(64,0)</text>
+<rect class="alt" x="997" y="242" width="358" height="22"/>
+<text class="cn" x="1006" y="257">id_cita</text><text class="chip" x="1206" y="257">FK</text><text class="ct" text-anchor="end" x="1346" y="257">bigint(64,0)</text>
+<text class="cn" x="1006" y="279">fecha_consulta</text><text class="chip" x="1206" y="279">NN</text><text class="ct" text-anchor="end" x="1346" y="279">date</text>
+<rect class="alt" x="997" y="286" width="358" height="22"/>
+<text class="cn" x="1006" y="301">motivo_consulta</text><text class="chip" x="1206" y="301"></text><text class="ct" text-anchor="end" x="1346" y="301">text</text>
+<text class="cn" x="1006" y="323">estado_consulta</text><text class="chip" x="1206" y="323">NN</text><text class="ct" text-anchor="end" x="1346" y="323">character varying(30)</text>
+<rect class="alt" x="997" y="330" width="358" height="22"/>
+<text class="cn" x="1006" y="345">observaciones_generales</text><text class="chip" x="1206" y="345"></text><text class="ct" text-anchor="end" x="1346" y="345">text</text>
+<text class="cn" x="1006" y="367">estado</text><text class="chip" x="1206" y="367">NN</text><text class="ct" text-anchor="end" x="1346" y="367">boolean</text>
+<rect class="alt" x="997" y="374" width="358" height="22"/>
+<text class="cn" x="1006" y="389">created_at</text><text class="chip" x="1206" y="389"></text><text class="ct" text-anchor="end" x="1346" y="389">timestamp without time zone</text>
+<text class="cn" x="1006" y="411">updated_at</text><text class="chip" x="1206" y="411"></text><text class="ct" text-anchor="end" x="1346" y="411">timestamp without time zone</text>
+<rect class="alt" x="997" y="418" width="358" height="22"/>
+<text class="cn" x="1006" y="433">deleted_at</text><text class="chip" x="1206" y="433"></text><text class="ct" text-anchor="end" x="1346" y="433">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="476" width="360" height="470" rx="5"/><rect class="head" x="996" y="476" width="360" height="44" rx="5"/><text class="tn" x="1008" y="503">public.evaluaciones_nutricionales</text>
+<text class="cn" x="1006" y="535">id_evaluacion_nutricional</text><text class="chip" x="1206" y="535">PK</text><text class="ct" text-anchor="end" x="1346" y="535">bigint(64,0)</text>
+<rect class="alt" x="997" y="542" width="358" height="22"/>
+<text class="cn" x="1006" y="557">id_paciente</text><text class="chip" x="1206" y="557">FK NN</text><text class="ct" text-anchor="end" x="1346" y="557">bigint(64,0)</text>
+<text class="cn" x="1006" y="579">id_nutricionista</text><text class="chip" x="1206" y="579">FK NN</text><text class="ct" text-anchor="end" x="1346" y="579">bigint(64,0)</text>
+<rect class="alt" x="997" y="586" width="358" height="22"/>
+<text class="cn" x="1006" y="601">id_consulta_nutricional</text><text class="chip" x="1206" y="601">FK NN</text><text class="ct" text-anchor="end" x="1346" y="601">bigint(64,0)</text>
+<text class="cn" x="1006" y="623">fecha_evaluacion</text><text class="chip" x="1206" y="623">NN</text><text class="ct" text-anchor="end" x="1346" y="623">date</text>
+<rect class="alt" x="997" y="630" width="358" height="22"/>
+<text class="cn" x="1006" y="645">peso</text><text class="chip" x="1206" y="645"></text><text class="ct" text-anchor="end" x="1346" y="645">numeric(8,2)</text>
+<text class="cn" x="1006" y="667">talla</text><text class="chip" x="1206" y="667"></text><text class="ct" text-anchor="end" x="1346" y="667">numeric(5,2)</text>
+<rect class="alt" x="997" y="674" width="358" height="22"/>
+<text class="cn" x="1006" y="689">imc</text><text class="chip" x="1206" y="689"></text><text class="ct" text-anchor="end" x="1346" y="689">numeric(5,2)</text>
+<text class="cn" x="1006" y="711">circunferencia_cintura</text><text class="chip" x="1206" y="711"></text><text class="ct" text-anchor="end" x="1346" y="711">numeric(6,2)</text>
+<rect class="alt" x="997" y="718" width="358" height="22"/>
+<text class="cn" x="1006" y="733">circunferencia_cadera</text><text class="chip" x="1206" y="733"></text><text class="ct" text-anchor="end" x="1346" y="733">numeric(6,2)</text>
+<text class="cn" x="1006" y="755">indice_cintura_cadera</text><text class="chip" x="1206" y="755"></text><text class="ct" text-anchor="end" x="1346" y="755">numeric(5,2)</text>
+<rect class="alt" x="997" y="762" width="358" height="22"/>
+<text class="cn" x="1006" y="777">porcentaje_grasa</text><text class="chip" x="1206" y="777"></text><text class="ct" text-anchor="end" x="1346" y="777">numeric(5,2)</text>
+<text class="cn" x="1006" y="799">masa_muscular</text><text class="chip" x="1206" y="799"></text><text class="ct" text-anchor="end" x="1346" y="799">numeric(6,2)</text>
+<rect class="alt" x="997" y="806" width="358" height="22"/>
+<text class="cn" x="1006" y="821">nivel_actividad</text><text class="chip" x="1206" y="821"></text><text class="ct" text-anchor="end" x="1346" y="821">character varying(40)</text>
+<text class="cn" x="1006" y="843">observaciones</text><text class="chip" x="1206" y="843"></text><text class="ct" text-anchor="end" x="1346" y="843">text</text>
+<rect class="alt" x="997" y="850" width="358" height="22"/>
+<text class="cn" x="1006" y="865">estado</text><text class="chip" x="1206" y="865">NN</text><text class="ct" text-anchor="end" x="1346" y="865">boolean</text>
+<text class="cn" x="1006" y="887">created_at</text><text class="chip" x="1206" y="887"></text><text class="ct" text-anchor="end" x="1346" y="887">timestamp without time zone</text>
+<rect class="alt" x="997" y="894" width="358" height="22"/>
+<text class="cn" x="1006" y="909">updated_at</text><text class="chip" x="1206" y="909"></text><text class="ct" text-anchor="end" x="1346" y="909">timestamp without time zone</text>
+<text class="cn" x="1006" y="931">deleted_at</text><text class="chip" x="1206" y="931"></text><text class="ct" text-anchor="end" x="1346" y="931">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="974" width="360" height="514" rx="5"/><rect class="head" x="996" y="974" width="360" height="44" rx="5"/><text class="tn" x="1008" y="1001">public.habitos_alimentarios</text>
+<text class="cn" x="1006" y="1033">id_habito_alimentario</text><text class="chip" x="1206" y="1033">PK</text><text class="ct" text-anchor="end" x="1346" y="1033">bigint(64,0)</text>
+<rect class="alt" x="997" y="1040" width="358" height="22"/>
+<text class="cn" x="1006" y="1055">id_paciente</text><text class="chip" x="1206" y="1055">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1055">bigint(64,0)</text>
+<text class="cn" x="1006" y="1077">id_nutricionista</text><text class="chip" x="1206" y="1077">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1077">bigint(64,0)</text>
+<rect class="alt" x="997" y="1084" width="358" height="22"/>
+<text class="cn" x="1006" y="1099">id_consulta_nutricional</text><text class="chip" x="1206" y="1099">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1099">bigint(64,0)</text>
+<text class="cn" x="1006" y="1121">comidas_por_dia</text><text class="chip" x="1206" y="1121"></text><text class="ct" text-anchor="end" x="1346" y="1121">smallint(16,0)</text>
+<rect class="alt" x="997" y="1128" width="358" height="22"/>
+<text class="cn" x="1006" y="1143">horarios_regulares</text><text class="chip" x="1206" y="1143">NN</text><text class="ct" text-anchor="end" x="1346" y="1143">boolean</text>
+<text class="cn" x="1006" y="1165">consume_desayuno</text><text class="chip" x="1206" y="1165">NN</text><text class="ct" text-anchor="end" x="1346" y="1165">boolean</text>
+<rect class="alt" x="997" y="1172" width="358" height="22"/>
+<text class="cn" x="1006" y="1187">consumo_agua_litros</text><text class="chip" x="1206" y="1187"></text><text class="ct" text-anchor="end" x="1346" y="1187">numeric(4,2)</text>
+<text class="cn" x="1006" y="1209">consumo_azucar</text><text class="chip" x="1206" y="1209"></text><text class="ct" text-anchor="end" x="1346" y="1209">character varying(30)</text>
+<rect class="alt" x="997" y="1216" width="358" height="22"/>
+<text class="cn" x="1006" y="1231">consumo_ultraprocesados</text><text class="chip" x="1206" y="1231"></text><text class="ct" text-anchor="end" x="1346" y="1231">character varying(30)</text>
+<text class="cn" x="1006" y="1253">consumo_frituras</text><text class="chip" x="1206" y="1253"></text><text class="ct" text-anchor="end" x="1346" y="1253">character varying(30)</text>
+<rect class="alt" x="997" y="1260" width="358" height="22"/>
+<text class="cn" x="1006" y="1275">consumo_bebidas_azucaradas</text><text class="chip" x="1206" y="1275"></text><text class="ct" text-anchor="end" x="1346" y="1275">character varying(30)</text>
+<text class="cn" x="1006" y="1297">frecuencia_frutas_verduras</text><text class="chip" x="1206" y="1297"></text><text class="ct" text-anchor="end" x="1346" y="1297">character varying(30)</text>
+<rect class="alt" x="997" y="1304" width="358" height="22"/>
+<text class="cn" x="1006" y="1319">cena_tardia</text><text class="chip" x="1206" y="1319">NN</text><text class="ct" text-anchor="end" x="1346" y="1319">boolean</text>
+<text class="cn" x="1006" y="1341">ansiedad_por_comida</text><text class="chip" x="1206" y="1341">NN</text><text class="ct" text-anchor="end" x="1346" y="1341">boolean</text>
+<rect class="alt" x="997" y="1348" width="358" height="22"/>
+<text class="cn" x="1006" y="1363">hambre_nocturna</text><text class="chip" x="1206" y="1363">NN</text><text class="ct" text-anchor="end" x="1346" y="1363">boolean</text>
+<text class="cn" x="1006" y="1385">observaciones</text><text class="chip" x="1206" y="1385"></text><text class="ct" text-anchor="end" x="1346" y="1385">text</text>
+<rect class="alt" x="997" y="1392" width="358" height="22"/>
+<text class="cn" x="1006" y="1407">estado</text><text class="chip" x="1206" y="1407">NN</text><text class="ct" text-anchor="end" x="1346" y="1407">boolean</text>
+<text class="cn" x="1006" y="1429">created_at</text><text class="chip" x="1206" y="1429"></text><text class="ct" text-anchor="end" x="1346" y="1429">timestamp without time zone</text>
+<rect class="alt" x="997" y="1436" width="358" height="22"/>
+<text class="cn" x="1006" y="1451">updated_at</text><text class="chip" x="1206" y="1451"></text><text class="ct" text-anchor="end" x="1346" y="1451">timestamp without time zone</text>
+<text class="cn" x="1006" y="1473">deleted_at</text><text class="chip" x="1206" y="1473"></text><text class="ct" text-anchor="end" x="1346" y="1473">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="1516" width="360" height="404" rx="5"/><rect class="head" x="996" y="1516" width="360" height="44" rx="5"/><text class="tn" x="1008" y="1543">public.objetivos_nutricionales</text>
+<text class="cn" x="1006" y="1575">id_objetivo_nutricional</text><text class="chip" x="1206" y="1575">PK</text><text class="ct" text-anchor="end" x="1346" y="1575">bigint(64,0)</text>
+<rect class="alt" x="997" y="1582" width="358" height="22"/>
+<text class="cn" x="1006" y="1597">id_paciente</text><text class="chip" x="1206" y="1597">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1597">bigint(64,0)</text>
+<text class="cn" x="1006" y="1619">id_nutricionista</text><text class="chip" x="1206" y="1619">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1619">bigint(64,0)</text>
+<rect class="alt" x="997" y="1626" width="358" height="22"/>
+<text class="cn" x="1006" y="1641">id_consulta_nutricional</text><text class="chip" x="1206" y="1641">FK NN</text><text class="ct" text-anchor="end" x="1346" y="1641">bigint(64,0)</text>
+<text class="cn" x="1006" y="1663">objetivo_principal</text><text class="chip" x="1206" y="1663">NN</text><text class="ct" text-anchor="end" x="1346" y="1663">character varying(60)</text>
+<rect class="alt" x="997" y="1670" width="358" height="22"/>
+<text class="cn" x="1006" y="1685">objetivo_secundario</text><text class="chip" x="1206" y="1685"></text><text class="ct" text-anchor="end" x="1346" y="1685">character varying(100)</text>
+<text class="cn" x="1006" y="1707">meta_peso</text><text class="chip" x="1206" y="1707"></text><text class="ct" text-anchor="end" x="1346" y="1707">numeric(8,2)</text>
+<rect class="alt" x="997" y="1714" width="358" height="22"/>
+<text class="cn" x="1006" y="1729">meta_cintura</text><text class="chip" x="1206" y="1729"></text><text class="ct" text-anchor="end" x="1346" y="1729">numeric(6,2)</text>
+<text class="cn" x="1006" y="1751">plazo_semanas</text><text class="chip" x="1206" y="1751"></text><text class="ct" text-anchor="end" x="1346" y="1751">smallint(16,0)</text>
+<rect class="alt" x="997" y="1758" width="358" height="22"/>
+<text class="cn" x="1006" y="1773">enfoque_nutricional</text><text class="chip" x="1206" y="1773"></text><text class="ct" text-anchor="end" x="1346" y="1773">character varying(60)</text>
+<text class="cn" x="1006" y="1795">prioridad</text><text class="chip" x="1206" y="1795">NN</text><text class="ct" text-anchor="end" x="1346" y="1795">character varying(30)</text>
+<rect class="alt" x="997" y="1802" width="358" height="22"/>
+<text class="cn" x="1006" y="1817">observaciones</text><text class="chip" x="1206" y="1817"></text><text class="ct" text-anchor="end" x="1346" y="1817">text</text>
+<text class="cn" x="1006" y="1839">estado</text><text class="chip" x="1206" y="1839">NN</text><text class="ct" text-anchor="end" x="1346" y="1839">boolean</text>
+<rect class="alt" x="997" y="1846" width="358" height="22"/>
+<text class="cn" x="1006" y="1861">created_at</text><text class="chip" x="1206" y="1861"></text><text class="ct" text-anchor="end" x="1346" y="1861">timestamp without time zone</text>
+<text class="cn" x="1006" y="1883">updated_at</text><text class="chip" x="1206" y="1883"></text><text class="ct" text-anchor="end" x="1346" y="1883">timestamp without time zone</text>
+<rect class="alt" x="997" y="1890" width="358" height="22"/>
+<text class="cn" x="1006" y="1905">deleted_at</text><text class="chip" x="1206" y="1905"></text><text class="ct" text-anchor="end" x="1346" y="1905">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="1948" width="360" height="382" rx="5"/><rect class="head" x="996" y="1948" width="360" height="44" rx="5"/><text class="tn" x="1008" y="1975">public.preferencias_alimentarias</text>
+<text class="cn" x="1006" y="2007">id_preferencia_alimentaria</text><text class="chip" x="1206" y="2007">PK</text><text class="ct" text-anchor="end" x="1346" y="2007">bigint(64,0)</text>
+<rect class="alt" x="997" y="2014" width="358" height="22"/>
+<text class="cn" x="1006" y="2029">id_paciente</text><text class="chip" x="1206" y="2029">FK NN</text><text class="ct" text-anchor="end" x="1346" y="2029">bigint(64,0)</text>
+<text class="cn" x="1006" y="2051">id_nutricionista</text><text class="chip" x="1206" y="2051">FK NN</text><text class="ct" text-anchor="end" x="1346" y="2051">bigint(64,0)</text>
+<rect class="alt" x="997" y="2058" width="358" height="22"/>
+<text class="cn" x="1006" y="2073">id_consulta_nutricional</text><text class="chip" x="1206" y="2073">FK NN</text><text class="ct" text-anchor="end" x="1346" y="2073">bigint(64,0)</text>
+<text class="cn" x="1006" y="2095">alimentos_preferidos</text><text class="chip" x="1206" y="2095"></text><text class="ct" text-anchor="end" x="1346" y="2095">text</text>
+<rect class="alt" x="997" y="2102" width="358" height="22"/>
+<text class="cn" x="1006" y="2117">alimentos_no_preferidos</text><text class="chip" x="1206" y="2117"></text><text class="ct" text-anchor="end" x="1346" y="2117">text</text>
+<text class="cn" x="1006" y="2139">comidas_preferidas</text><text class="chip" x="1206" y="2139"></text><text class="ct" text-anchor="end" x="1346" y="2139">text</text>
+<rect class="alt" x="997" y="2146" width="358" height="22"/>
+<text class="cn" x="1006" y="2161">comidas_frecuentes</text><text class="chip" x="1206" y="2161"></text><text class="ct" text-anchor="end" x="1346" y="2161">text</text>
+<text class="cn" x="1006" y="2183">preparaciones_preferidas</text><text class="chip" x="1206" y="2183"></text><text class="ct" text-anchor="end" x="1346" y="2183">text</text>
+<rect class="alt" x="997" y="2190" width="358" height="22"/>
+<text class="cn" x="1006" y="2205">sabores_preferidos</text><text class="chip" x="1206" y="2205"></text><text class="ct" text-anchor="end" x="1346" y="2205">character varying(100)</text>
+<text class="cn" x="1006" y="2227">observaciones</text><text class="chip" x="1206" y="2227"></text><text class="ct" text-anchor="end" x="1346" y="2227">text</text>
+<rect class="alt" x="997" y="2234" width="358" height="22"/>
+<text class="cn" x="1006" y="2249">estado</text><text class="chip" x="1206" y="2249">NN</text><text class="ct" text-anchor="end" x="1346" y="2249">boolean</text>
+<text class="cn" x="1006" y="2271">created_at</text><text class="chip" x="1206" y="2271"></text><text class="ct" text-anchor="end" x="1346" y="2271">timestamp without time zone</text>
+<rect class="alt" x="997" y="2278" width="358" height="22"/>
+<text class="cn" x="1006" y="2293">updated_at</text><text class="chip" x="1206" y="2293"></text><text class="ct" text-anchor="end" x="1346" y="2293">timestamp without time zone</text>
+<text class="cn" x="1006" y="2315">deleted_at</text><text class="chip" x="1206" y="2315"></text><text class="ct" text-anchor="end" x="1346" y="2315">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="2358" width="360" height="734" rx="5"/><rect class="head" x="996" y="2358" width="360" height="44" rx="5"/><text class="tn" x="1008" y="2385">public.recomendaciones_nutricionales_expertas</text>
+<text class="cn" x="1006" y="2417">id_recomendacion_nutricional_experta</text><text class="chip" x="1206" y="2417">PK</text><text class="ct" text-anchor="end" x="1346" y="2417">bigint(64,0)</text>
+<rect class="alt" x="997" y="2424" width="358" height="22"/>
+<text class="cn" x="1006" y="2439">id_paciente</text><text class="chip" x="1206" y="2439">FK NN</text><text class="ct" text-anchor="end" x="1346" y="2439">bigint(64,0)</text>
+<text class="cn" x="1006" y="2461">id_nutricionista</text><text class="chip" x="1206" y="2461">FK</text><text class="ct" text-anchor="end" x="1346" y="2461">bigint(64,0)</text>
+<rect class="alt" x="997" y="2468" width="358" height="22"/>
+<text class="cn" x="1006" y="2483">id_requerimiento_nutricional</text><text class="chip" x="1206" y="2483">FK</text><text class="ct" text-anchor="end" x="1346" y="2483">bigint(64,0)</text>
+<text class="cn" x="1006" y="2505">enfoque_nutricional_experto</text><text class="chip" x="1206" y="2505"></text><text class="ct" text-anchor="end" x="1346" y="2505">character varying(255)</text>
+<rect class="alt" x="997" y="2512" width="358" height="22"/>
+<text class="cn" x="1006" y="2527">prioridad_nutricional</text><text class="chip" x="1206" y="2527"></text><text class="ct" text-anchor="end" x="1346" y="2527">character varying(255)</text>
+<text class="cn" x="1006" y="2549">calorias_sugeridas</text><text class="chip" x="1206" y="2549"></text><text class="ct" text-anchor="end" x="1346" y="2549">numeric(8,2)</text>
+<rect class="alt" x="997" y="2556" width="358" height="22"/>
+<text class="cn" x="1006" y="2571">proteinas_porcentaje</text><text class="chip" x="1206" y="2571"></text><text class="ct" text-anchor="end" x="1346" y="2571">numeric(5,2)</text>
+<text class="cn" x="1006" y="2593">carbohidratos_porcentaje</text><text class="chip" x="1206" y="2593"></text><text class="ct" text-anchor="end" x="1346" y="2593">numeric(5,2)</text>
+<rect class="alt" x="997" y="2600" width="358" height="22"/>
+<text class="cn" x="1006" y="2615">grasas_porcentaje</text><text class="chip" x="1206" y="2615"></text><text class="ct" text-anchor="end" x="1346" y="2615">numeric(5,2)</text>
+<text class="cn" x="1006" y="2637">fibra_sugerida</text><text class="chip" x="1206" y="2637"></text><text class="ct" text-anchor="end" x="1346" y="2637">numeric(5,2)</text>
+<rect class="alt" x="997" y="2644" width="358" height="22"/>
+<text class="cn" x="1006" y="2659">recomendaciones</text><text class="chip" x="1206" y="2659"></text><text class="ct" text-anchor="end" x="1346" y="2659">json</text>
+<text class="cn" x="1006" y="2681">restricciones</text><text class="chip" x="1206" y="2681"></text><text class="ct" text-anchor="end" x="1346" y="2681">json</text>
+<rect class="alt" x="997" y="2688" width="358" height="22"/>
+<text class="cn" x="1006" y="2703">alertas</text><text class="chip" x="1206" y="2703"></text><text class="ct" text-anchor="end" x="1346" y="2703">json</text>
+<text class="cn" x="1006" y="2725">conclusion</text><text class="chip" x="1206" y="2725"></text><text class="ct" text-anchor="end" x="1346" y="2725">text</text>
+<rect class="alt" x="997" y="2732" width="358" height="22"/>
+<text class="cn" x="1006" y="2747">generado_por_motor_experto</text><text class="chip" x="1206" y="2747">NN</text><text class="ct" text-anchor="end" x="1346" y="2747">boolean</text>
+<text class="cn" x="1006" y="2769">hechos_utilizados</text><text class="chip" x="1206" y="2769"></text><text class="ct" text-anchor="end" x="1346" y="2769">json</text>
+<rect class="alt" x="997" y="2776" width="358" height="22"/>
+<text class="cn" x="1006" y="2791">reglas_activadas</text><text class="chip" x="1206" y="2791"></text><text class="ct" text-anchor="end" x="1346" y="2791">json</text>
+<text class="cn" x="1006" y="2813">explicacion_experta</text><text class="chip" x="1206" y="2813"></text><text class="ct" text-anchor="end" x="1346" y="2813">text</text>
+<rect class="alt" x="997" y="2820" width="358" height="22"/>
+<text class="cn" x="1006" y="2835">recomendaciones_expertas</text><text class="chip" x="1206" y="2835"></text><text class="ct" text-anchor="end" x="1346" y="2835">json</text>
+<text class="cn" x="1006" y="2857">confianza_experta</text><text class="chip" x="1206" y="2857"></text><text class="ct" text-anchor="end" x="1346" y="2857">numeric(5,2)</text>
+<rect class="alt" x="997" y="2864" width="358" height="22"/>
+<text class="cn" x="1006" y="2879">version_motor_experto</text><text class="chip" x="1206" y="2879"></text><text class="ct" text-anchor="end" x="1346" y="2879">character varying(255)</text>
+<text class="cn" x="1006" y="2901">evaluado_por_motor_experto_en</text><text class="chip" x="1206" y="2901"></text><text class="ct" text-anchor="end" x="1346" y="2901">timestamp without time zone</text>
+<rect class="alt" x="997" y="2908" width="358" height="22"/>
+<text class="cn" x="1006" y="2923">estado_validacion_experta</text><text class="chip" x="1206" y="2923">NN</text><text class="ct" text-anchor="end" x="1346" y="2923">character varying(255)</text>
+<text class="cn" x="1006" y="2945">validado_por</text><text class="chip" x="1206" y="2945">FK</text><text class="ct" text-anchor="end" x="1346" y="2945">bigint(64,0)</text>
+<rect class="alt" x="997" y="2952" width="358" height="22"/>
+<text class="cn" x="1006" y="2967">fecha_validacion</text><text class="chip" x="1206" y="2967"></text><text class="ct" text-anchor="end" x="1346" y="2967">timestamp without time zone</text>
+<text class="cn" x="1006" y="2989">observacion_validacion</text><text class="chip" x="1206" y="2989"></text><text class="ct" text-anchor="end" x="1346" y="2989">text</text>
+<rect class="alt" x="997" y="2996" width="358" height="22"/>
+<text class="cn" x="1006" y="3011">estado</text><text class="chip" x="1206" y="3011">NN</text><text class="ct" text-anchor="end" x="1346" y="3011">character varying(255)</text>
+<text class="cn" x="1006" y="3033">created_at</text><text class="chip" x="1206" y="3033"></text><text class="ct" text-anchor="end" x="1346" y="3033">timestamp without time zone</text>
+<rect class="alt" x="997" y="3040" width="358" height="22"/>
+<text class="cn" x="1006" y="3055">updated_at</text><text class="chip" x="1206" y="3055"></text><text class="ct" text-anchor="end" x="1346" y="3055">timestamp without time zone</text>
+<text class="cn" x="1006" y="3077">deleted_at</text><text class="chip" x="1206" y="3077"></text><text class="ct" text-anchor="end" x="1346" y="3077">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="3120" width="360" height="162" rx="5"/><rect class="head" x="996" y="3120" width="360" height="44" rx="5"/><text class="tn" x="1008" y="3147">public.regla_requerimiento_nutricional</text>
+<text class="cn" x="1006" y="3179">id_regla_requerimiento_nutricional</text><text class="chip" x="1206" y="3179">PK</text><text class="ct" text-anchor="end" x="1346" y="3179">bigint(64,0)</text>
+<rect class="alt" x="997" y="3186" width="358" height="22"/>
+<text class="cn" x="1006" y="3201">id_regla_nutricional</text><text class="chip" x="1206" y="3201">UQ FK NN</text><text class="ct" text-anchor="end" x="1346" y="3201">bigint(64,0)</text>
+<text class="cn" x="1006" y="3223">id_requerimiento_nutricional</text><text class="chip" x="1206" y="3223">UQ FK NN</text><text class="ct" text-anchor="end" x="1346" y="3223">bigint(64,0)</text>
+<rect class="alt" x="997" y="3230" width="358" height="22"/>
+<text class="cn" x="1006" y="3245">created_at</text><text class="chip" x="1206" y="3245"></text><text class="ct" text-anchor="end" x="1346" y="3245">timestamp without time zone</text>
+<text class="cn" x="1006" y="3267">updated_at</text><text class="chip" x="1206" y="3267"></text><text class="ct" text-anchor="end" x="1346" y="3267">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="3310" width="360" height="382" rx="5"/><rect class="head" x="996" y="3310" width="360" height="44" rx="5"/><text class="tn" x="1008" y="3337">public.reglas_nutricionales</text>
+<text class="cn" x="1006" y="3369">id_regla_nutricional</text><text class="chip" x="1206" y="3369">PK</text><text class="ct" text-anchor="end" x="1346" y="3369">bigint(64,0)</text>
+<rect class="alt" x="997" y="3376" width="358" height="22"/>
+<text class="cn" x="1006" y="3391">codigo</text><text class="chip" x="1206" y="3391">UQ NN</text><text class="ct" text-anchor="end" x="1346" y="3391">character varying(30)</text>
+<text class="cn" x="1006" y="3413">nombre</text><text class="chip" x="1206" y="3413">NN</text><text class="ct" text-anchor="end" x="1346" y="3413">character varying(150)</text>
+<rect class="alt" x="997" y="3420" width="358" height="22"/>
+<text class="cn" x="1006" y="3435">tipo_regla</text><text class="chip" x="1206" y="3435">NN</text><text class="ct" text-anchor="end" x="1346" y="3435">character varying(60)</text>
+<text class="cn" x="1006" y="3457">condicion_campo</text><text class="chip" x="1206" y="3457">NN</text><text class="ct" text-anchor="end" x="1346" y="3457">character varying(80)</text>
+<rect class="alt" x="997" y="3464" width="358" height="22"/>
+<text class="cn" x="1006" y="3479">condicion_operador</text><text class="chip" x="1206" y="3479">NN</text><text class="ct" text-anchor="end" x="1346" y="3479">character varying(20)</text>
+<text class="cn" x="1006" y="3501">condicion_valor</text><text class="chip" x="1206" y="3501"></text><text class="ct" text-anchor="end" x="1346" y="3501">json</text>
+<rect class="alt" x="997" y="3508" width="358" height="22"/>
+<text class="cn" x="1006" y="3523">resultado</text><text class="chip" x="1206" y="3523">NN</text><text class="ct" text-anchor="end" x="1346" y="3523">json</text>
+<text class="cn" x="1006" y="3545">prioridad</text><text class="chip" x="1206" y="3545">NN</text><text class="ct" text-anchor="end" x="1346" y="3545">smallint(16,0)</text>
+<rect class="alt" x="997" y="3552" width="358" height="22"/>
+<text class="cn" x="1006" y="3567">descripcion</text><text class="chip" x="1206" y="3567"></text><text class="ct" text-anchor="end" x="1346" y="3567">text</text>
+<text class="cn" x="1006" y="3589">fuente</text><text class="chip" x="1206" y="3589"></text><text class="ct" text-anchor="end" x="1346" y="3589">character varying(255)</text>
+<rect class="alt" x="997" y="3596" width="358" height="22"/>
+<text class="cn" x="1006" y="3611">estado</text><text class="chip" x="1206" y="3611">NN</text><text class="ct" text-anchor="end" x="1346" y="3611">boolean</text>
+<text class="cn" x="1006" y="3633">created_at</text><text class="chip" x="1206" y="3633"></text><text class="ct" text-anchor="end" x="1346" y="3633">timestamp without time zone</text>
+<rect class="alt" x="997" y="3640" width="358" height="22"/>
+<text class="cn" x="1006" y="3655">updated_at</text><text class="chip" x="1206" y="3655"></text><text class="ct" text-anchor="end" x="1346" y="3655">timestamp without time zone</text>
+<text class="cn" x="1006" y="3677">deleted_at</text><text class="chip" x="1206" y="3677"></text><text class="ct" text-anchor="end" x="1346" y="3677">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="996" y="3720" width="360" height="712" rx="5"/><rect class="head" x="996" y="3720" width="360" height="44" rx="5"/><text class="tn" x="1008" y="3747">public.requerimientos_nutricionales</text>
+<text class="cn" x="1006" y="3779">id_requerimiento_nutricional</text><text class="chip" x="1206" y="3779">PK</text><text class="ct" text-anchor="end" x="1346" y="3779">bigint(64,0)</text>
+<rect class="alt" x="997" y="3786" width="358" height="22"/>
+<text class="cn" x="1006" y="3801">id_paciente</text><text class="chip" x="1206" y="3801">FK NN</text><text class="ct" text-anchor="end" x="1346" y="3801">bigint(64,0)</text>
+<text class="cn" x="1006" y="3823">id_nutricionista</text><text class="chip" x="1206" y="3823">FK NN</text><text class="ct" text-anchor="end" x="1346" y="3823">bigint(64,0)</text>
+<rect class="alt" x="997" y="3830" width="358" height="22"/>
+<text class="cn" x="1006" y="3845">id_consulta_nutricional</text><text class="chip" x="1206" y="3845">FK</text><text class="ct" text-anchor="end" x="1346" y="3845">bigint(64,0)</text>
+<text class="cn" x="1006" y="3867">id_evaluacion_nutricional</text><text class="chip" x="1206" y="3867">FK NN</text><text class="ct" text-anchor="end" x="1346" y="3867">bigint(64,0)</text>
+<rect class="alt" x="997" y="3874" width="358" height="22"/>
+<text class="cn" x="1006" y="3889">id_objetivo_nutricional</text><text class="chip" x="1206" y="3889">FK</text><text class="ct" text-anchor="end" x="1346" y="3889">bigint(64,0)</text>
+<text class="cn" x="1006" y="3911">fecha_calculo</text><text class="chip" x="1206" y="3911">NN</text><text class="ct" text-anchor="end" x="1346" y="3911">date</text>
+<rect class="alt" x="997" y="3918" width="358" height="22"/>
+<text class="cn" x="1006" y="3933">peso_referencia</text><text class="chip" x="1206" y="3933">NN</text><text class="ct" text-anchor="end" x="1346" y="3933">numeric(8,2)</text>
+<text class="cn" x="1006" y="3955">talla_referencia</text><text class="chip" x="1206" y="3955">NN</text><text class="ct" text-anchor="end" x="1346" y="3955">numeric(5,2)</text>
+<rect class="alt" x="997" y="3962" width="358" height="22"/>
+<text class="cn" x="1006" y="3977">edad_referencia</text><text class="chip" x="1206" y="3977"></text><text class="ct" text-anchor="end" x="1346" y="3977">smallint(16,0)</text>
+<text class="cn" x="1006" y="3999">nivel_actividad</text><text class="chip" x="1206" y="3999"></text><text class="ct" text-anchor="end" x="1346" y="3999">character varying(40)</text>
+<rect class="alt" x="997" y="4006" width="358" height="22"/>
+<text class="cn" x="1006" y="4021">factor_actividad</text><text class="chip" x="1206" y="4021">NN</text><text class="ct" text-anchor="end" x="1346" y="4021">numeric(4,3)</text>
+<text class="cn" x="1006" y="4043">tmb</text><text class="chip" x="1206" y="4043">NN</text><text class="ct" text-anchor="end" x="1346" y="4043">numeric(10,2)</text>
+<rect class="alt" x="997" y="4050" width="358" height="22"/>
+<text class="cn" x="1006" y="4065">get</text><text class="chip" x="1206" y="4065">NN</text><text class="ct" text-anchor="end" x="1346" y="4065">numeric(10,2)</text>
+<text class="cn" x="1006" y="4087">ajuste_calorico</text><text class="chip" x="1206" y="4087">NN</text><text class="ct" text-anchor="end" x="1346" y="4087">numeric(10,2)</text>
+<rect class="alt" x="997" y="4094" width="358" height="22"/>
+<text class="cn" x="1006" y="4109">calorias_objetivo</text><text class="chip" x="1206" y="4109">NN</text><text class="ct" text-anchor="end" x="1346" y="4109">numeric(10,2)</text>
+<text class="cn" x="1006" y="4131">proteinas_diarias</text><text class="chip" x="1206" y="4131">NN</text><text class="ct" text-anchor="end" x="1346" y="4131">numeric(10,2)</text>
+<rect class="alt" x="997" y="4138" width="358" height="22"/>
+<text class="cn" x="1006" y="4153">carbohidratos_diarios</text><text class="chip" x="1206" y="4153">NN</text><text class="ct" text-anchor="end" x="1346" y="4153">numeric(10,2)</text>
+<text class="cn" x="1006" y="4175">grasas_diarias</text><text class="chip" x="1206" y="4175">NN</text><text class="ct" text-anchor="end" x="1346" y="4175">numeric(10,2)</text>
+<rect class="alt" x="997" y="4182" width="358" height="22"/>
+<text class="cn" x="1006" y="4197">fibra_diaria</text><text class="chip" x="1206" y="4197">NN</text><text class="ct" text-anchor="end" x="1346" y="4197">numeric(10,2)</text>
+<text class="cn" x="1006" y="4219">porcentaje_proteinas</text><text class="chip" x="1206" y="4219">NN</text><text class="ct" text-anchor="end" x="1346" y="4219">numeric(5,2)</text>
+<rect class="alt" x="997" y="4226" width="358" height="22"/>
+<text class="cn" x="1006" y="4241">porcentaje_carbohidratos</text><text class="chip" x="1206" y="4241">NN</text><text class="ct" text-anchor="end" x="1346" y="4241">numeric(5,2)</text>
+<text class="cn" x="1006" y="4263">porcentaje_grasas</text><text class="chip" x="1206" y="4263">NN</text><text class="ct" text-anchor="end" x="1346" y="4263">numeric(5,2)</text>
+<rect class="alt" x="997" y="4270" width="358" height="22"/>
+<text class="cn" x="1006" y="4285">metodo_calculo</text><text class="chip" x="1206" y="4285">NN</text><text class="ct" text-anchor="end" x="1346" y="4285">character varying(60)</text>
+<text class="cn" x="1006" y="4307">observaciones</text><text class="chip" x="1206" y="4307"></text><text class="ct" text-anchor="end" x="1346" y="4307">text</text>
+<rect class="alt" x="997" y="4314" width="358" height="22"/>
+<text class="cn" x="1006" y="4329">estado</text><text class="chip" x="1206" y="4329">NN</text><text class="ct" text-anchor="end" x="1346" y="4329">boolean</text>
+<text class="cn" x="1006" y="4351">created_at</text><text class="chip" x="1206" y="4351"></text><text class="ct" text-anchor="end" x="1346" y="4351">timestamp without time zone</text>
+<rect class="alt" x="997" y="4358" width="358" height="22"/>
+<text class="cn" x="1006" y="4373">updated_at</text><text class="chip" x="1206" y="4373"></text><text class="ct" text-anchor="end" x="1346" y="4373">timestamp without time zone</text>
+<text class="cn" x="1006" y="4395">deleted_at</text><text class="chip" x="1206" y="4395"></text><text class="ct" text-anchor="end" x="1346" y="4395">timestamp without time zone</text>
+<rect class="alt" x="997" y="4402" width="358" height="22"/>
+<text class="cn" x="1006" y="4417">reglas_aplicadas</text><text class="chip" x="1206" y="4417"></text><text class="ct" text-anchor="end" x="1346" y="4417">json</text>
+</g>
+<g><rect class="box" x="996" y="4460" width="360" height="360" rx="5"/><rect class="head" x="996" y="4460" width="360" height="44" rx="5"/><text class="tn" x="1008" y="4487">public.restricciones_alimentarias</text>
+<text class="cn" x="1006" y="4519">id_restriccion_alimentaria</text><text class="chip" x="1206" y="4519">PK</text><text class="ct" text-anchor="end" x="1346" y="4519">bigint(64,0)</text>
+<rect class="alt" x="997" y="4526" width="358" height="22"/>
+<text class="cn" x="1006" y="4541">id_paciente</text><text class="chip" x="1206" y="4541">FK NN</text><text class="ct" text-anchor="end" x="1346" y="4541">bigint(64,0)</text>
+<text class="cn" x="1006" y="4563">id_nutricionista</text><text class="chip" x="1206" y="4563">FK NN</text><text class="ct" text-anchor="end" x="1346" y="4563">bigint(64,0)</text>
+<rect class="alt" x="997" y="4570" width="358" height="22"/>
+<text class="cn" x="1006" y="4585">id_consulta_nutricional</text><text class="chip" x="1206" y="4585">FK NN</text><text class="ct" text-anchor="end" x="1346" y="4585">bigint(64,0)</text>
+<text class="cn" x="1006" y="4607">alergias</text><text class="chip" x="1206" y="4607"></text><text class="ct" text-anchor="end" x="1346" y="4607">text</text>
+<rect class="alt" x="997" y="4614" width="358" height="22"/>
+<text class="cn" x="1006" y="4629">intolerancias</text><text class="chip" x="1206" y="4629"></text><text class="ct" text-anchor="end" x="1346" y="4629">text</text>
+<text class="cn" x="1006" y="4651">alimentos_restringidos</text><text class="chip" x="1206" y="4651"></text><text class="ct" text-anchor="end" x="1346" y="4651">text</text>
+<rect class="alt" x="997" y="4658" width="358" height="22"/>
+<text class="cn" x="1006" y="4673">alimentos_no_tolerados</text><text class="chip" x="1206" y="4673"></text><text class="ct" text-anchor="end" x="1346" y="4673">text</text>
+<text class="cn" x="1006" y="4695">alimentos_rechazados</text><text class="chip" x="1206" y="4695"></text><text class="ct" text-anchor="end" x="1346" y="4695">text</text>
+<rect class="alt" x="997" y="4702" width="358" height="22"/>
+<text class="cn" x="1006" y="4717">observaciones</text><text class="chip" x="1206" y="4717"></text><text class="ct" text-anchor="end" x="1346" y="4717">text</text>
+<text class="cn" x="1006" y="4739">estado</text><text class="chip" x="1206" y="4739">NN</text><text class="ct" text-anchor="end" x="1346" y="4739">boolean</text>
+<rect class="alt" x="997" y="4746" width="358" height="22"/>
+<text class="cn" x="1006" y="4761">created_at</text><text class="chip" x="1206" y="4761"></text><text class="ct" text-anchor="end" x="1346" y="4761">timestamp without time zone</text>
+<text class="cn" x="1006" y="4783">updated_at</text><text class="chip" x="1206" y="4783"></text><text class="ct" text-anchor="end" x="1346" y="4783">timestamp without time zone</text>
+<rect class="alt" x="997" y="4790" width="358" height="22"/>
+<text class="cn" x="1006" y="4805">deleted_at</text><text class="chip" x="1206" y="4805"></text><text class="ct" text-anchor="end" x="1346" y="4805">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1468" y="132" width="360" height="470" rx="5"/><rect class="head" x="1468" y="132" width="360" height="44" rx="5"/><text class="tn" x="1480" y="159">public.alimentos</text>
+<text class="cn" x="1478" y="191">id_alimento</text><text class="chip" x="1678" y="191">PK</text><text class="ct" text-anchor="end" x="1818" y="191">bigint(64,0)</text>
+<rect class="alt" x="1469" y="198" width="358" height="22"/>
+<text class="cn" x="1478" y="213">nombre</text><text class="chip" x="1678" y="213">NN</text><text class="ct" text-anchor="end" x="1818" y="213">character varying(150)</text>
+<text class="cn" x="1478" y="235">grupo_alimentario</text><text class="chip" x="1678" y="235">NN</text><text class="ct" text-anchor="end" x="1818" y="235">character varying(50)</text>
+<rect class="alt" x="1469" y="242" width="358" height="22"/>
+<text class="cn" x="1478" y="257">unidad_base</text><text class="chip" x="1678" y="257">NN</text><text class="ct" text-anchor="end" x="1818" y="257">character varying(30)</text>
+<text class="cn" x="1478" y="279">cantidad_base</text><text class="chip" x="1678" y="279">NN</text><text class="ct" text-anchor="end" x="1818" y="279">numeric(8,2)</text>
+<rect class="alt" x="1469" y="286" width="358" height="22"/>
+<text class="cn" x="1478" y="301">calorias</text><text class="chip" x="1678" y="301">NN</text><text class="ct" text-anchor="end" x="1818" y="301">numeric(8,2)</text>
+<text class="cn" x="1478" y="323">proteinas</text><text class="chip" x="1678" y="323">NN</text><text class="ct" text-anchor="end" x="1818" y="323">numeric(8,2)</text>
+<rect class="alt" x="1469" y="330" width="358" height="22"/>
+<text class="cn" x="1478" y="345">carbohidratos</text><text class="chip" x="1678" y="345">NN</text><text class="ct" text-anchor="end" x="1818" y="345">numeric(8,2)</text>
+<text class="cn" x="1478" y="367">grasas</text><text class="chip" x="1678" y="367">NN</text><text class="ct" text-anchor="end" x="1818" y="367">numeric(8,2)</text>
+<rect class="alt" x="1469" y="374" width="358" height="22"/>
+<text class="cn" x="1478" y="389">fibra</text><text class="chip" x="1678" y="389">NN</text><text class="ct" text-anchor="end" x="1818" y="389">numeric(8,2)</text>
+<text class="cn" x="1478" y="411">indice_glucemico</text><text class="chip" x="1678" y="411"></text><text class="ct" text-anchor="end" x="1818" y="411">smallint(16,0)</text>
+<rect class="alt" x="1469" y="418" width="358" height="22"/>
+<text class="cn" x="1478" y="433">disponibilidad_temporal</text><text class="chip" x="1678" y="433">NN</text><text class="ct" text-anchor="end" x="1818" y="433">character varying(30)</text>
+<text class="cn" x="1478" y="455">temporada_escasez</text><text class="chip" x="1678" y="455"></text><text class="ct" text-anchor="end" x="1818" y="455">character varying(30)</text>
+<rect class="alt" x="1469" y="462" width="358" height="22"/>
+<text class="cn" x="1478" y="477">mensaje_disponibilidad</text><text class="chip" x="1678" y="477"></text><text class="ct" text-anchor="end" x="1818" y="477">text</text>
+<text class="cn" x="1478" y="499">observaciones</text><text class="chip" x="1678" y="499"></text><text class="ct" text-anchor="end" x="1818" y="499">text</text>
+<rect class="alt" x="1469" y="506" width="358" height="22"/>
+<text class="cn" x="1478" y="521">estado</text><text class="chip" x="1678" y="521">NN</text><text class="ct" text-anchor="end" x="1818" y="521">character varying(20)</text>
+<text class="cn" x="1478" y="543">created_at</text><text class="chip" x="1678" y="543"></text><text class="ct" text-anchor="end" x="1818" y="543">timestamp without time zone</text>
+<rect class="alt" x="1469" y="550" width="358" height="22"/>
+<text class="cn" x="1478" y="565">updated_at</text><text class="chip" x="1678" y="565"></text><text class="ct" text-anchor="end" x="1818" y="565">timestamp without time zone</text>
+<text class="cn" x="1478" y="587">deleted_at</text><text class="chip" x="1678" y="587"></text><text class="ct" text-anchor="end" x="1818" y="587">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1468" y="630" width="360" height="426" rx="5"/><rect class="head" x="1468" y="630" width="360" height="44" rx="5"/><text class="tn" x="1480" y="657">public.recetas</text>
+<text class="cn" x="1478" y="689">id_receta</text><text class="chip" x="1678" y="689">PK</text><text class="ct" text-anchor="end" x="1818" y="689">bigint(64,0)</text>
+<rect class="alt" x="1469" y="696" width="358" height="22"/>
+<text class="cn" x="1478" y="711">nombre</text><text class="chip" x="1678" y="711">NN</text><text class="ct" text-anchor="end" x="1818" y="711">character varying(150)</text>
+<text class="cn" x="1478" y="733">descripcion</text><text class="chip" x="1678" y="733"></text><text class="ct" text-anchor="end" x="1818" y="733">text</text>
+<rect class="alt" x="1469" y="740" width="358" height="22"/>
+<text class="cn" x="1478" y="755">tipo_comida</text><text class="chip" x="1678" y="755">NN</text><text class="ct" text-anchor="end" x="1818" y="755">character varying(40)</text>
+<text class="cn" x="1478" y="777">porciones</text><text class="chip" x="1678" y="777">NN</text><text class="ct" text-anchor="end" x="1818" y="777">smallint(16,0)</text>
+<rect class="alt" x="1469" y="784" width="358" height="22"/>
+<text class="cn" x="1478" y="799">tiempo_preparacion_minutos</text><text class="chip" x="1678" y="799"></text><text class="ct" text-anchor="end" x="1818" y="799">smallint(16,0)</text>
+<text class="cn" x="1478" y="821">preparacion</text><text class="chip" x="1678" y="821"></text><text class="ct" text-anchor="end" x="1818" y="821">text</text>
+<rect class="alt" x="1469" y="828" width="358" height="22"/>
+<text class="cn" x="1478" y="843">calorias_totales</text><text class="chip" x="1678" y="843">NN</text><text class="ct" text-anchor="end" x="1818" y="843">numeric(10,2)</text>
+<text class="cn" x="1478" y="865">proteinas_totales</text><text class="chip" x="1678" y="865">NN</text><text class="ct" text-anchor="end" x="1818" y="865">numeric(10,2)</text>
+<rect class="alt" x="1469" y="872" width="358" height="22"/>
+<text class="cn" x="1478" y="887">carbohidratos_totales</text><text class="chip" x="1678" y="887">NN</text><text class="ct" text-anchor="end" x="1818" y="887">numeric(10,2)</text>
+<text class="cn" x="1478" y="909">grasas_totales</text><text class="chip" x="1678" y="909">NN</text><text class="ct" text-anchor="end" x="1818" y="909">numeric(10,2)</text>
+<rect class="alt" x="1469" y="916" width="358" height="22"/>
+<text class="cn" x="1478" y="931">fibra_total</text><text class="chip" x="1678" y="931">NN</text><text class="ct" text-anchor="end" x="1818" y="931">numeric(10,2)</text>
+<text class="cn" x="1478" y="953">observaciones</text><text class="chip" x="1678" y="953"></text><text class="ct" text-anchor="end" x="1818" y="953">text</text>
+<rect class="alt" x="1469" y="960" width="358" height="22"/>
+<text class="cn" x="1478" y="975">estado</text><text class="chip" x="1678" y="975">NN</text><text class="ct" text-anchor="end" x="1818" y="975">character varying(20)</text>
+<text class="cn" x="1478" y="997">created_at</text><text class="chip" x="1678" y="997"></text><text class="ct" text-anchor="end" x="1818" y="997">timestamp without time zone</text>
+<rect class="alt" x="1469" y="1004" width="358" height="22"/>
+<text class="cn" x="1478" y="1019">updated_at</text><text class="chip" x="1678" y="1019"></text><text class="ct" text-anchor="end" x="1818" y="1019">timestamp without time zone</text>
+<text class="cn" x="1478" y="1041">deleted_at</text><text class="chip" x="1678" y="1041"></text><text class="ct" text-anchor="end" x="1818" y="1041">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="132" width="360" height="118" rx="5"/><rect class="head" x="1940" y="132" width="360" height="44" rx="5"/><text class="tn" x="1952" y="159">public.cache</text>
+<text class="cn" x="1950" y="191">key</text><text class="chip" x="2150" y="191">PK</text><text class="ct" text-anchor="end" x="2290" y="191">character varying(255)</text>
+<rect class="alt" x="1941" y="198" width="358" height="22"/>
+<text class="cn" x="1950" y="213">value</text><text class="chip" x="2150" y="213">NN</text><text class="ct" text-anchor="end" x="2290" y="213">text</text>
+<text class="cn" x="1950" y="235">expiration</text><text class="chip" x="2150" y="235">NN</text><text class="ct" text-anchor="end" x="2290" y="235">integer(32,0)</text>
+</g>
+<g><rect class="box" x="1940" y="278" width="360" height="118" rx="5"/><rect class="head" x="1940" y="278" width="360" height="44" rx="5"/><text class="tn" x="1952" y="305">public.cache_locks</text>
+<text class="cn" x="1950" y="337">key</text><text class="chip" x="2150" y="337">PK</text><text class="ct" text-anchor="end" x="2290" y="337">character varying(255)</text>
+<rect class="alt" x="1941" y="344" width="358" height="22"/>
+<text class="cn" x="1950" y="359">owner</text><text class="chip" x="2150" y="359">NN</text><text class="ct" text-anchor="end" x="2290" y="359">character varying(255)</text>
+<text class="cn" x="1950" y="381">expiration</text><text class="chip" x="2150" y="381">NN</text><text class="ct" text-anchor="end" x="2290" y="381">integer(32,0)</text>
+</g>
+<g><rect class="box" x="1940" y="424" width="360" height="448" rx="5"/><rect class="head" x="1940" y="424" width="360" height="44" rx="5"/><text class="tn" x="1952" y="451">public.citas</text>
+<text class="cn" x="1950" y="483">id_cita</text><text class="chip" x="2150" y="483">PK</text><text class="ct" text-anchor="end" x="2290" y="483">bigint(64,0)</text>
+<rect class="alt" x="1941" y="490" width="358" height="22"/>
+<text class="cn" x="1950" y="505">id_paciente</text><text class="chip" x="2150" y="505">FK NN</text><text class="ct" text-anchor="end" x="2290" y="505">bigint(64,0)</text>
+<text class="cn" x="1950" y="527">id_profesional</text><text class="chip" x="2150" y="527">FK NN</text><text class="ct" text-anchor="end" x="2290" y="527">bigint(64,0)</text>
+<rect class="alt" x="1941" y="534" width="358" height="22"/>
+<text class="cn" x="1950" y="549">tipo_profesional</text><text class="chip" x="2150" y="549">NN</text><text class="ct" text-anchor="end" x="2290" y="549">character varying(30)</text>
+<text class="cn" x="1950" y="571">fecha_cita</text><text class="chip" x="2150" y="571">NN</text><text class="ct" text-anchor="end" x="2290" y="571">date</text>
+<rect class="alt" x="1941" y="578" width="358" height="22"/>
+<text class="cn" x="1950" y="593">hora_inicio</text><text class="chip" x="2150" y="593">NN</text><text class="ct" text-anchor="end" x="2290" y="593">time without time zone</text>
+<text class="cn" x="1950" y="615">hora_fin</text><text class="chip" x="2150" y="615">NN</text><text class="ct" text-anchor="end" x="2290" y="615">time without time zone</text>
+<rect class="alt" x="1941" y="622" width="358" height="22"/>
+<text class="cn" x="1950" y="637">duracion_minutos</text><text class="chip" x="2150" y="637">NN</text><text class="ct" text-anchor="end" x="2290" y="637">smallint(16,0)</text>
+<text class="cn" x="1950" y="659">tipo_cita</text><text class="chip" x="2150" y="659">NN</text><text class="ct" text-anchor="end" x="2290" y="659">character varying(50)</text>
+<rect class="alt" x="1941" y="666" width="358" height="22"/>
+<text class="cn" x="1950" y="681">modalidad</text><text class="chip" x="2150" y="681">NN</text><text class="ct" text-anchor="end" x="2290" y="681">character varying(30)</text>
+<text class="cn" x="1950" y="703">motivo</text><text class="chip" x="2150" y="703">NN</text><text class="ct" text-anchor="end" x="2290" y="703">text</text>
+<rect class="alt" x="1941" y="710" width="358" height="22"/>
+<text class="cn" x="1950" y="725">estado</text><text class="chip" x="2150" y="725">NN</text><text class="ct" text-anchor="end" x="2290" y="725">character varying(30)</text>
+<text class="cn" x="1950" y="747">observaciones</text><text class="chip" x="2150" y="747"></text><text class="ct" text-anchor="end" x="2290" y="747">text</text>
+<rect class="alt" x="1941" y="754" width="358" height="22"/>
+<text class="cn" x="1950" y="769">motivo_cancelacion</text><text class="chip" x="2150" y="769"></text><text class="ct" text-anchor="end" x="2290" y="769">text</text>
+<text class="cn" x="1950" y="791">registrada_por</text><text class="chip" x="2150" y="791">FK NN</text><text class="ct" text-anchor="end" x="2290" y="791">bigint(64,0)</text>
+<rect class="alt" x="1941" y="798" width="358" height="22"/>
+<text class="cn" x="1950" y="813">created_at</text><text class="chip" x="2150" y="813"></text><text class="ct" text-anchor="end" x="2290" y="813">timestamp without time zone</text>
+<text class="cn" x="1950" y="835">updated_at</text><text class="chip" x="2150" y="835"></text><text class="ct" text-anchor="end" x="2290" y="835">timestamp without time zone</text>
+<rect class="alt" x="1941" y="842" width="358" height="22"/>
+<text class="cn" x="1950" y="857">deleted_at</text><text class="chip" x="2150" y="857"></text><text class="ct" text-anchor="end" x="2290" y="857">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="900" width="360" height="404" rx="5"/><rect class="head" x="1940" y="900" width="360" height="44" rx="5"/><text class="tn" x="1952" y="927">public.comidas_plan_alimentario</text>
+<text class="cn" x="1950" y="959">id_comida_plan_alimentario</text><text class="chip" x="2150" y="959">PK</text><text class="ct" text-anchor="end" x="2290" y="959">bigint(64,0)</text>
+<rect class="alt" x="1941" y="966" width="358" height="22"/>
+<text class="cn" x="1950" y="981">id_dia_plan_alimentario</text><text class="chip" x="2150" y="981">FK NN</text><text class="ct" text-anchor="end" x="2290" y="981">bigint(64,0)</text>
+<text class="cn" x="1950" y="1003">tipo_comida</text><text class="chip" x="2150" y="1003">NN</text><text class="ct" text-anchor="end" x="2290" y="1003">character varying(255)</text>
+<rect class="alt" x="1941" y="1010" width="358" height="22"/>
+<text class="cn" x="1950" y="1025">hora_sugerida</text><text class="chip" x="2150" y="1025"></text><text class="ct" text-anchor="end" x="2290" y="1025">time without time zone</text>
+<text class="cn" x="1950" y="1047">nombre_comida</text><text class="chip" x="2150" y="1047"></text><text class="ct" text-anchor="end" x="2290" y="1047">character varying(255)</text>
+<rect class="alt" x="1941" y="1054" width="358" height="22"/>
+<text class="cn" x="1950" y="1069">calorias_totales</text><text class="chip" x="2150" y="1069"></text><text class="ct" text-anchor="end" x="2290" y="1069">numeric(8,2)</text>
+<text class="cn" x="1950" y="1091">proteinas_totales</text><text class="chip" x="2150" y="1091"></text><text class="ct" text-anchor="end" x="2290" y="1091">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1098" width="358" height="22"/>
+<text class="cn" x="1950" y="1113">carbohidratos_totales</text><text class="chip" x="2150" y="1113"></text><text class="ct" text-anchor="end" x="2290" y="1113">numeric(8,2)</text>
+<text class="cn" x="1950" y="1135">grasas_totales</text><text class="chip" x="2150" y="1135"></text><text class="ct" text-anchor="end" x="2290" y="1135">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1142" width="358" height="22"/>
+<text class="cn" x="1950" y="1157">fibra_total</text><text class="chip" x="2150" y="1157"></text><text class="ct" text-anchor="end" x="2290" y="1157">numeric(8,2)</text>
+<text class="cn" x="1950" y="1179">observaciones</text><text class="chip" x="2150" y="1179"></text><text class="ct" text-anchor="end" x="2290" y="1179">text</text>
+<rect class="alt" x="1941" y="1186" width="358" height="22"/>
+<text class="cn" x="1950" y="1201">orden</text><text class="chip" x="2150" y="1201">NN</text><text class="ct" text-anchor="end" x="2290" y="1201">integer(32,0)</text>
+<text class="cn" x="1950" y="1223">estado</text><text class="chip" x="2150" y="1223">NN</text><text class="ct" text-anchor="end" x="2290" y="1223">character varying(255)</text>
+<rect class="alt" x="1941" y="1230" width="358" height="22"/>
+<text class="cn" x="1950" y="1245">created_at</text><text class="chip" x="2150" y="1245"></text><text class="ct" text-anchor="end" x="2290" y="1245">timestamp without time zone</text>
+<text class="cn" x="1950" y="1267">updated_at</text><text class="chip" x="2150" y="1267"></text><text class="ct" text-anchor="end" x="2290" y="1267">timestamp without time zone</text>
+<rect class="alt" x="1941" y="1274" width="358" height="22"/>
+<text class="cn" x="1950" y="1289">deleted_at</text><text class="chip" x="2150" y="1289"></text><text class="ct" text-anchor="end" x="2290" y="1289">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="1332" width="360" height="470" rx="5"/><rect class="head" x="1940" y="1332" width="360" height="44" rx="5"/><text class="tn" x="1952" y="1359">public.componentes_comida_plan</text>
+<text class="cn" x="1950" y="1391">id_componente_comida_plan</text><text class="chip" x="2150" y="1391">PK</text><text class="ct" text-anchor="end" x="2290" y="1391">bigint(64,0)</text>
+<rect class="alt" x="1941" y="1398" width="358" height="22"/>
+<text class="cn" x="1950" y="1413">id_comida_plan_alimentario</text><text class="chip" x="2150" y="1413">FK NN</text><text class="ct" text-anchor="end" x="2290" y="1413">bigint(64,0)</text>
+<text class="cn" x="1950" y="1435">tipo_componente</text><text class="chip" x="2150" y="1435">NN</text><text class="ct" text-anchor="end" x="2290" y="1435">character varying(255)</text>
+<rect class="alt" x="1941" y="1442" width="358" height="22"/>
+<text class="cn" x="1950" y="1457">id_alimento</text><text class="chip" x="2150" y="1457">FK</text><text class="ct" text-anchor="end" x="2290" y="1457">bigint(64,0)</text>
+<text class="cn" x="1950" y="1479">id_receta</text><text class="chip" x="2150" y="1479">FK</text><text class="ct" text-anchor="end" x="2290" y="1479">bigint(64,0)</text>
+<rect class="alt" x="1941" y="1486" width="358" height="22"/>
+<text class="cn" x="1950" y="1501">nombre_manual</text><text class="chip" x="2150" y="1501"></text><text class="ct" text-anchor="end" x="2290" y="1501">character varying(255)</text>
+<text class="cn" x="1950" y="1523">cantidad</text><text class="chip" x="2150" y="1523"></text><text class="ct" text-anchor="end" x="2290" y="1523">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1530" width="358" height="22"/>
+<text class="cn" x="1950" y="1545">unidad</text><text class="chip" x="2150" y="1545"></text><text class="ct" text-anchor="end" x="2290" y="1545">character varying(255)</text>
+<text class="cn" x="1950" y="1567">calorias</text><text class="chip" x="2150" y="1567"></text><text class="ct" text-anchor="end" x="2290" y="1567">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1574" width="358" height="22"/>
+<text class="cn" x="1950" y="1589">proteinas</text><text class="chip" x="2150" y="1589"></text><text class="ct" text-anchor="end" x="2290" y="1589">numeric(8,2)</text>
+<text class="cn" x="1950" y="1611">carbohidratos</text><text class="chip" x="2150" y="1611"></text><text class="ct" text-anchor="end" x="2290" y="1611">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1618" width="358" height="22"/>
+<text class="cn" x="1950" y="1633">grasas</text><text class="chip" x="2150" y="1633"></text><text class="ct" text-anchor="end" x="2290" y="1633">numeric(8,2)</text>
+<text class="cn" x="1950" y="1655">fibra</text><text class="chip" x="2150" y="1655"></text><text class="ct" text-anchor="end" x="2290" y="1655">numeric(8,2)</text>
+<rect class="alt" x="1941" y="1662" width="358" height="22"/>
+<text class="cn" x="1950" y="1677">observaciones</text><text class="chip" x="2150" y="1677"></text><text class="ct" text-anchor="end" x="2290" y="1677">text</text>
+<text class="cn" x="1950" y="1699">orden</text><text class="chip" x="2150" y="1699">NN</text><text class="ct" text-anchor="end" x="2290" y="1699">integer(32,0)</text>
+<rect class="alt" x="1941" y="1706" width="358" height="22"/>
+<text class="cn" x="1950" y="1721">estado</text><text class="chip" x="2150" y="1721">NN</text><text class="ct" text-anchor="end" x="2290" y="1721">character varying(255)</text>
+<text class="cn" x="1950" y="1743">created_at</text><text class="chip" x="2150" y="1743"></text><text class="ct" text-anchor="end" x="2290" y="1743">timestamp without time zone</text>
+<rect class="alt" x="1941" y="1750" width="358" height="22"/>
+<text class="cn" x="1950" y="1765">updated_at</text><text class="chip" x="2150" y="1765"></text><text class="ct" text-anchor="end" x="2290" y="1765">timestamp without time zone</text>
+<text class="cn" x="1950" y="1787">deleted_at</text><text class="chip" x="2150" y="1787"></text><text class="ct" text-anchor="end" x="2290" y="1787">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="1830" width="360" height="382" rx="5"/><rect class="head" x="1940" y="1830" width="360" height="44" rx="5"/><text class="tn" x="1952" y="1857">public.derivaciones_nutricionales</text>
+<text class="cn" x="1950" y="1889">id_derivacion_nutricional</text><text class="chip" x="2150" y="1889">PK</text><text class="ct" text-anchor="end" x="2290" y="1889">bigint(64,0)</text>
+<rect class="alt" x="1941" y="1896" width="358" height="22"/>
+<text class="cn" x="1950" y="1911">id_paciente</text><text class="chip" x="2150" y="1911">FK NN</text><text class="ct" text-anchor="end" x="2290" y="1911">bigint(64,0)</text>
+<text class="cn" x="1950" y="1933">id_endocrinologo</text><text class="chip" x="2150" y="1933">FK</text><text class="ct" text-anchor="end" x="2290" y="1933">bigint(64,0)</text>
+<rect class="alt" x="1941" y="1940" width="358" height="22"/>
+<text class="cn" x="1950" y="1955">id_nutricionista</text><text class="chip" x="2150" y="1955">FK</text><text class="ct" text-anchor="end" x="2290" y="1955">bigint(64,0)</text>
+<text class="cn" x="1950" y="1977">motivo_derivacion</text><text class="chip" x="2150" y="1977"></text><text class="ct" text-anchor="end" x="2290" y="1977">text</text>
+<rect class="alt" x="1941" y="1984" width="358" height="22"/>
+<text class="cn" x="1950" y="1999">prioridad</text><text class="chip" x="2150" y="1999">NN</text><text class="ct" text-anchor="end" x="2290" y="1999">character varying(20)</text>
+<text class="cn" x="1950" y="2021">origen</text><text class="chip" x="2150" y="2021"></text><text class="ct" text-anchor="end" x="2290" y="2021">character varying(30)</text>
+<rect class="alt" x="1941" y="2028" width="358" height="22"/>
+<text class="cn" x="1950" y="2043">estado</text><text class="chip" x="2150" y="2043">NN</text><text class="ct" text-anchor="end" x="2290" y="2043">character varying(30)</text>
+<text class="cn" x="1950" y="2065">fecha_derivacion</text><text class="chip" x="2150" y="2065"></text><text class="ct" text-anchor="end" x="2290" y="2065">timestamp without time zone</text>
+<rect class="alt" x="1941" y="2072" width="358" height="22"/>
+<text class="cn" x="1950" y="2087">fecha_vista</text><text class="chip" x="2150" y="2087"></text><text class="ct" text-anchor="end" x="2290" y="2087">timestamp without time zone</text>
+<text class="cn" x="1950" y="2109">fecha_atencion</text><text class="chip" x="2150" y="2109"></text><text class="ct" text-anchor="end" x="2290" y="2109">timestamp without time zone</text>
+<rect class="alt" x="1941" y="2116" width="358" height="22"/>
+<text class="cn" x="1950" y="2131">observaciones</text><text class="chip" x="2150" y="2131"></text><text class="ct" text-anchor="end" x="2290" y="2131">text</text>
+<text class="cn" x="1950" y="2153">created_at</text><text class="chip" x="2150" y="2153"></text><text class="ct" text-anchor="end" x="2290" y="2153">timestamp without time zone</text>
+<rect class="alt" x="1941" y="2160" width="358" height="22"/>
+<text class="cn" x="1950" y="2175">updated_at</text><text class="chip" x="2150" y="2175"></text><text class="ct" text-anchor="end" x="2290" y="2175">timestamp without time zone</text>
+<text class="cn" x="1950" y="2197">deleted_at</text><text class="chip" x="2150" y="2197"></text><text class="ct" text-anchor="end" x="2290" y="2197">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="2240" width="360" height="382" rx="5"/><rect class="head" x="1940" y="2240" width="360" height="44" rx="5"/><text class="tn" x="1952" y="2267">public.dias_plan_alimentario</text>
+<text class="cn" x="1950" y="2299">id_dia_plan_alimentario</text><text class="chip" x="2150" y="2299">PK</text><text class="ct" text-anchor="end" x="2290" y="2299">bigint(64,0)</text>
+<rect class="alt" x="1941" y="2306" width="358" height="22"/>
+<text class="cn" x="1950" y="2321">id_plan_alimentario</text><text class="chip" x="2150" y="2321">FK NN</text><text class="ct" text-anchor="end" x="2290" y="2321">bigint(64,0)</text>
+<text class="cn" x="1950" y="2343">numero_dia</text><text class="chip" x="2150" y="2343">NN</text><text class="ct" text-anchor="end" x="2290" y="2343">integer(32,0)</text>
+<rect class="alt" x="1941" y="2350" width="358" height="22"/>
+<text class="cn" x="1950" y="2365">nombre_dia</text><text class="chip" x="2150" y="2365"></text><text class="ct" text-anchor="end" x="2290" y="2365">character varying(255)</text>
+<text class="cn" x="1950" y="2387">fecha</text><text class="chip" x="2150" y="2387"></text><text class="ct" text-anchor="end" x="2290" y="2387">date</text>
+<rect class="alt" x="1941" y="2394" width="358" height="22"/>
+<text class="cn" x="1950" y="2409">calorias_totales</text><text class="chip" x="2150" y="2409"></text><text class="ct" text-anchor="end" x="2290" y="2409">numeric(8,2)</text>
+<text class="cn" x="1950" y="2431">proteinas_totales</text><text class="chip" x="2150" y="2431"></text><text class="ct" text-anchor="end" x="2290" y="2431">numeric(8,2)</text>
+<rect class="alt" x="1941" y="2438" width="358" height="22"/>
+<text class="cn" x="1950" y="2453">carbohidratos_totales</text><text class="chip" x="2150" y="2453"></text><text class="ct" text-anchor="end" x="2290" y="2453">numeric(8,2)</text>
+<text class="cn" x="1950" y="2475">grasas_totales</text><text class="chip" x="2150" y="2475"></text><text class="ct" text-anchor="end" x="2290" y="2475">numeric(8,2)</text>
+<rect class="alt" x="1941" y="2482" width="358" height="22"/>
+<text class="cn" x="1950" y="2497">fibra_total</text><text class="chip" x="2150" y="2497"></text><text class="ct" text-anchor="end" x="2290" y="2497">numeric(8,2)</text>
+<text class="cn" x="1950" y="2519">observaciones</text><text class="chip" x="2150" y="2519"></text><text class="ct" text-anchor="end" x="2290" y="2519">text</text>
+<rect class="alt" x="1941" y="2526" width="358" height="22"/>
+<text class="cn" x="1950" y="2541">estado</text><text class="chip" x="2150" y="2541">NN</text><text class="ct" text-anchor="end" x="2290" y="2541">character varying(255)</text>
+<text class="cn" x="1950" y="2563">created_at</text><text class="chip" x="2150" y="2563"></text><text class="ct" text-anchor="end" x="2290" y="2563">timestamp without time zone</text>
+<rect class="alt" x="1941" y="2570" width="358" height="22"/>
+<text class="cn" x="1950" y="2585">updated_at</text><text class="chip" x="2150" y="2585"></text><text class="ct" text-anchor="end" x="2290" y="2585">timestamp without time zone</text>
+<text class="cn" x="1950" y="2607">deleted_at</text><text class="chip" x="2150" y="2607"></text><text class="ct" text-anchor="end" x="2290" y="2607">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="2650" width="360" height="206" rx="5"/><rect class="head" x="1940" y="2650" width="360" height="44" rx="5"/><text class="tn" x="1952" y="2677">public.failed_jobs</text>
+<text class="cn" x="1950" y="2709">id</text><text class="chip" x="2150" y="2709">PK</text><text class="ct" text-anchor="end" x="2290" y="2709">bigint(64,0)</text>
+<rect class="alt" x="1941" y="2716" width="358" height="22"/>
+<text class="cn" x="1950" y="2731">uuid</text><text class="chip" x="2150" y="2731">UQ NN</text><text class="ct" text-anchor="end" x="2290" y="2731">character varying(255)</text>
+<text class="cn" x="1950" y="2753">connection</text><text class="chip" x="2150" y="2753">NN</text><text class="ct" text-anchor="end" x="2290" y="2753">text</text>
+<rect class="alt" x="1941" y="2760" width="358" height="22"/>
+<text class="cn" x="1950" y="2775">queue</text><text class="chip" x="2150" y="2775">NN</text><text class="ct" text-anchor="end" x="2290" y="2775">text</text>
+<text class="cn" x="1950" y="2797">payload</text><text class="chip" x="2150" y="2797">NN</text><text class="ct" text-anchor="end" x="2290" y="2797">text</text>
+<rect class="alt" x="1941" y="2804" width="358" height="22"/>
+<text class="cn" x="1950" y="2819">exception</text><text class="chip" x="2150" y="2819">NN</text><text class="ct" text-anchor="end" x="2290" y="2819">text</text>
+<text class="cn" x="1950" y="2841">failed_at</text><text class="chip" x="2150" y="2841">NN</text><text class="ct" text-anchor="end" x="2290" y="2841">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="2884" width="360" height="272" rx="5"/><rect class="head" x="1940" y="2884" width="360" height="44" rx="5"/><text class="tn" x="1952" y="2911">public.job_batches</text>
+<text class="cn" x="1950" y="2943">id</text><text class="chip" x="2150" y="2943">PK</text><text class="ct" text-anchor="end" x="2290" y="2943">character varying(255)</text>
+<rect class="alt" x="1941" y="2950" width="358" height="22"/>
+<text class="cn" x="1950" y="2965">name</text><text class="chip" x="2150" y="2965">NN</text><text class="ct" text-anchor="end" x="2290" y="2965">character varying(255)</text>
+<text class="cn" x="1950" y="2987">total_jobs</text><text class="chip" x="2150" y="2987">NN</text><text class="ct" text-anchor="end" x="2290" y="2987">integer(32,0)</text>
+<rect class="alt" x="1941" y="2994" width="358" height="22"/>
+<text class="cn" x="1950" y="3009">pending_jobs</text><text class="chip" x="2150" y="3009">NN</text><text class="ct" text-anchor="end" x="2290" y="3009">integer(32,0)</text>
+<text class="cn" x="1950" y="3031">failed_jobs</text><text class="chip" x="2150" y="3031">NN</text><text class="ct" text-anchor="end" x="2290" y="3031">integer(32,0)</text>
+<rect class="alt" x="1941" y="3038" width="358" height="22"/>
+<text class="cn" x="1950" y="3053">failed_job_ids</text><text class="chip" x="2150" y="3053">NN</text><text class="ct" text-anchor="end" x="2290" y="3053">text</text>
+<text class="cn" x="1950" y="3075">options</text><text class="chip" x="2150" y="3075"></text><text class="ct" text-anchor="end" x="2290" y="3075">text</text>
+<rect class="alt" x="1941" y="3082" width="358" height="22"/>
+<text class="cn" x="1950" y="3097">cancelled_at</text><text class="chip" x="2150" y="3097"></text><text class="ct" text-anchor="end" x="2290" y="3097">integer(32,0)</text>
+<text class="cn" x="1950" y="3119">created_at</text><text class="chip" x="2150" y="3119">NN</text><text class="ct" text-anchor="end" x="2290" y="3119">integer(32,0)</text>
+<rect class="alt" x="1941" y="3126" width="358" height="22"/>
+<text class="cn" x="1950" y="3141">finished_at</text><text class="chip" x="2150" y="3141"></text><text class="ct" text-anchor="end" x="2290" y="3141">integer(32,0)</text>
+</g>
+<g><rect class="box" x="1940" y="3184" width="360" height="206" rx="5"/><rect class="head" x="1940" y="3184" width="360" height="44" rx="5"/><text class="tn" x="1952" y="3211">public.jobs</text>
+<text class="cn" x="1950" y="3243">id</text><text class="chip" x="2150" y="3243">PK</text><text class="ct" text-anchor="end" x="2290" y="3243">bigint(64,0)</text>
+<rect class="alt" x="1941" y="3250" width="358" height="22"/>
+<text class="cn" x="1950" y="3265">queue</text><text class="chip" x="2150" y="3265">NN</text><text class="ct" text-anchor="end" x="2290" y="3265">character varying(255)</text>
+<text class="cn" x="1950" y="3287">payload</text><text class="chip" x="2150" y="3287">NN</text><text class="ct" text-anchor="end" x="2290" y="3287">text</text>
+<rect class="alt" x="1941" y="3294" width="358" height="22"/>
+<text class="cn" x="1950" y="3309">attempts</text><text class="chip" x="2150" y="3309">NN</text><text class="ct" text-anchor="end" x="2290" y="3309">smallint(16,0)</text>
+<text class="cn" x="1950" y="3331">reserved_at</text><text class="chip" x="2150" y="3331"></text><text class="ct" text-anchor="end" x="2290" y="3331">integer(32,0)</text>
+<rect class="alt" x="1941" y="3338" width="358" height="22"/>
+<text class="cn" x="1950" y="3353">available_at</text><text class="chip" x="2150" y="3353">NN</text><text class="ct" text-anchor="end" x="2290" y="3353">integer(32,0)</text>
+<text class="cn" x="1950" y="3375">created_at</text><text class="chip" x="2150" y="3375">NN</text><text class="ct" text-anchor="end" x="2290" y="3375">integer(32,0)</text>
+</g>
+<g><rect class="box" x="1940" y="3418" width="360" height="118" rx="5"/><rect class="head" x="1940" y="3418" width="360" height="44" rx="5"/><text class="tn" x="1952" y="3445">public.migrations</text>
+<text class="cn" x="1950" y="3477">id</text><text class="chip" x="2150" y="3477">PK</text><text class="ct" text-anchor="end" x="2290" y="3477">integer(32,0)</text>
+<rect class="alt" x="1941" y="3484" width="358" height="22"/>
+<text class="cn" x="1950" y="3499">migration</text><text class="chip" x="2150" y="3499">NN</text><text class="ct" text-anchor="end" x="2290" y="3499">character varying(255)</text>
+<text class="cn" x="1950" y="3521">batch</text><text class="chip" x="2150" y="3521">NN</text><text class="ct" text-anchor="end" x="2290" y="3521">integer(32,0)</text>
+</g>
+<g><rect class="box" x="1940" y="3564" width="360" height="360" rx="5"/><rect class="head" x="1940" y="3564" width="360" height="44" rx="5"/><text class="tn" x="1952" y="3591">public.notificaciones_internas</text>
+<text class="cn" x="1950" y="3623">id_notificacion_interna</text><text class="chip" x="2150" y="3623">PK</text><text class="ct" text-anchor="end" x="2290" y="3623">bigint(64,0)</text>
+<rect class="alt" x="1941" y="3630" width="358" height="22"/>
+<text class="cn" x="1950" y="3645">id_usuario_destino</text><text class="chip" x="2150" y="3645">FK NN</text><text class="ct" text-anchor="end" x="2290" y="3645">bigint(64,0)</text>
+<text class="cn" x="1950" y="3667">tipo</text><text class="chip" x="2150" y="3667">NN</text><text class="ct" text-anchor="end" x="2290" y="3667">character varying(80)</text>
+<rect class="alt" x="1941" y="3674" width="358" height="22"/>
+<text class="cn" x="1950" y="3689">titulo</text><text class="chip" x="2150" y="3689">NN</text><text class="ct" text-anchor="end" x="2290" y="3689">character varying(180)</text>
+<text class="cn" x="1950" y="3711">mensaje</text><text class="chip" x="2150" y="3711">NN</text><text class="ct" text-anchor="end" x="2290" y="3711">text</text>
+<rect class="alt" x="1941" y="3718" width="358" height="22"/>
+<text class="cn" x="1950" y="3733">data</text><text class="chip" x="2150" y="3733"></text><text class="ct" text-anchor="end" x="2290" y="3733">json</text>
+<text class="cn" x="1950" y="3755">leida</text><text class="chip" x="2150" y="3755">NN</text><text class="ct" text-anchor="end" x="2290" y="3755">boolean</text>
+<rect class="alt" x="1941" y="3762" width="358" height="22"/>
+<text class="cn" x="1950" y="3777">fecha_lectura</text><text class="chip" x="2150" y="3777"></text><text class="ct" text-anchor="end" x="2290" y="3777">timestamp without time zone</text>
+<text class="cn" x="1950" y="3799">url_destino</text><text class="chip" x="2150" y="3799"></text><text class="ct" text-anchor="end" x="2290" y="3799">character varying(255)</text>
+<rect class="alt" x="1941" y="3806" width="358" height="22"/>
+<text class="cn" x="1950" y="3821">prioridad</text><text class="chip" x="2150" y="3821">NN</text><text class="ct" text-anchor="end" x="2290" y="3821">character varying(20)</text>
+<text class="cn" x="1950" y="3843">estado</text><text class="chip" x="2150" y="3843">NN</text><text class="ct" text-anchor="end" x="2290" y="3843">character varying(20)</text>
+<rect class="alt" x="1941" y="3850" width="358" height="22"/>
+<text class="cn" x="1950" y="3865">created_at</text><text class="chip" x="2150" y="3865"></text><text class="ct" text-anchor="end" x="2290" y="3865">timestamp without time zone</text>
+<text class="cn" x="1950" y="3887">updated_at</text><text class="chip" x="2150" y="3887"></text><text class="ct" text-anchor="end" x="2290" y="3887">timestamp without time zone</text>
+<rect class="alt" x="1941" y="3894" width="358" height="22"/>
+<text class="cn" x="1950" y="3909">deleted_at</text><text class="chip" x="2150" y="3909"></text><text class="ct" text-anchor="end" x="2290" y="3909">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="3952" width="360" height="690" rx="5"/><rect class="head" x="1940" y="3952" width="360" height="44" rx="5"/><text class="tn" x="1952" y="3979">public.planes_alimentarios</text>
+<text class="cn" x="1950" y="4011">id_plan_alimentario</text><text class="chip" x="2150" y="4011">PK</text><text class="ct" text-anchor="end" x="2290" y="4011">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4018" width="358" height="22"/>
+<text class="cn" x="1950" y="4033">id_paciente</text><text class="chip" x="2150" y="4033">FK NN</text><text class="ct" text-anchor="end" x="2290" y="4033">bigint(64,0)</text>
+<text class="cn" x="1950" y="4055">id_nutricionista</text><text class="chip" x="2150" y="4055">FK</text><text class="ct" text-anchor="end" x="2290" y="4055">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4062" width="358" height="22"/>
+<text class="cn" x="1950" y="4077">id_recomendacion_nutricional_experta</text><text class="chip" x="2150" y="4077">FK</text><text class="ct" text-anchor="end" x="2290" y="4077">bigint(64,0)</text>
+<text class="cn" x="1950" y="4099">id_requerimiento_nutricional</text><text class="chip" x="2150" y="4099">FK</text><text class="ct" text-anchor="end" x="2290" y="4099">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4106" width="358" height="22"/>
+<text class="cn" x="1950" y="4121">nombre</text><text class="chip" x="2150" y="4121">NN</text><text class="ct" text-anchor="end" x="2290" y="4121">character varying(255)</text>
+<text class="cn" x="1950" y="4143">fecha_inicio</text><text class="chip" x="2150" y="4143"></text><text class="ct" text-anchor="end" x="2290" y="4143">date</text>
+<rect class="alt" x="1941" y="4150" width="358" height="22"/>
+<text class="cn" x="1950" y="4165">fecha_fin</text><text class="chip" x="2150" y="4165"></text><text class="ct" text-anchor="end" x="2290" y="4165">date</text>
+<text class="cn" x="1950" y="4187">duracion_dias</text><text class="chip" x="2150" y="4187">NN</text><text class="ct" text-anchor="end" x="2290" y="4187">integer(32,0)</text>
+<rect class="alt" x="1941" y="4194" width="358" height="22"/>
+<text class="cn" x="1950" y="4209">objetivo_plan</text><text class="chip" x="2150" y="4209"></text><text class="ct" text-anchor="end" x="2290" y="4209">character varying(255)</text>
+<text class="cn" x="1950" y="4231">calorias_objetivo</text><text class="chip" x="2150" y="4231"></text><text class="ct" text-anchor="end" x="2290" y="4231">numeric(8,2)</text>
+<rect class="alt" x="1941" y="4238" width="358" height="22"/>
+<text class="cn" x="1950" y="4253">proteinas_objetivo</text><text class="chip" x="2150" y="4253"></text><text class="ct" text-anchor="end" x="2290" y="4253">numeric(8,2)</text>
+<text class="cn" x="1950" y="4275">carbohidratos_objetivo</text><text class="chip" x="2150" y="4275"></text><text class="ct" text-anchor="end" x="2290" y="4275">numeric(8,2)</text>
+<rect class="alt" x="1941" y="4282" width="358" height="22"/>
+<text class="cn" x="1950" y="4297">grasas_objetivo</text><text class="chip" x="2150" y="4297"></text><text class="ct" text-anchor="end" x="2290" y="4297">numeric(8,2)</text>
+<text class="cn" x="1950" y="4319">fibra_objetivo</text><text class="chip" x="2150" y="4319"></text><text class="ct" text-anchor="end" x="2290" y="4319">numeric(8,2)</text>
+<rect class="alt" x="1941" y="4326" width="358" height="22"/>
+<text class="cn" x="1950" y="4341">calorias_totales</text><text class="chip" x="2150" y="4341"></text><text class="ct" text-anchor="end" x="2290" y="4341">numeric(10,2)</text>
+<text class="cn" x="1950" y="4363">proteinas_totales</text><text class="chip" x="2150" y="4363"></text><text class="ct" text-anchor="end" x="2290" y="4363">numeric(10,2)</text>
+<rect class="alt" x="1941" y="4370" width="358" height="22"/>
+<text class="cn" x="1950" y="4385">carbohidratos_totales</text><text class="chip" x="2150" y="4385"></text><text class="ct" text-anchor="end" x="2290" y="4385">numeric(10,2)</text>
+<text class="cn" x="1950" y="4407">grasas_totales</text><text class="chip" x="2150" y="4407"></text><text class="ct" text-anchor="end" x="2290" y="4407">numeric(10,2)</text>
+<rect class="alt" x="1941" y="4414" width="358" height="22"/>
+<text class="cn" x="1950" y="4429">fibra_total</text><text class="chip" x="2150" y="4429"></text><text class="ct" text-anchor="end" x="2290" y="4429">numeric(10,2)</text>
+<text class="cn" x="1950" y="4451">estado_plan</text><text class="chip" x="2150" y="4451">NN</text><text class="ct" text-anchor="end" x="2290" y="4451">character varying(255)</text>
+<rect class="alt" x="1941" y="4458" width="358" height="22"/>
+<text class="cn" x="1950" y="4473">generado_por_sistema_experto</text><text class="chip" x="2150" y="4473">NN</text><text class="ct" text-anchor="end" x="2290" y="4473">boolean</text>
+<text class="cn" x="1950" y="4495">observaciones</text><text class="chip" x="2150" y="4495"></text><text class="ct" text-anchor="end" x="2290" y="4495">text</text>
+<rect class="alt" x="1941" y="4502" width="358" height="22"/>
+<text class="cn" x="1950" y="4517">fecha_aprobacion</text><text class="chip" x="2150" y="4517"></text><text class="ct" text-anchor="end" x="2290" y="4517">timestamp without time zone</text>
+<text class="cn" x="1950" y="4539">aprobado_por</text><text class="chip" x="2150" y="4539">FK</text><text class="ct" text-anchor="end" x="2290" y="4539">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4546" width="358" height="22"/>
+<text class="cn" x="1950" y="4561">estado</text><text class="chip" x="2150" y="4561">NN</text><text class="ct" text-anchor="end" x="2290" y="4561">character varying(255)</text>
+<text class="cn" x="1950" y="4583">created_at</text><text class="chip" x="2150" y="4583"></text><text class="ct" text-anchor="end" x="2290" y="4583">timestamp without time zone</text>
+<rect class="alt" x="1941" y="4590" width="358" height="22"/>
+<text class="cn" x="1950" y="4605">updated_at</text><text class="chip" x="2150" y="4605"></text><text class="ct" text-anchor="end" x="2290" y="4605">timestamp without time zone</text>
+<text class="cn" x="1950" y="4627">deleted_at</text><text class="chip" x="2150" y="4627"></text><text class="ct" text-anchor="end" x="2290" y="4627">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="4670" width="360" height="360" rx="5"/><rect class="head" x="1940" y="4670" width="360" height="44" rx="5"/><text class="tn" x="1952" y="4697">public.receta_alimentos</text>
+<text class="cn" x="1950" y="4729">id_receta_alimento</text><text class="chip" x="2150" y="4729">PK</text><text class="ct" text-anchor="end" x="2290" y="4729">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4736" width="358" height="22"/>
+<text class="cn" x="1950" y="4751">id_receta</text><text class="chip" x="2150" y="4751">FK NN</text><text class="ct" text-anchor="end" x="2290" y="4751">bigint(64,0)</text>
+<text class="cn" x="1950" y="4773">id_alimento</text><text class="chip" x="2150" y="4773">FK NN</text><text class="ct" text-anchor="end" x="2290" y="4773">bigint(64,0)</text>
+<rect class="alt" x="1941" y="4780" width="358" height="22"/>
+<text class="cn" x="1950" y="4795">cantidad</text><text class="chip" x="2150" y="4795">NN</text><text class="ct" text-anchor="end" x="2290" y="4795">numeric(10,2)</text>
+<text class="cn" x="1950" y="4817">unidad</text><text class="chip" x="2150" y="4817">NN</text><text class="ct" text-anchor="end" x="2290" y="4817">character varying(30)</text>
+<rect class="alt" x="1941" y="4824" width="358" height="22"/>
+<text class="cn" x="1950" y="4839">calorias_aporte</text><text class="chip" x="2150" y="4839">NN</text><text class="ct" text-anchor="end" x="2290" y="4839">numeric(10,2)</text>
+<text class="cn" x="1950" y="4861">proteinas_aporte</text><text class="chip" x="2150" y="4861">NN</text><text class="ct" text-anchor="end" x="2290" y="4861">numeric(10,2)</text>
+<rect class="alt" x="1941" y="4868" width="358" height="22"/>
+<text class="cn" x="1950" y="4883">carbohidratos_aporte</text><text class="chip" x="2150" y="4883">NN</text><text class="ct" text-anchor="end" x="2290" y="4883">numeric(10,2)</text>
+<text class="cn" x="1950" y="4905">grasas_aporte</text><text class="chip" x="2150" y="4905">NN</text><text class="ct" text-anchor="end" x="2290" y="4905">numeric(10,2)</text>
+<rect class="alt" x="1941" y="4912" width="358" height="22"/>
+<text class="cn" x="1950" y="4927">fibra_aporte</text><text class="chip" x="2150" y="4927">NN</text><text class="ct" text-anchor="end" x="2290" y="4927">numeric(10,2)</text>
+<text class="cn" x="1950" y="4949">observaciones</text><text class="chip" x="2150" y="4949"></text><text class="ct" text-anchor="end" x="2290" y="4949">text</text>
+<rect class="alt" x="1941" y="4956" width="358" height="22"/>
+<text class="cn" x="1950" y="4971">created_at</text><text class="chip" x="2150" y="4971"></text><text class="ct" text-anchor="end" x="2290" y="4971">timestamp without time zone</text>
+<text class="cn" x="1950" y="4993">updated_at</text><text class="chip" x="2150" y="4993"></text><text class="ct" text-anchor="end" x="2290" y="4993">timestamp without time zone</text>
+<rect class="alt" x="1941" y="5000" width="358" height="22"/>
+<text class="cn" x="1950" y="5015">deleted_at</text><text class="chip" x="2150" y="5015"></text><text class="ct" text-anchor="end" x="2290" y="5015">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="5058" width="360" height="426" rx="5"/><rect class="head" x="1940" y="5058" width="360" height="44" rx="5"/><text class="tn" x="1952" y="5085">public.retroalimentaciones_paciente</text>
+<text class="cn" x="1950" y="5117">id_retroalimentacion_paciente</text><text class="chip" x="2150" y="5117">PK</text><text class="ct" text-anchor="end" x="2290" y="5117">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5124" width="358" height="22"/>
+<text class="cn" x="1950" y="5139">id_paciente</text><text class="chip" x="2150" y="5139">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5139">bigint(64,0)</text>
+<text class="cn" x="1950" y="5161">id_plan_alimentario</text><text class="chip" x="2150" y="5161">FK</text><text class="ct" text-anchor="end" x="2290" y="5161">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5168" width="358" height="22"/>
+<text class="cn" x="1950" y="5183">id_seguimiento_comida</text><text class="chip" x="2150" y="5183">FK</text><text class="ct" text-anchor="end" x="2290" y="5183">bigint(64,0)</text>
+<text class="cn" x="1950" y="5205">id_seguimiento_sintoma_paciente</text><text class="chip" x="2150" y="5205">FK</text><text class="ct" text-anchor="end" x="2290" y="5205">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5212" width="358" height="22"/>
+<text class="cn" x="1950" y="5227">id_usuario_emisor</text><text class="chip" x="2150" y="5227">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5227">bigint(64,0)</text>
+<text class="cn" x="1950" y="5249">rol_emisor</text><text class="chip" x="2150" y="5249">NN</text><text class="ct" text-anchor="end" x="2290" y="5249">character varying(30)</text>
+<rect class="alt" x="1941" y="5256" width="358" height="22"/>
+<text class="cn" x="1950" y="5271">tipo_retroalimentacion</text><text class="chip" x="2150" y="5271">NN</text><text class="ct" text-anchor="end" x="2290" y="5271">character varying(40)</text>
+<text class="cn" x="1950" y="5293">mensaje</text><text class="chip" x="2150" y="5293">NN</text><text class="ct" text-anchor="end" x="2290" y="5293">text</text>
+<rect class="alt" x="1941" y="5300" width="358" height="22"/>
+<text class="cn" x="1950" y="5315">prioridad</text><text class="chip" x="2150" y="5315">NN</text><text class="ct" text-anchor="end" x="2290" y="5315">character varying(20)</text>
+<text class="cn" x="1950" y="5337">visible_para_paciente</text><text class="chip" x="2150" y="5337">NN</text><text class="ct" text-anchor="end" x="2290" y="5337">boolean</text>
+<rect class="alt" x="1941" y="5344" width="358" height="22"/>
+<text class="cn" x="1950" y="5359">leido_por_paciente</text><text class="chip" x="2150" y="5359">NN</text><text class="ct" text-anchor="end" x="2290" y="5359">boolean</text>
+<text class="cn" x="1950" y="5381">fecha_lectura_paciente</text><text class="chip" x="2150" y="5381"></text><text class="ct" text-anchor="end" x="2290" y="5381">timestamp without time zone</text>
+<rect class="alt" x="1941" y="5388" width="358" height="22"/>
+<text class="cn" x="1950" y="5403">estado</text><text class="chip" x="2150" y="5403">NN</text><text class="ct" text-anchor="end" x="2290" y="5403">character varying(20)</text>
+<text class="cn" x="1950" y="5425">created_at</text><text class="chip" x="2150" y="5425"></text><text class="ct" text-anchor="end" x="2290" y="5425">timestamp without time zone</text>
+<rect class="alt" x="1941" y="5432" width="358" height="22"/>
+<text class="cn" x="1950" y="5447">updated_at</text><text class="chip" x="2150" y="5447"></text><text class="ct" text-anchor="end" x="2290" y="5447">timestamp without time zone</text>
+<text class="cn" x="1950" y="5469">deleted_at</text><text class="chip" x="2150" y="5469"></text><text class="ct" text-anchor="end" x="2290" y="5469">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="5512" width="360" height="712" rx="5"/><rect class="head" x="1940" y="5512" width="360" height="44" rx="5"/><text class="tn" x="1952" y="5539">public.seguimientos_comidas</text>
+<text class="cn" x="1950" y="5571">id_seguimiento_comida</text><text class="chip" x="2150" y="5571">PK</text><text class="ct" text-anchor="end" x="2290" y="5571">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5578" width="358" height="22"/>
+<text class="cn" x="1950" y="5593">id_paciente</text><text class="chip" x="2150" y="5593">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5593">bigint(64,0)</text>
+<text class="cn" x="1950" y="5615">id_plan_alimentario</text><text class="chip" x="2150" y="5615">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5615">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5622" width="358" height="22"/>
+<text class="cn" x="1950" y="5637">id_dia_plan_alimentario</text><text class="chip" x="2150" y="5637">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5637">bigint(64,0)</text>
+<text class="cn" x="1950" y="5659">id_comida_plan_alimentario</text><text class="chip" x="2150" y="5659">FK NN</text><text class="ct" text-anchor="end" x="2290" y="5659">bigint(64,0)</text>
+<rect class="alt" x="1941" y="5666" width="358" height="22"/>
+<text class="cn" x="1950" y="5681">fecha_seguimiento</text><text class="chip" x="2150" y="5681">NN</text><text class="ct" text-anchor="end" x="2290" y="5681">date</text>
+<text class="cn" x="1950" y="5703">estado_cumplimiento</text><text class="chip" x="2150" y="5703">NN</text><text class="ct" text-anchor="end" x="2290" y="5703">character varying(30)</text>
+<rect class="alt" x="1941" y="5710" width="358" height="22"/>
+<text class="cn" x="1950" y="5725">porcentaje_consumido</text><text class="chip" x="2150" y="5725"></text><text class="ct" text-anchor="end" x="2290" y="5725">smallint(16,0)</text>
+<text class="cn" x="1950" y="5747">nivel_agrado</text><text class="chip" x="2150" y="5747"></text><text class="ct" text-anchor="end" x="2290" y="5747">character varying(30)</text>
+<rect class="alt" x="1941" y="5754" width="358" height="22"/>
+<text class="cn" x="1950" y="5769">desea_repetir</text><text class="chip" x="2150" y="5769"></text><text class="ct" text-anchor="end" x="2290" y="5769">boolean</text>
+<text class="cn" x="1950" y="5791">nivel_saciedad</text><text class="chip" x="2150" y="5791"></text><text class="ct" text-anchor="end" x="2290" y="5791">character varying(20)</text>
+<rect class="alt" x="1941" y="5798" width="358" height="22"/>
+<text class="cn" x="1950" y="5813">nivel_hambre_posterior</text><text class="chip" x="2150" y="5813"></text><text class="ct" text-anchor="end" x="2290" y="5813">character varying(20)</text>
+<text class="cn" x="1950" y="5835">ansiedad_posterior</text><text class="chip" x="2150" y="5835">NN</text><text class="ct" text-anchor="end" x="2290" y="5835">boolean</text>
+<rect class="alt" x="1941" y="5842" width="358" height="22"/>
+<text class="cn" x="1950" y="5857">presento_molestia</text><text class="chip" x="2150" y="5857">NN</text><text class="ct" text-anchor="end" x="2290" y="5857">boolean</text>
+<text class="cn" x="1950" y="5879">tipo_molestia</text><text class="chip" x="2150" y="5879"></text><text class="ct" text-anchor="end" x="2290" y="5879">character varying(40)</text>
+<rect class="alt" x="1941" y="5886" width="358" height="22"/>
+<text class="cn" x="1950" y="5901">intensidad_molestia</text><text class="chip" x="2150" y="5901"></text><text class="ct" text-anchor="end" x="2290" y="5901">character varying(20)</text>
+<text class="cn" x="1950" y="5923">dificultad_preparacion</text><text class="chip" x="2150" y="5923"></text><text class="ct" text-anchor="end" x="2290" y="5923">character varying(20)</text>
+<rect class="alt" x="1941" y="5930" width="358" height="22"/>
+<text class="cn" x="1950" y="5945">consiguio_ingredientes</text><text class="chip" x="2150" y="5945"></text><text class="ct" text-anchor="end" x="2290" y="5945">boolean</text>
+<text class="cn" x="1950" y="5967">motivo_no_cumplimiento</text><text class="chip" x="2150" y="5967"></text><text class="ct" text-anchor="end" x="2290" y="5967">character varying(40)</text>
+<rect class="alt" x="1941" y="5974" width="358" height="22"/>
+<text class="cn" x="1950" y="5989">comida_reemplazo</text><text class="chip" x="2150" y="5989"></text><text class="ct" text-anchor="end" x="2290" y="5989">text</text>
+<text class="cn" x="1950" y="6011">motivo_reemplazo</text><text class="chip" x="2150" y="6011"></text><text class="ct" text-anchor="end" x="2290" y="6011">text</text>
+<rect class="alt" x="1941" y="6018" width="358" height="22"/>
+<text class="cn" x="1950" y="6033">comentario_paciente</text><text class="chip" x="2150" y="6033"></text><text class="ct" text-anchor="end" x="2290" y="6033">text</text>
+<text class="cn" x="1950" y="6055">sugerencia_paciente</text><text class="chip" x="2150" y="6055"></text><text class="ct" text-anchor="end" x="2290" y="6055">text</text>
+<rect class="alt" x="1941" y="6062" width="358" height="22"/>
+<text class="cn" x="1950" y="6077">observacion_para_siguiente_plan</text><text class="chip" x="2150" y="6077"></text><text class="ct" text-anchor="end" x="2290" y="6077">text</text>
+<text class="cn" x="1950" y="6099">registrado_por</text><text class="chip" x="2150" y="6099">FK</text><text class="ct" text-anchor="end" x="2290" y="6099">bigint(64,0)</text>
+<rect class="alt" x="1941" y="6106" width="358" height="22"/>
+<text class="cn" x="1950" y="6121">revisado_por_nutricionista</text><text class="chip" x="2150" y="6121">NN</text><text class="ct" text-anchor="end" x="2290" y="6121">boolean</text>
+<text class="cn" x="1950" y="6143">fecha_revision_nutricionista</text><text class="chip" x="2150" y="6143"></text><text class="ct" text-anchor="end" x="2290" y="6143">timestamp without time zone</text>
+<rect class="alt" x="1941" y="6150" width="358" height="22"/>
+<text class="cn" x="1950" y="6165">created_at</text><text class="chip" x="2150" y="6165"></text><text class="ct" text-anchor="end" x="2290" y="6165">timestamp without time zone</text>
+<text class="cn" x="1950" y="6187">updated_at</text><text class="chip" x="2150" y="6187"></text><text class="ct" text-anchor="end" x="2290" y="6187">timestamp without time zone</text>
+<rect class="alt" x="1941" y="6194" width="358" height="22"/>
+<text class="cn" x="1950" y="6209">deleted_at</text><text class="chip" x="2150" y="6209"></text><text class="ct" text-anchor="end" x="2290" y="6209">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="1940" y="6252" width="360" height="602" rx="5"/><rect class="head" x="1940" y="6252" width="360" height="44" rx="5"/><text class="tn" x="1952" y="6279">public.seguimientos_sintomas_paciente</text>
+<text class="cn" x="1950" y="6311">id_seguimiento_sintoma_paciente</text><text class="chip" x="2150" y="6311">PK</text><text class="ct" text-anchor="end" x="2290" y="6311">bigint(64,0)</text>
+<rect class="alt" x="1941" y="6318" width="358" height="22"/>
+<text class="cn" x="1950" y="6333">id_paciente</text><text class="chip" x="2150" y="6333">UQ FK NN</text><text class="ct" text-anchor="end" x="2290" y="6333">bigint(64,0)</text>
+<text class="cn" x="1950" y="6355">fecha_registro</text><text class="chip" x="2150" y="6355">UQ NN</text><text class="ct" text-anchor="end" x="2290" y="6355">date</text>
+<rect class="alt" x="1941" y="6362" width="358" height="22"/>
+<text class="cn" x="1950" y="6377">nivel_energia</text><text class="chip" x="2150" y="6377"></text><text class="ct" text-anchor="end" x="2290" y="6377">character varying(255)</text>
+<text class="cn" x="1950" y="6399">hambre_durante_dia</text><text class="chip" x="2150" y="6399"></text><text class="ct" text-anchor="end" x="2290" y="6399">character varying(255)</text>
+<rect class="alt" x="1941" y="6406" width="358" height="22"/>
+<text class="cn" x="1950" y="6421">ansiedad_por_comida</text><text class="chip" x="2150" y="6421"></text><text class="ct" text-anchor="end" x="2290" y="6421">character varying(255)</text>
+<text class="cn" x="1950" y="6443">antojos_dulces</text><text class="chip" x="2150" y="6443"></text><text class="ct" text-anchor="end" x="2290" y="6443">character varying(255)</text>
+<rect class="alt" x="1941" y="6450" width="358" height="22"/>
+<text class="cn" x="1950" y="6465">hambre_nocturna</text><text class="chip" x="2150" y="6465">NN</text><text class="ct" text-anchor="end" x="2290" y="6465">boolean</text>
+<text class="cn" x="1950" y="6487">hinchazon_abdominal</text><text class="chip" x="2150" y="6487"></text><text class="ct" text-anchor="end" x="2290" y="6487">character varying(255)</text>
+<rect class="alt" x="1941" y="6494" width="358" height="22"/>
+<text class="cn" x="1950" y="6509">fatiga_post_comida</text><text class="chip" x="2150" y="6509"></text><text class="ct" text-anchor="end" x="2290" y="6509">character varying(255)</text>
+<text class="cn" x="1950" y="6531">mareos_o_debilidad</text><text class="chip" x="2150" y="6531">NN</text><text class="ct" text-anchor="end" x="2290" y="6531">boolean</text>
+<rect class="alt" x="1941" y="6538" width="358" height="22"/>
+<text class="cn" x="1950" y="6553">acne</text><text class="chip" x="2150" y="6553"></text><text class="ct" text-anchor="end" x="2290" y="6553">character varying(255)</text>
+<text class="cn" x="1950" y="6575">dolor_menstrual</text><text class="chip" x="2150" y="6575"></text><text class="ct" text-anchor="end" x="2290" y="6575">character varying(255)</text>
+<rect class="alt" x="1941" y="6582" width="358" height="22"/>
+<text class="cn" x="1950" y="6597">irregularidad_menstrual</text><text class="chip" x="2150" y="6597"></text><text class="ct" text-anchor="end" x="2290" y="6597">boolean</text>
+<text class="cn" x="1950" y="6619">cambios_estado_animo</text><text class="chip" x="2150" y="6619"></text><text class="ct" text-anchor="end" x="2290" y="6619">character varying(255)</text>
+<rect class="alt" x="1941" y="6626" width="358" height="22"/>
+<text class="cn" x="1950" y="6641">calidad_sueno</text><text class="chip" x="2150" y="6641"></text><text class="ct" text-anchor="end" x="2290" y="6641">character varying(255)</text>
+<text class="cn" x="1950" y="6663">horas_sueno</text><text class="chip" x="2150" y="6663"></text><text class="ct" text-anchor="end" x="2290" y="6663">numeric(4,1)</text>
+<rect class="alt" x="1941" y="6670" width="358" height="22"/>
+<text class="cn" x="1950" y="6685">actividad_fisica</text><text class="chip" x="2150" y="6685"></text><text class="ct" text-anchor="end" x="2290" y="6685">character varying(255)</text>
+<text class="cn" x="1950" y="6707">minutos_actividad</text><text class="chip" x="2150" y="6707"></text><text class="ct" text-anchor="end" x="2290" y="6707">smallint(16,0)</text>
+<rect class="alt" x="1941" y="6714" width="358" height="22"/>
+<text class="cn" x="1950" y="6729">consumo_agua_litros</text><text class="chip" x="2150" y="6729"></text><text class="ct" text-anchor="end" x="2290" y="6729">numeric(4,1)</text>
+<text class="cn" x="1950" y="6751">observaciones</text><text class="chip" x="2150" y="6751"></text><text class="ct" text-anchor="end" x="2290" y="6751">text</text>
+<rect class="alt" x="1941" y="6758" width="358" height="22"/>
+<text class="cn" x="1950" y="6773">registrado_por</text><text class="chip" x="2150" y="6773">FK</text><text class="ct" text-anchor="end" x="2290" y="6773">bigint(64,0)</text>
+<text class="cn" x="1950" y="6795">created_at</text><text class="chip" x="2150" y="6795"></text><text class="ct" text-anchor="end" x="2290" y="6795">timestamp without time zone</text>
+<rect class="alt" x="1941" y="6802" width="358" height="22"/>
+<text class="cn" x="1950" y="6817">updated_at</text><text class="chip" x="2150" y="6817"></text><text class="ct" text-anchor="end" x="2290" y="6817">timestamp without time zone</text>
+<text class="cn" x="1950" y="6839">deleted_at</text><text class="chip" x="2150" y="6839"></text><text class="ct" text-anchor="end" x="2290" y="6839">timestamp without time zone</text>
+</g>
+<g><rect class="box" x="2412" y="132" width="360" height="316" rx="5"/><rect class="head" x="2412" y="132" width="360" height="44" rx="5"/><text class="tn" x="2424" y="159">public.activity_log</text>
+<text class="cn" x="2422" y="191">id</text><text class="chip" x="2622" y="191">PK</text><text class="ct" text-anchor="end" x="2762" y="191">bigint(64,0)</text>
+<rect class="alt" x="2413" y="198" width="358" height="22"/>
+<text class="cn" x="2422" y="213">log_name</text><text class="chip" x="2622" y="213"></text><text class="ct" text-anchor="end" x="2762" y="213">character varying(255)</text>
+<text class="cn" x="2422" y="235">description</text><text class="chip" x="2622" y="235">NN</text><text class="ct" text-anchor="end" x="2762" y="235">text</text>
+<rect class="alt" x="2413" y="242" width="358" height="22"/>
+<text class="cn" x="2422" y="257">subject_type</text><text class="chip" x="2622" y="257"></text><text class="ct" text-anchor="end" x="2762" y="257">character varying(255)</text>
+<text class="cn" x="2422" y="279">subject_id</text><text class="chip" x="2622" y="279"></text><text class="ct" text-anchor="end" x="2762" y="279">bigint(64,0)</text>
+<rect class="alt" x="2413" y="286" width="358" height="22"/>
+<text class="cn" x="2422" y="301">event</text><text class="chip" x="2622" y="301"></text><text class="ct" text-anchor="end" x="2762" y="301">character varying(255)</text>
+<text class="cn" x="2422" y="323">causer_type</text><text class="chip" x="2622" y="323"></text><text class="ct" text-anchor="end" x="2762" y="323">character varying(255)</text>
+<rect class="alt" x="2413" y="330" width="358" height="22"/>
+<text class="cn" x="2422" y="345">causer_id</text><text class="chip" x="2622" y="345"></text><text class="ct" text-anchor="end" x="2762" y="345">bigint(64,0)</text>
+<text class="cn" x="2422" y="367">attribute_changes</text><text class="chip" x="2622" y="367"></text><text class="ct" text-anchor="end" x="2762" y="367">json</text>
+<rect class="alt" x="2413" y="374" width="358" height="22"/>
+<text class="cn" x="2422" y="389">properties</text><text class="chip" x="2622" y="389"></text><text class="ct" text-anchor="end" x="2762" y="389">json</text>
+<text class="cn" x="2422" y="411">created_at</text><text class="chip" x="2622" y="411"></text><text class="ct" text-anchor="end" x="2762" y="411">timestamp without time zone</text>
+<rect class="alt" x="2413" y="418" width="358" height="22"/>
+<text class="cn" x="2422" y="433">updated_at</text><text class="chip" x="2622" y="433"></text><text class="ct" text-anchor="end" x="2762" y="433">timestamp without time zone</text>
+</g>
+<text class="foot" x="52" y="7366">PK = PRIMARY KEY · FK = FOREIGN KEY · UQ = UNIQUE · NN = NOT NULL · las líneas incluyen ON DELETE en su tooltip</text></svg></figure></main></body></html>
