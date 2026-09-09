@@ -1,17 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Activity, ArrowLeft, ArrowRight, Briefcase, Calendar, CheckCircle2, ClipboardList, Heart, Leaf, MapPin, Phone, Salad, SquarePen, User, Utensils, X } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, Briefcase, Calendar, CheckCircle2, ClipboardList, Heart, Leaf, MapPin, Phone, Salad, ShieldAlert, SquarePen, Stethoscope, User, Utensils, X } from 'lucide-react';
+import clsx from 'clsx';
 import Alerta from '@/Components/ui/alerta';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 import { Badge } from '@/Components/ui/badge';
 import { Boton, BotonLink } from '@/Components/ui/boton';
 import type { PageProps } from '@/types';
 
-interface PacienteRow { id_paciente: number; ci: string; nombre_completo?: string | null; fecha_nacimiento: string; edad?: number | null; sexo: string; telefono?: string | null; direccion?: string | null; ocupacion?: string | null; estado_civil?: string | null; fecha_registro?: string | null; observaciones?: string | null; estado: 'activo' | 'inactivo'; user?: { name?: string | null; email?: string | null } | null; }
-interface Props extends PageProps { paciente: PacienteRow; }
+interface PacienteRow { id_paciente: number; ci: string; nombre_completo?: string | null; fecha_nacimiento: string; edad?: number | null; sexo: string; telefono?: string | null; direccion?: string | null; ocupacion?: string | null; estado_civil?: string | null; fecha_registro?: string | null; observaciones?: string | null; estado: 'activo' | 'inactivo'; user?: { name?: string | null; email?: string | null; avatar_url?: string | null } | null; }
+interface ContextoEndocrinologico {
+    hay_registros: boolean;
+    consulta?: { fecha?: string | null; motivo?: string | null } | null;
+    diagnosticos: { titulo: string; estado: string; detalle?: string | null; riesgo?: string | null }[];
+    indicadores: { etiqueta: string; valor: string }[];
+    orientacion?: string | null;
+}
+interface Props extends PageProps { paciente: PacienteRow; contextoEndocrinologico: ContextoEndocrinologico; }
 
-export default function Show({ paciente, flash }: Props) {
+export default function Show({ paciente, contextoEndocrinologico, flash }: Props) {
     const id = paciente.id_paciente;
     const nombre = paciente.nombre_completo ?? paciente.user?.name ?? 'Paciente';
 
@@ -44,7 +52,7 @@ export default function Show({ paciente, flash }: Props) {
                     <div className="relative px-5 pb-5">
                         <div className="-mt-10 mb-3">
                             <div className="inline-flex rounded-full border-4 border-surface-card dark:border-surface-card-dark">
-                                <AvatarIniciales nombre={nombre} size={72} />
+                                <AvatarPaciente nombre={nombre} avatarUrl={paciente.user?.avatar_url} size="xl" />
                             </div>
                         </div>
 
@@ -121,8 +129,40 @@ export default function Show({ paciente, flash }: Props) {
                         </div>
                     </div>
                 </div>
+
+                <ContextoEndocrino contexto={contextoEndocrinologico} />
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+function ContextoEndocrino({ contexto }: { contexto: ContextoEndocrinologico }) {
+    if (!contexto.hay_registros) return null;
+
+    return (
+        <section className="card-elevated overflow-hidden border-brand-green/20">
+            <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-brand-green/15 bg-gradient-to-r from-brand-green/[0.10] via-brand-green/[0.035] to-transparent px-5 py-4 dark:from-brand-green/[0.12] dark:via-brand-green/[0.04]">
+                <div className="absolute -right-8 -top-9 h-28 w-28 rounded-full bg-brand-green/10 blur-2xl" />
+                <div className="relative flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green-dark shadow-sm dark:text-brand-green"><Stethoscope size={18} strokeWidth={1.9} /></div>
+                    <div><p className="text-[9px] font-bold uppercase tracking-[0.15em] text-brand-green-dark dark:text-brand-green">Coordinación clínica</p><h3 className="mt-0.5 text-[14px] font-bold text-ink dark:text-ink-dark">Contexto registrado por endocrinología</h3><p className="mt-0.5 text-[10px] text-ink-muted dark:text-ink-muted-dark">Datos clave para personalizar la intervención nutricional.</p></div>
+                </div>
+                <span className="relative rounded-full border border-brand-green/20 bg-surface-card/80 px-2.5 py-1 text-[9px] font-bold text-brand-green-dark backdrop-blur-sm dark:bg-surface-card-dark/70 dark:text-brand-green">Solo lectura</span>
+            </div>
+            <div className="space-y-4 p-5">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+                    {contexto.diagnosticos.map((diagnostico) => {
+                        const confirmado = diagnostico.estado.toLowerCase().includes('confirmad') && !diagnostico.estado.toLowerCase().includes('no ');
+                        return <div key={diagnostico.titulo} className="relative overflow-hidden rounded-2xl border border-surface-border bg-gradient-to-br from-brand-green/[0.08] to-transparent p-4 dark:border-surface-border-dark dark:from-brand-green/[0.10] lg:col-span-4"><div className="absolute right-0 top-0 h-16 w-16 rounded-bl-full bg-brand-green/[0.07]" /><div className="relative flex items-start justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark">{diagnostico.titulo}</p><span className={clsx('rounded-full px-2 py-0.5 text-[9px] font-bold', confirmado ? 'bg-brand-green/15 text-brand-green-dark dark:text-brand-green' : 'bg-ink-muted/10 text-ink-muted dark:text-ink-muted-dark')}>{diagnostico.estado}</span></div><p className="relative mt-3 text-[12px] font-semibold capitalize text-ink dark:text-ink-dark">{diagnostico.detalle || 'Sin clasificación adicional'}</p>{diagnostico.riesgo && <div className="relative mt-3 flex items-center gap-1.5 text-[10px] font-bold capitalize text-brand-orange"><ShieldAlert size={12} /> Riesgo {diagnostico.riesgo.replaceAll('_', ' ')}</div>}</div>;
+                    })}
+                    {contexto.indicadores.length > 0 && <div className="rounded-2xl border border-surface-border bg-black/[0.015] p-4 dark:border-surface-border-dark dark:bg-white/[0.025] lg:col-span-4"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark">Indicadores relevantes</p><Activity size={14} className="text-brand-green" /></div><div className="mt-4 grid grid-cols-3 divide-x divide-surface-border dark:divide-surface-border-dark">{contexto.indicadores.map((indicador) => <div key={indicador.etiqueta} className="px-2 first:pl-0 last:pr-0"><p className="text-[9px] font-medium text-ink-muted dark:text-ink-muted-dark">{indicador.etiqueta}</p><p className="mt-1 text-[15px] font-bold text-ink dark:text-ink-dark">{indicador.valor}</p></div>)}</div><p className="mt-3 text-[9px] text-ink-muted dark:text-ink-muted-dark">Últimos valores registrados por endocrinología.</p></div>}
+                </div>
+                {(contexto.consulta?.motivo || contexto.orientacion) && <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    {contexto.consulta?.motivo && <div className="rounded-xl border-l-4 border-brand-green bg-brand-green/[0.045] px-4 py-3 text-[10.5px] text-ink-muted dark:text-ink-muted-dark"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-brand-green-dark dark:text-brand-green">Motivo de consulta endocrinológica</p><p className="text-ink dark:text-ink-dark">{contexto.consulta.motivo}</p></div>}
+                    {contexto.orientacion && <div className="rounded-xl border-l-4 border-brand-orange bg-brand-orange/[0.05] px-4 py-3 text-[10.5px] text-ink-muted dark:text-ink-muted-dark"><p className="mb-1 text-[9px] font-bold uppercase tracking-wide text-brand-orange">Orientación para el plan</p><p className="text-ink dark:text-ink-dark">{contexto.orientacion}</p></div>}
+                </div>}
+            </div>
+        </section>
     );
 }
 

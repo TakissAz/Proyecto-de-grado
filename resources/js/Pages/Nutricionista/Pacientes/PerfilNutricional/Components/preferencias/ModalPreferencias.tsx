@@ -44,7 +44,7 @@ export default function ModalPreferencias({ abierto, cerrar, registro, pacienteI
         sabores_preferidos: String(registro?.sabores_preferidos ?? ''),
         observaciones: String(registro?.observaciones ?? ''),
     };
-    const { data, setData, post, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
+    const { data, setData, post, put, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
 
     useEffect(() => { if (abierto) { setData(valoresIniciales); clearErrors(); } }, [abierto, id]);
 
@@ -52,13 +52,8 @@ export default function ModalPreferencias({ abierto, cerrar, registro, pacienteI
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        const opts = { preserveScroll: true, onSuccess: () => { reset(); cerrar(); } };
-        if (id) {
-            // Use POST with _method spoofing for PUT
-            post(`${url}?_method=PUT`, opts);
-        } else {
-            post(url, opts);
-        }
+        const opts = { preserveScroll: true, preserveState: false, onSuccess: () => { reset(); cerrar(); } };
+        id ? put(url, opts) : post(url, opts);
     };
 
     return (

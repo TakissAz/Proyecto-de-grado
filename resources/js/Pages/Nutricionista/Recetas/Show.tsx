@@ -26,6 +26,7 @@ interface Receta {
   id_receta: number;
   nombre: string;
   descripcion: string | null;
+  imagen_url: string | null;
   tipo_comida: string;
   porciones: number;
   tiempo_preparacion_minutos: number | null;
@@ -61,8 +62,9 @@ export default function Show({ receta }: Props) {
       <div className="space-y-5">
         {/* Header card */}
         <div className="card-elevated p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <img src={receta.imagen_url || '/images/recetas/receta-saludable-portada.png'} alt={receta.nombre} className="h-32 w-full rounded-2xl object-cover shadow-sm ring-1 ring-black/5 sm:w-48 dark:ring-white/10" />
+            <div className="min-w-[240px] flex-1 self-center">
               <div className="flex items-center gap-2">
                 <h2 className="text-[17px] font-semibold text-ink dark:text-ink-dark">{receta.nombre}</h2>
                 <EstadoPill activo={receta.estado === 'activo'} textoActivo="Activa" textoInactivo="Inactiva" />

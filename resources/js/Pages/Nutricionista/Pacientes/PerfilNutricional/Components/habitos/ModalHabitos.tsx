@@ -34,7 +34,7 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
         hambre_nocturna: Boolean(registro?.hambre_nocturna),
         observaciones: String(registro?.observaciones ?? ''),
     };
-    const { data, setData, post, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
+    const { data, setData, post, put, processing, errors, clearErrors, reset } = useForm(valoresIniciales);
 
     useEffect(() => {
         if (!abierto) return;
@@ -46,8 +46,8 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
 
     const enviar = (e: React.FormEvent) => {
         e.preventDefault();
-        const opts = { preserveScroll: true, onSuccess: () => { reset(); cerrar(); } };
-        registro ? post(`${url}?_method=PUT`, opts) : post(url, opts);
+        const opts = { preserveScroll: true, preserveState: false, onSuccess: () => { reset(); cerrar(); } };
+        id ? put(url, opts) : post(url, opts);
     };
 
     const FrecuenciaSelector = ({ campo, label }: { campo: string; label: string }) => (
@@ -95,7 +95,7 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
                 </div>
 
                 {/* Form */}
-                <form onSubmit={enviar} className="px-5 py-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <form id="form-habitos-alimentarios" onSubmit={enviar} className="px-5 py-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                     {/* Datos generales */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -137,12 +137,13 @@ export default function ModalHabitos({ abierto, cerrar, registro, pacienteId, op
                         <label className="text-[10px] font-semibold text-ink-muted dark:text-ink-muted-dark block mb-1">Observaciones</label>
                         <textarea value={data.observaciones} onChange={e => setData('observaciones', e.target.value)} rows={2} placeholder="Notas sobre los hábitos del paciente..." className="campo-input resize-none" />
                     </div>
+                    {Object.keys(errors).length > 0 && <div className="rounded-xl border border-category-fruits/25 bg-category-fruits/[0.06] px-3 py-2 text-[10px] text-category-fruits">Revisa los campos marcados: {Object.values(errors).join(' ')}</div>}
                 </form>
 
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-surface-border dark:border-surface-border-dark bg-black/[0.01] dark:bg-white/[0.01]">
                     <Boton variante="ghost" tamano="sm" onClick={cerrar}>Cancelar</Boton>
-                    <Boton variante="primary" tamano="sm" onClick={(e: any) => enviar(e)} disabled={processing}>
+                    <Boton type="submit" form="form-habitos-alimentarios" variante="primary" tamano="sm" disabled={processing}>
                         {processing ? 'Guardando...' : (id ? 'Actualizar' : 'Registrar')}
                     </Boton>
                 </div>

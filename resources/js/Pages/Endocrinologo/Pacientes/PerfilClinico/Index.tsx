@@ -3,11 +3,10 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Phone, Mail, MapPin, Briefcase, Heart, Calendar, Stethoscope, FlaskConical, Brain, CheckCircle2, TrendingUp } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 
 import AlertaDatosPendientes from './componentes/AlertaDatosPendientes';
-import TarjetaResumenClinico from './componentes/TarjetaResumenClinico';
 import TarjetaConsultaInicial from './componentes/TarjetaConsultaInicial';
 import FormularioConsultaInicial from './componentes/FormularioConsultaInicial';
 import { TarjetaHistoriaMenstrual, CrearHistoriaMenstrual, EditarHistoriaMenstrual } from './componentes/historia-menstrual';
@@ -20,7 +19,6 @@ import TarjetaDiagnosticoPmos from './componentes/TarjetaDiagnosticoPmos';
 import FormularioDiagnosticoPmos from './componentes/FormularioDiagnosticoPmos';
 import TarjetaDiagnosticoRi from './componentes/TarjetaDiagnosticoRi';
 import FormularioDiagnosticoRi from './componentes/FormularioDiagnosticoRi';
-import SeccionAuditoria from './componentes/SeccionAuditoria';
 import PanelSeguimientoEndocrinologico, { type PanelEndocrinologico } from './componentes/PanelSeguimientoEndocrinologico';
 
 import { Desplegable } from '@/Components/ui/desplegable';
@@ -44,7 +42,7 @@ interface Props extends PageProps {
 }
 
 export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) {
-    const { paciente, resumen_clinico, estado_flujo, alertas, auditoria, consulta_inicial, historia_menstrual, hiperandrogenismo, antecedentes, evaluacion_fisica, laboratorios, ecografia, evaluacion_pmos, diagnostico_pmos, evaluacion_ri, diagnostico_ri } = perfil;
+    const { paciente, estado_flujo, alertas, consulta_inicial, historia_menstrual, hiperandrogenismo, antecedentes, evaluacion_fisica, laboratorios, ecografia, evaluacion_pmos, diagnostico_pmos, evaluacion_ri, diagnostico_ri } = perfil;
     const id = paciente.id_paciente;
     const nombre = paciente.nombre_completo ?? 'Paciente';
 
@@ -94,6 +92,48 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
     const [formularioEcografiaCrearAbierto, setFormularioEcografiaCrearAbierto] = useState(false);
     const [formularioDiagnosticoPmosAbierto, setFormularioDiagnosticoPmosAbierto] = useState(false);
     const [formularioDiagnosticoRiAbierto, setFormularioDiagnosticoRiAbierto] = useState(false);
+
+    // Conserva la vista rápida seleccionada, pero la oculta mientras se crea o edita.
+    // Al cerrar el formulario vuelve a mostrarse con las props actualizadas por Inertia.
+    const formularioSecundarioAbierto = [
+        formularioConsultaAbierto,
+        formularioHistoriaAbierto, formularioHistoriaCrearAbierto,
+        formularioHiperandrogenismoAbierto, formularioHiperandrogenismoCrearAbierto,
+        formularioAntecedentesAbierto, formularioAntecedentesCrearAbierto,
+        formularioEvaluacionFisicaAbierto, formularioEvaluacionFisicaCrearAbierto,
+        formularioPerfilAndrogenicoAbierto, formularioPerfilAndrogenicoCrearAbierto,
+        formularioPerfilGonadotropoAbierto, formularioPerfilGonadotropoCrearAbierto,
+        formularioDiferencialesAbierto, formularioDiferencialesCrearAbierto,
+        formularioGlucosaInsulinaAbierto, formularioGlucosaInsulinaCrearAbierto,
+        formularioPerfilLipidicoAbierto, formularioPerfilLipidicoCrearAbierto,
+        formularioEcografiaAbierto, formularioEcografiaCrearAbierto,
+        formularioDiagnosticoPmosAbierto, formularioDiagnosticoRiAbierto,
+    ].some(Boolean);
+
+    const propsVistaRapida = {
+        modoModal: true,
+        modalSuspendido: formularioSecundarioAbierto,
+        descripcionModal: 'Vista rápida del expediente endocrinológico',
+    } as const;
+
+    const cerrarFormularioActualizando = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+        setter(false);
+
+        if (setter === setFormularioHistoriaAbierto || setter === setFormularioHistoriaCrearAbierto) setAcordeonEval('historia');
+        else if (setter === setFormularioHiperandrogenismoAbierto || setter === setFormularioHiperandrogenismoCrearAbierto) setAcordeonEval('hiper');
+        else if (setter === setFormularioAntecedentesAbierto || setter === setFormularioAntecedentesCrearAbierto) setAcordeonEval('antecedentes');
+        else if (setter === setFormularioEvaluacionFisicaAbierto || setter === setFormularioEvaluacionFisicaCrearAbierto) setAcordeonEval('fisica');
+        else if (
+            setter === setFormularioPerfilAndrogenicoAbierto || setter === setFormularioPerfilAndrogenicoCrearAbierto
+            || setter === setFormularioPerfilGonadotropoAbierto || setter === setFormularioPerfilGonadotropoCrearAbierto
+            || setter === setFormularioDiferencialesAbierto || setter === setFormularioDiferencialesCrearAbierto
+            || setter === setFormularioGlucosaInsulinaAbierto || setter === setFormularioGlucosaInsulinaCrearAbierto
+            || setter === setFormularioPerfilLipidicoAbierto || setter === setFormularioPerfilLipidicoCrearAbierto
+        ) setAcordeonEstudios('labs');
+        else if (setter === setFormularioEcografiaAbierto || setter === setFormularioEcografiaCrearAbierto) setAcordeonEstudios('eco');
+        else if (setter === setFormularioDiagnosticoPmosAbierto) setAcordeonDiag('pmos');
+        else if (setter === setFormularioDiagnosticoRiAbierto) setAcordeonDiag('ri');
+    };
 
     // ── Acordeón controlado por step (solo uno abierto a la vez) ──
     const [acordeonEval, setAcordeonEval] = useState<string | null>(null);
@@ -146,7 +186,7 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
 
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5">
                         <div className="flex items-start gap-3.5">
-                            <AvatarIniciales nombre={nombre} size={52} />
+                            <AvatarPaciente nombre={nombre} avatarUrl={paciente.user?.avatar_url} size="lg" />
                             <div>
                                 <h1 className="text-[18px] font-bold text-ink dark:text-ink-dark">{nombre}</h1>
                                 <p className="text-[12px] text-ink-muted dark:text-ink-muted-dark mt-0.5">CI: {paciente.ci} · {paciente.sexo} · {paciente.edad ?? '—'} años</p>
@@ -228,16 +268,16 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
                         <div className="space-y-2">
                             {stepActivo === 'evaluacion' && (
                                 <>
-                                    <Desplegable titulo="Historia menstrual" tiene={!!historia_menstrual} abierto={acordeonEval === 'historia'} onToggle={() => toggleAc(setAcordeonEval, 'historia')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Historia menstrual" tiene={!!historia_menstrual} abierto={acordeonEval === 'historia'} onToggle={() => toggleAc(setAcordeonEval, 'historia')}>
                                         <TarjetaHistoriaMenstrual historia={historia_menstrual} idPaciente={id} onRegistrar={() => setFormularioHistoriaCrearAbierto(true)} onEditar={() => setFormularioHistoriaAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Hiperandrogenismo" tiene={!!hiperandrogenismo} abierto={acordeonEval === 'hiper'} onToggle={() => toggleAc(setAcordeonEval, 'hiper')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Hiperandrogenismo" tiene={!!hiperandrogenismo} abierto={acordeonEval === 'hiper'} onToggle={() => toggleAc(setAcordeonEval, 'hiper')}>
                                         <TarjetaHiperandrogenismo hiperandrogenismo={hiperandrogenismo} idPaciente={id} onRegistrar={() => setFormularioHiperandrogenismoCrearAbierto(true)} onEditar={() => setFormularioHiperandrogenismoAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Antecedentes endocrino-metabólicos" tiene={!!antecedentes} abierto={acordeonEval === 'antecedentes'} onToggle={() => toggleAc(setAcordeonEval, 'antecedentes')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Antecedentes endocrino-metabólicos" tiene={!!antecedentes} abierto={acordeonEval === 'antecedentes'} onToggle={() => toggleAc(setAcordeonEval, 'antecedentes')}>
                                         <TarjetaAntecedentes antecedentes={antecedentes} idPaciente={id} onRegistrar={() => setFormularioAntecedentesCrearAbierto(true)} onEditar={() => setFormularioAntecedentesAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Evaluación física" tiene={!!evaluacion_fisica} abierto={acordeonEval === 'fisica'} onToggle={() => toggleAc(setAcordeonEval, 'fisica')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Evaluación física" tiene={!!evaluacion_fisica} abierto={acordeonEval === 'fisica'} onToggle={() => toggleAc(setAcordeonEval, 'fisica')}>
                                         <TarjetaEvaluacionFisica evaluacion={evaluacion_fisica} idPaciente={id} onRegistrar={() => setFormularioEvaluacionFisicaCrearAbierto(true)} onEditar={() => setFormularioEvaluacionFisicaAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -245,7 +285,7 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
 
                             {stepActivo === 'estudios' && (
                                 <>
-                                    <Desplegable titulo="Laboratorios" tiene={!!(laboratorios.perfil_androgenico || laboratorios.perfil_gonadotropo || laboratorios.glucosa_insulina)} abierto={acordeonEstudios === 'labs'} onToggle={() => toggleAc(setAcordeonEstudios, 'labs')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Laboratorios" tiene={!!(laboratorios.perfil_androgenico || laboratorios.perfil_gonadotropo || laboratorios.glucosa_insulina)} abierto={acordeonEstudios === 'labs'} onToggle={() => toggleAc(setAcordeonEstudios, 'labs')}>
                                         <TarjetaLaboratorios
                                             laboratorios={laboratorios} idPaciente={id}
                                             onRegistrarPerfilAndrogenico={() => setFormularioPerfilAndrogenicoCrearAbierto(true)} onEditarPerfilAndrogenico={() => setFormularioPerfilAndrogenicoAbierto(true)}
@@ -255,7 +295,7 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
                                             onRegistrarPerfilLipidico={() => setFormularioPerfilLipidicoCrearAbierto(true)} onEditarPerfilLipidico={() => setFormularioPerfilLipidicoAbierto(true)}
                                         />
                                     </Desplegable>
-                                    <Desplegable titulo="Ecografía" tiene={!!ecografia} abierto={acordeonEstudios === 'eco'} onToggle={() => toggleAc(setAcordeonEstudios, 'eco')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Ecografía" tiene={!!ecografia} abierto={acordeonEstudios === 'eco'} onToggle={() => toggleAc(setAcordeonEstudios, 'eco')}>
                                         <TarjetaEcografia ecografia={ecografia} idPaciente={id} onRegistrar={() => setFormularioEcografiaCrearAbierto(true)} onEditar={() => setFormularioEcografiaAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -263,10 +303,10 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
 
                             {stepActivo === 'diagnostico' && (
                                 <>
-                                    <Desplegable titulo="Diagnóstico PMOS" tiene={!!diagnostico_pmos} abierto={acordeonDiag === 'pmos'} onToggle={() => toggleAc(setAcordeonDiag, 'pmos')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Diagnóstico PMOS" tiene={!!diagnostico_pmos} abierto={acordeonDiag === 'pmos'} onToggle={() => toggleAc(setAcordeonDiag, 'pmos')}>
                                         <TarjetaDiagnosticoPmos idPaciente={id} evaluacion={evaluacion_pmos} diagnostico={diagnostico_pmos} onRegistrar={() => setFormularioDiagnosticoPmosAbierto(true)} onEditar={() => setFormularioDiagnosticoPmosAbierto(true)} />
                                     </Desplegable>
-                                    <Desplegable titulo="Diagnóstico Resistencia a la Insulina" tiene={!!diagnostico_ri} abierto={acordeonDiag === 'ri'} onToggle={() => toggleAc(setAcordeonDiag, 'ri')}>
+                                    <Desplegable {...propsVistaRapida} titulo="Diagnóstico Resistencia a la Insulina" tiene={!!diagnostico_ri} abierto={acordeonDiag === 'ri'} onToggle={() => toggleAc(setAcordeonDiag, 'ri')}>
                                         <TarjetaDiagnosticoRi idPaciente={id} evaluacion={evaluacion_ri} diagnostico={diagnostico_ri} onRegistrar={() => setFormularioDiagnosticoRiAbierto(true)} onEditar={() => setFormularioDiagnosticoRiAbierto(true)} />
                                     </Desplegable>
                                 </>
@@ -280,37 +320,35 @@ export default function PerfilClinico({ perfil, panel_endocrinologico }: Props) 
 
                     {/* Panel lateral sticky */}
                     <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-                        <TarjetaResumenClinico resumen={resumen_clinico} />
                         <TarjetaConsultaInicial consulta={consulta_inicial} idPaciente={id} onRegistrar={() => setFormularioConsultaAbierto(true)} onEditar={() => setFormularioConsultaAbierto(true)} />
-                        <SeccionAuditoria auditoria={auditoria} />
                     </aside>
                 </div>
             </div>
 
             {/* ═══ MODALES ═══ */}
-            <FormularioConsultaInicial abierto={formularioConsultaAbierto} idPaciente={id} consultaExistente={consulta_inicial} onCerrar={() => setFormularioConsultaAbierto(false)} />
-            <CrearHistoriaMenstrual abierto={formularioHistoriaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioHistoriaCrearAbierto(false)} />
-            {historia_menstrual && <EditarHistoriaMenstrual key={`historia-${historia_menstrual.id_historia_menstrual}`} abierto={formularioHistoriaAbierto} idPaciente={id} historia={historia_menstrual} onCerrar={() => setFormularioHistoriaAbierto(false)} />}
-            <CrearHiperandrogenismo abierto={formularioHiperandrogenismoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioHiperandrogenismoCrearAbierto(false)} />
-            {hiperandrogenismo && <EditarHiperandrogenismo key={`hiper-${hiperandrogenismo.id_historia_hiperandrogenica}`} abierto={formularioHiperandrogenismoAbierto} idPaciente={id} hiperandrogenismo={hiperandrogenismo} onCerrar={() => setFormularioHiperandrogenismoAbierto(false)} />}
-            <CrearAntecedentes abierto={formularioAntecedentesCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioAntecedentesCrearAbierto(false)} />
-            {antecedentes && <EditarAntecedentes key={`antecedentes-${antecedentes.id_antecedente}`} abierto={formularioAntecedentesAbierto} idPaciente={id} antecedentes={antecedentes} onCerrar={() => setFormularioAntecedentesAbierto(false)} />}
-            <CrearEvaluacionFisica abierto={formularioEvaluacionFisicaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioEvaluacionFisicaCrearAbierto(false)} />
-            {evaluacion_fisica && <EditarEvaluacionFisica key={`fisica-${evaluacion_fisica.id_evaluacion_fisica}`} abierto={formularioEvaluacionFisicaAbierto} idPaciente={id} evaluacion={evaluacion_fisica} onCerrar={() => setFormularioEvaluacionFisicaAbierto(false)} />}
-            <CrearPerfilAndrogenico abierto={formularioPerfilAndrogenicoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioPerfilAndrogenicoCrearAbierto(false)} />
-            {laboratorios.perfil_androgenico && <EditarPerfilAndrogenico key={`androgenico-${laboratorios.perfil_androgenico.id_perfil_androgenico}`} abierto={formularioPerfilAndrogenicoAbierto} idPaciente={id} data={laboratorios.perfil_androgenico} onCerrar={() => setFormularioPerfilAndrogenicoAbierto(false)} />}
-            <CrearPerfilGonadotropo abierto={formularioPerfilGonadotropoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioPerfilGonadotropoCrearAbierto(false)} />
-            {laboratorios.perfil_gonadotropo && <EditarPerfilGonadotropo key={`gonadotropo-${laboratorios.perfil_gonadotropo.id_perfil_gonadotropo}`} abierto={formularioPerfilGonadotropoAbierto} idPaciente={id} data={laboratorios.perfil_gonadotropo} onCerrar={() => setFormularioPerfilGonadotropoAbierto(false)} />}
-            <CrearDiferenciales abierto={formularioDiferencialesCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioDiferencialesCrearAbierto(false)} />
-            {laboratorios.diferencial_endocrino && <EditarDiferenciales key={`diferencial-${laboratorios.diferencial_endocrino.id_diferencial_endocrino}`} abierto={formularioDiferencialesAbierto} idPaciente={id} data={laboratorios.diferencial_endocrino} onCerrar={() => setFormularioDiferencialesAbierto(false)} />}
-            <CrearGlucosaInsulina abierto={formularioGlucosaInsulinaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioGlucosaInsulinaCrearAbierto(false)} />
-            {laboratorios.glucosa_insulina && <EditarGlucosaInsulina key={`glucosa-${laboratorios.glucosa_insulina.id_glucosa_insulina}`} abierto={formularioGlucosaInsulinaAbierto} idPaciente={id} data={laboratorios.glucosa_insulina} onCerrar={() => setFormularioGlucosaInsulinaAbierto(false)} />}
-            <CrearPerfilLipidico abierto={formularioPerfilLipidicoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioPerfilLipidicoCrearAbierto(false)} />
-            {laboratorios.perfil_lipidico && <EditarPerfilLipidico key={`lipidico-${laboratorios.perfil_lipidico.id_perfil_lipidico}`} abierto={formularioPerfilLipidicoAbierto} idPaciente={id} data={laboratorios.perfil_lipidico} onCerrar={() => setFormularioPerfilLipidicoAbierto(false)} />}
-            <CrearEcografia abierto={formularioEcografiaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => setFormularioEcografiaCrearAbierto(false)} />
-            {ecografia && <EditarEcografia key={`ecografia-${ecografia.id_ecografia}`} abierto={formularioEcografiaAbierto} idPaciente={id} ecografia={ecografia} onCerrar={() => setFormularioEcografiaAbierto(false)} />}
-            <FormularioDiagnosticoPmos abierto={formularioDiagnosticoPmosAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} evaluacion={evaluacion_pmos} existente={diagnostico_pmos} onCerrar={() => setFormularioDiagnosticoPmosAbierto(false)} />
-            <FormularioDiagnosticoRi abierto={formularioDiagnosticoRiAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} evaluacion={evaluacion_ri} existente={diagnostico_ri} onCerrar={() => setFormularioDiagnosticoRiAbierto(false)} />
+            <FormularioConsultaInicial abierto={formularioConsultaAbierto} idPaciente={id} consultaExistente={consulta_inicial} onCerrar={() => cerrarFormularioActualizando(setFormularioConsultaAbierto)} />
+            <CrearHistoriaMenstrual abierto={formularioHistoriaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioHistoriaCrearAbierto)} />
+            {historia_menstrual && <EditarHistoriaMenstrual key={`historia-${historia_menstrual.id_historia_menstrual}`} abierto={formularioHistoriaAbierto} idPaciente={id} historia={historia_menstrual} onCerrar={() => cerrarFormularioActualizando(setFormularioHistoriaAbierto)} />}
+            <CrearHiperandrogenismo abierto={formularioHiperandrogenismoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioHiperandrogenismoCrearAbierto)} />
+            {hiperandrogenismo && <EditarHiperandrogenismo key={`hiper-${hiperandrogenismo.id_historia_hiperandrogenica}`} abierto={formularioHiperandrogenismoAbierto} idPaciente={id} hiperandrogenismo={hiperandrogenismo} onCerrar={() => cerrarFormularioActualizando(setFormularioHiperandrogenismoAbierto)} />}
+            <CrearAntecedentes abierto={formularioAntecedentesCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioAntecedentesCrearAbierto)} />
+            {antecedentes && <EditarAntecedentes key={`antecedentes-${antecedentes.id_antecedente}`} abierto={formularioAntecedentesAbierto} idPaciente={id} antecedentes={antecedentes} onCerrar={() => cerrarFormularioActualizando(setFormularioAntecedentesAbierto)} />}
+            <CrearEvaluacionFisica abierto={formularioEvaluacionFisicaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioEvaluacionFisicaCrearAbierto)} />
+            {evaluacion_fisica && <EditarEvaluacionFisica key={`fisica-${evaluacion_fisica.id_evaluacion_fisica}`} abierto={formularioEvaluacionFisicaAbierto} idPaciente={id} evaluacion={evaluacion_fisica} onCerrar={() => cerrarFormularioActualizando(setFormularioEvaluacionFisicaAbierto)} />}
+            <CrearPerfilAndrogenico abierto={formularioPerfilAndrogenicoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilAndrogenicoCrearAbierto)} />
+            {laboratorios.perfil_androgenico && <EditarPerfilAndrogenico key={`androgenico-${laboratorios.perfil_androgenico.id_perfil_androgenico}`} abierto={formularioPerfilAndrogenicoAbierto} idPaciente={id} data={laboratorios.perfil_androgenico} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilAndrogenicoAbierto)} />}
+            <CrearPerfilGonadotropo abierto={formularioPerfilGonadotropoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilGonadotropoCrearAbierto)} />
+            {laboratorios.perfil_gonadotropo && <EditarPerfilGonadotropo key={`gonadotropo-${laboratorios.perfil_gonadotropo.id_perfil_gonadotropo}`} abierto={formularioPerfilGonadotropoAbierto} idPaciente={id} data={laboratorios.perfil_gonadotropo} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilGonadotropoAbierto)} />}
+            <CrearDiferenciales abierto={formularioDiferencialesCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioDiferencialesCrearAbierto)} />
+            {laboratorios.diferencial_endocrino && <EditarDiferenciales key={`diferencial-${laboratorios.diferencial_endocrino.id_diferencial_endocrino}`} abierto={formularioDiferencialesAbierto} idPaciente={id} data={laboratorios.diferencial_endocrino} onCerrar={() => cerrarFormularioActualizando(setFormularioDiferencialesAbierto)} />}
+            <CrearGlucosaInsulina abierto={formularioGlucosaInsulinaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioGlucosaInsulinaCrearAbierto)} />
+            {laboratorios.glucosa_insulina && <EditarGlucosaInsulina key={`glucosa-${laboratorios.glucosa_insulina.id_glucosa_insulina}`} abierto={formularioGlucosaInsulinaAbierto} idPaciente={id} data={laboratorios.glucosa_insulina} onCerrar={() => cerrarFormularioActualizando(setFormularioGlucosaInsulinaAbierto)} />}
+            <CrearPerfilLipidico abierto={formularioPerfilLipidicoCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilLipidicoCrearAbierto)} />
+            {laboratorios.perfil_lipidico && <EditarPerfilLipidico key={`lipidico-${laboratorios.perfil_lipidico.id_perfil_lipidico}`} abierto={formularioPerfilLipidicoAbierto} idPaciente={id} data={laboratorios.perfil_lipidico} onCerrar={() => cerrarFormularioActualizando(setFormularioPerfilLipidicoAbierto)} />}
+            <CrearEcografia abierto={formularioEcografiaCrearAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} onCerrar={() => cerrarFormularioActualizando(setFormularioEcografiaCrearAbierto)} />
+            {ecografia && <EditarEcografia key={`ecografia-${ecografia.id_ecografia}`} abierto={formularioEcografiaAbierto} idPaciente={id} ecografia={ecografia} onCerrar={() => cerrarFormularioActualizando(setFormularioEcografiaAbierto)} />}
+            <FormularioDiagnosticoPmos abierto={formularioDiagnosticoPmosAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} evaluacion={evaluacion_pmos} existente={diagnostico_pmos} onCerrar={() => cerrarFormularioActualizando(setFormularioDiagnosticoPmosAbierto)} />
+            <FormularioDiagnosticoRi abierto={formularioDiagnosticoRiAbierto} idPaciente={id} idConsulta={consulta_inicial?.id_consulta_endocrinologica ?? null} evaluacion={evaluacion_ri} existente={diagnostico_ri} onCerrar={() => cerrarFormularioActualizando(setFormularioDiagnosticoRiAbierto)} />
         </AuthenticatedLayout>
     );
 }

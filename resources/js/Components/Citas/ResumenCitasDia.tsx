@@ -1,7 +1,8 @@
-import { Bell, CalendarClock, Clock3, UserRound } from 'lucide-react';
+import { Bell, CalendarClock, Clock3 } from 'lucide-react';
 import clsx from 'clsx';
 import type { CitaData } from './tipos';
 import { ESTADOS_BADGE } from './tipos';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 
 interface Props { citas: CitaData[]; fecha: string; }
 
@@ -27,7 +28,10 @@ export default function ResumenCitasDia({ citas, fecha }: Props) {
                         return (
                             <article key={cita.id_cita} className={clsx('rounded-xl border border-surface-border border-l-[3px] bg-black/[0.008] p-3 dark:border-surface-border-dark dark:bg-white/[0.015]', borde)}>
                                 <div className="flex items-center justify-between gap-2"><span className="flex items-center gap-1.5 text-[11.5px] font-bold tabular-nums text-ink dark:text-ink-dark"><Clock3 size={11} className="text-brand-green-dark" />{cita.hora_inicio} – {cita.hora_fin}</span><span className={clsx('pill text-[8px]', badge.class)}>{badge.label}</span></div>
-                                <p className="mt-2 flex items-center gap-1.5 truncate text-[10.5px] font-semibold text-ink dark:text-ink-dark"><UserRound size={10} className="text-ink-muted/50" />{cita.paciente?.nombre_completo ?? '—'}</p>
+                                <div className="mt-2 flex min-w-0 items-center gap-2">
+                                    <AvatarPaciente nombre={cita.paciente?.nombre_completo ?? 'Paciente'} avatarUrl={cita.paciente?.avatar_url} size="sm" />
+                                    <p className="truncate text-[10.5px] font-semibold text-ink dark:text-ink-dark">{cita.paciente?.nombre_completo ?? '—'}</p>
+                                </div>
                                 <p className="mt-1 text-[9px] text-ink-muted dark:text-ink-muted-dark">{cita.tipo_cita} · <span className="capitalize">{cita.modalidad}</span></p>
                             </article>
                         );

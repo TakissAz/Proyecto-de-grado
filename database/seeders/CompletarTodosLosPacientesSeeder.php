@@ -25,8 +25,8 @@ class CompletarTodosLosPacientesSeeder extends Seeder
 
     public function run(): void
     {
-        $endocrinologo = User::query()->where('email', 'endocrinologia.datos@nutrigo.test')->first();
-        $nutricionista = User::query()->where('email', 'nutricion.datos@nutrigo.test')->first();
+        $endocrinologo = User::query()->where('email', DatosClinicosNutricionalesRealistasSeeder::EMAIL_ENDOCRINOLOGIA)->first();
+        $nutricionista = User::query()->where('email', DatosClinicosNutricionalesRealistasSeeder::EMAIL_NUTRICION)->first();
         if (! $endocrinologo || ! $nutricionista) {
             throw new RuntimeException('Primero ejecuta DatosClinicosNutricionalesRealistasSeeder.');
         }
@@ -83,7 +83,7 @@ class CompletarTodosLosPacientesSeeder extends Seeder
             ['id_endocrinologo'=>$endocrinologo->id,
                 'motivo_consulta'=>$pmos ? 'Alteraciones menstruales y signos de hiperandrogenismo.' : 'Control metabólico preventivo.',
                 'sospecha_pmos'=>$pmos, 'sospecha_resistencia_insulina'=>$ri,
-                'observaciones_generales'=>'Valoración endocrinológica integral completada para entorno académico.',
+                'observaciones_generales'=>'Valoración endocrinológica integral con revisión de antecedentes y perfil metabólico.',
                 'estado'=>'cerrada', 'deleted_at'=>null]
         );
         if ($consulta->trashed()) $consulta->restore();

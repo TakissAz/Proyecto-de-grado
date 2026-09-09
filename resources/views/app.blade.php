@@ -20,8 +20,8 @@
         </script>
         <style>
             /* Evita el destello de fondo blanco antes de aplicar estilos */
-            html { background-color: #FFFFFF; }
-            html.dark { background-color: #14161A; }
+            html, body, #app { min-height: 100%; background-color: #F7F8F6; }
+            html.dark, html.dark body, html.dark #app { background-color: #14161A; }
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>

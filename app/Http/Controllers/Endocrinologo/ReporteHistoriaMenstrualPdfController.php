@@ -34,19 +34,31 @@ class ReporteHistoriaMenstrualPdfController extends Controller
 
         $nombre = trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' '));
 
-        // Estadísticas rápidas
-        $conDatos = $registros->filter(fn ($r) => $r->duracion_ciclo_dias !== null);
+        $cronologicos = $registros->sortBy('created_at')->values();
+        $total = $registros->count();
+        $porcentaje = fn (int $cantidad): float => $total > 0 ? round(($cantidad / $total) * 100, 1) : 0;
         $stats = [
-            'total' => $registros->count(),
+            'total' => $total,
             'promedio_duracion' => $registros->whereNotNull('duracion_ciclo_dias')->avg('duracion_ciclo_dias'),
             'promedio_intervalo' => $registros->whereNotNull('intervalo_entre_ciclos_dias')->avg('intervalo_entre_ciclos_dias'),
+            'promedio_progesterona' => $registros->whereNotNull('progesterona_lutea')->avg('progesterona_lutea'),
             'con_anovulacion' => $registros->where('confirma_anovulacion_por_progesterona', true)->count(),
+            'regulares' => $registros->where('regularidad_ciclo', 'regular')->count(),
+            'hallazgos' => collect([
+                'Amenorrea' => $registros->where('amenorrea', true)->count(),
+                'Oligomenorrea' => $registros->where('oligomenorrea', true)->count(),
+                'Sangrado abundante' => $registros->where('sangrado_abundante', true)->count(),
+                'Dolor menstrual' => $registros->where('dolor_menstrual', true)->count(),
+                'Sospecha de anovulación' => $registros->where('sospecha_anovulacion', true)->count(),
+                'Anovulación confirmada' => $registros->where('confirma_anovulacion_por_progesterona', true)->count(),
+            ])->map(fn ($cantidad) => ['cantidad' => $cantidad, 'porcentaje' => $porcentaje($cantidad)]),
         ];
 
         return Pdf::loadView('pdf.historia-menstrual', [
             'paciente' => $paciente,
             'nombrePaciente' => $nombre,
             'registros' => $registros,
+            'cronologicos' => $cronologicos,
             'filtros' => $filtros,
             'stats' => $stats,
             'profesional' => $request->user(),

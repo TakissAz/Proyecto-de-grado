@@ -4,8 +4,9 @@ import HistorialGenerico from './Components/HistorialGenerico';
 export default function HistorialRestricciones({ paciente, registros }: any) {
     return (
         <HistorialGenerico
-            titulo="Historial de restricciones"
-            descripcion="Todos los registros de restricciones alimentarias del paciente."
+            tipoHistorial="restricciones"
+            titulo="Evolución de restricciones alimentarias"
+            descripcion="Identifica nuevas alergias, intolerancias o alimentos restringidos y revisa qué indicaciones dejaron de estar vigentes."
             icono={ShieldAlert}
             colorIcono="text-category-fruits"
             bgIcono="bg-category-fruits/10"

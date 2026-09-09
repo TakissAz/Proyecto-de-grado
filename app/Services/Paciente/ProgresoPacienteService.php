@@ -63,6 +63,25 @@ class ProgresoPacienteService
         ];
     }
 
+    public function obtenerHistorial(Paciente $paciente): array
+    {
+        return $paciente->evaluacionesNutricionales()->where('estado', true)
+            ->orderBy('fecha_evaluacion')->orderBy('id_evaluacion_nutricional')->get()
+            ->map(function ($evaluacion): array {
+                $imc = $this->imc($evaluacion);
+                return [
+                    'id' => $evaluacion->getKey(),
+                    'fecha' => $evaluacion->fecha_evaluacion?->toDateString(),
+                    'peso' => $this->numero($evaluacion->peso),
+                    'imc' => $imc,
+                    'cintura' => $this->numero($evaluacion->circunferencia_cintura),
+                    'cadera' => $this->numero($evaluacion->circunferencia_cadera),
+                    'porcentaje_grasa' => $this->numero($evaluacion->porcentaje_grasa),
+                    'masa_muscular' => $this->numero($evaluacion->masa_muscular),
+                ];
+            })->values()->all();
+    }
+
     private function imc(?object $evaluacion): ?float
     {
         if (! $evaluacion) return null;

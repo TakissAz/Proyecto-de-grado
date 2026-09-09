@@ -43,11 +43,22 @@ class PacienteResource extends JsonResource
             'actualizado_por_user' => data_get($this->getAttribute('auditoria_actualizacion'), 'usuario'),
             'auditoria_creacion' => $this->getAttribute('auditoria_creacion'),
             'auditoria_actualizacion' => $this->getAttribute('auditoria_actualizacion'),
+            'derivacion_nutricional' => $this->when($this->relationLoaded('derivacionesNutricionales'), function () {
+                $derivacion = $this->derivacionesNutricionales->first();
+                return $derivacion ? [
+                    'id_derivacion_nutricional' => $derivacion->getKey(),
+                    'estado' => $derivacion->estado,
+                    'prioridad' => $derivacion->prioridad,
+                    'motivo_derivacion' => $derivacion->motivo_derivacion,
+                    'fecha_derivacion' => $derivacion->fecha_derivacion?->toIso8601String(),
+                ] : null;
+            }),
             'user' => $this->whenLoaded('user', function () {
                 return [
                     'id' => $this->user?->id,
                     'name' => $this->user?->name,
                     'email' => $this->user?->email,
+                    'avatar_url' => $this->user?->avatar_url,
                     'estado' => $this->user?->estado,
                     'roles' => $this->user?->relationLoaded('roles')
                         ? $this->user->roles->map(function ($rol) {

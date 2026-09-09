@@ -5,11 +5,18 @@
 @layer base {
   html {
     @apply antialiased;
+    min-height: 100%;
   }
 
   body {
     @apply bg-surface-bg text-ink transition-colors duration-200 dark:bg-surface-bg-dark dark:text-ink-dark;
     font-size: 15px;
+    min-height: 100vh;
+  }
+
+  #app {
+    min-height: 100vh;
+    background: inherit;
   }
 }
 

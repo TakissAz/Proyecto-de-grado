@@ -25,6 +25,14 @@ th{background:#f2f7f5;color:#365d54}
 .footer{position:fixed;bottom:-15px;left:0;right:0;text-align:center;color:#78908a;font-size:8px}
 .note{padding:9px;background:#fff8df;border:1px solid #e3cb75;border-radius:6px;margin-top:14px}
 .interp{text-align:left;background:#fafcfb;color:#657a75;font-style:italic}
+.latest{margin:12px 0;padding:10px 12px;border:1px solid #b9d8d0;border-radius:8px;background:#f7fbfa}
+.latest-title{font-size:8px;text-transform:uppercase;font-weight:bold;color:#667b76;letter-spacing:.6px}
+.latest-value{font-size:13px;font-weight:bold;color:#176b5b;margin:2px 0 5px}
+.latest-grid{width:100%;border:0;margin:0}.latest-grid td{width:25%;border:0;padding:3px 8px 3px 0;text-align:left;background:transparent}
+.image-table{border-collapse:separate;border-spacing:8px 8px;margin:0 -8px;width:calc(100% + 16px)}
+.image-table td{width:50%;vertical-align:top;text-align:left;border:1px solid #d6e2df;border-radius:7px;padding:7px;background:#fafcfb}
+.eco-image{display:block;max-width:100%;width:100%;height:190px;object-fit:contain;background:#edf3f1;border-radius:4px;margin-bottom:6px}
+.image-caption{font-size:8px;color:#657a75}.image-caption strong{color:#365d54;font-size:9px}
 </style></head><body>
 
 <div class="header">
@@ -59,6 +67,36 @@ th{background:#f2f7f5;color:#365d54}
         <td><div class="num {{ $stats['promedio_vol_oi'] && $stats['promedio_vol_oi'] >= 10 ? 'alto' : '' }}">{{ $stats['promedio_vol_oi'] ? round($stats['promedio_vol_oi'], 1) : '—' }}</div><div class="label">Prom. Vol. OI (mL)</div></td>
     </tr>
 </table>
+
+@if($ultimoRegistro)
+<div class="latest">
+    <div class="latest-title">Lectura del estudio más reciente</div>
+    <div class="latest-value">{{ $ultimoRegistro->fecha_ecografia?->format('d/m/Y') ?? 'Sin fecha' }} · {{ $ultimoRegistro->tipo_ecografia ? ucfirst($ultimoRegistro->tipo_ecografia) : 'Tipo no especificado' }}</div>
+    <table class="latest-grid"><tr>
+        <td><span class="label">Morfología</span><br><b class="{{ $ultimoRegistro->morfologia_compatible_pmos ? 'alto' : '' }}">{{ $ultimoRegistro->morfologia_compatible_pmos ? 'Compatible PMOS' : 'Sin criterios marcados' }}</b></td>
+        <td><span class="label">Volumen OD / OI</span><br><b>{{ $ultimoRegistro->volumen_ovario_derecho ?? '—' }} / {{ $ultimoRegistro->volumen_ovario_izquierdo ?? '—' }} mL</b></td>
+        <td><span class="label">Folículos OD / OI</span><br><b>{{ $ultimoRegistro->foliculos_ovario_derecho ?? '—' }} / {{ $ultimoRegistro->foliculos_ovario_izquierdo ?? '—' }}</b></td>
+        <td><span class="label">Distribución periférica</span><br><b>{{ $ultimoRegistro->distribucion_periferica ? 'Presente' : 'No reportada' }}</b></td>
+    </tr></table>
+</div>
+@endif
+
+@if($registrosConImagen->isNotEmpty())
+<h2>Imágenes ecográficas adjuntas <span class="panel-tag">{{ $registrosConImagen->count() }} disponible(s)</span></h2>
+<div class="meta" style="margin:-2px 0 5px">Las imágenes corresponden a los archivos cargados en cada evaluación y se incluyen para complementar, no reemplazar, el informe radiológico.</div>
+<table class="image-table"><tr>
+@foreach($registrosConImagen as $indice => $estudio)
+    <td>
+        <img class="eco-image" src="{{ $estudio->imagen_pdf }}" alt="Imagen ecográfica del {{ $estudio->fecha_ecografia?->format('d/m/Y') }}">
+        <div class="image-caption"><strong>{{ $estudio->fecha_ecografia?->format('d/m/Y') ?? 'Sin fecha' }} · {{ $estudio->tipo_ecografia ? ucfirst($estudio->tipo_ecografia) : 'Ecografía' }}</strong><br>
+            {{ $estudio->morfologia_compatible_pmos ? 'Morfología compatible con PMOS.' : 'Sin criterios ecográficos marcados para PMOS.' }}
+        </div>
+    </td>
+    @if($indice % 2 === 1)</tr><tr>@endif
+@endforeach
+@if($registrosConImagen->count() % 2 === 1)<td style="border:0;background:transparent"></td>@endif
+</tr></table>
+@endif
 
 <h2>Registros cronológicos ({{ $registros->count() }})</h2>
 @if($registros->isEmpty())

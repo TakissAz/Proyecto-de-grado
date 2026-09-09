@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Activity, AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, ClipboardCheck, DatabaseBackup, HeartPulse, Salad, ShieldCheck, Stethoscope, UserCog, Users } from 'lucide-react';
 import clsx from 'clsx';
+import RoleWelcomePreloader from '@/Components/ui/RoleWelcomePreloader';
 
 type N = Record<string, number>;
 type Alerta = { titulo: string; mensaje: string; severidad: string; categoria: string };
@@ -11,9 +12,9 @@ const VACIO: Metricas = { resumen:{}, diagnosticos:{pmos_confirmado:0,pmos_no_co
 
 export default function Dashboard({ metricasGenerales }: { metricasGenerales?: Metricas }) {
     const m = metricasGenerales ?? VACIO;
-    const pagina = usePage().props as { auth?: { user?: { name?: string } | null } };
+    const pagina = usePage().props as { auth?: { user?: { id?: number; name?: string } | null } };
     const nombre = pagina.auth?.user?.name?.trim().replace(/^(lic\.?|dra?\.?|nut\.?|ing\.?)\s+/i, '').split(/\s+/)[0] || 'Administrador';
-    return <AuthenticatedLayout header={<h2>Administración</h2>}><Head title="Administración"/><main className="mx-auto max-w-7xl space-y-5">
+    return <AuthenticatedLayout header={<h2>Administración</h2>}><Head title="Administración"/><RoleWelcomePreloader role="administrador" userName={pagina.auth?.user?.name} userId={pagina.auth?.user?.id}/><main className="mx-auto max-w-7xl space-y-5">
         <header className="relative overflow-hidden rounded-2xl border border-surface-border bg-white p-6 shadow-[0_8px_30px_rgba(16,24,20,.04)] dark:border-surface-border-dark dark:bg-[#1c2027] dark:shadow-none"><div className="absolute inset-y-0 left-0 w-1 bg-category-dairy"/><div className="flex flex-wrap items-center justify-between gap-5"><div className="flex items-center gap-4"><div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-category-dairy/10 text-category-dairy sm:flex"><ShieldCheck size={23}/></div><div><div className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-category-dairy"/><p className="text-[9.5px] font-bold uppercase tracking-[.18em] text-category-dairy">Supervisión del sistema</p></div><h1 className="mt-1.5 text-2xl font-bold tracking-tight">Hola, {nombre}</h1><p className="mt-1 text-[12px] text-ink-muted">Estado general, alertas operativas y accesos administrativos.</p></div></div><div className="flex flex-wrap gap-2"><a href={route('admin.base-datos.respaldo')} className="inline-flex items-center gap-2 rounded-xl border border-category-dairy/25 px-4 py-2.5 text-[11px] font-bold text-category-dairy"><DatabaseBackup size={15}/> Descargar respaldo</a><Link href={route('admin.users.create')} className="inline-flex items-center gap-2 rounded-xl bg-category-dairy px-4 py-2.5 text-[11px] font-bold text-white"><UserCog size={15}/> Nuevo usuario</Link></div></div></header>
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metrica icon={Users} titulo="Usuarios registrados" valor={m.resumen.total_usuarios ?? 0} detalle={`${m.resumen.total_nutricionistas ?? 0} nutricionistas · ${m.resumen.total_endocrinologos ?? 0} endocrinólogos`} color="purple"/><Metrica icon={HeartPulse} titulo="Pacientes" valor={m.resumen.total_pacientes ?? 0} detalle={`${m.resumen.pacientes_activos ?? 0} activos · ${m.resumen.pacientes_inactivos ?? 0} inactivos`} color="green"/><Metrica icon={Salad} titulo="Planes activos" valor={m.planes.activos ?? 0} detalle={`${m.planes.en_revision ?? 0} en revisión · ${m.planes.sugeridos ?? 0} sugeridos`} color="orange"/><Metrica icon={ClipboardCheck} titulo="Adherencia general" valor={`${m.seguimiento.adherencia_promedio ?? 0}%`} detalle={`${m.seguimiento.pacientes_baja_adherencia ?? 0} pacientes bajo 60%`} color={(m.seguimiento.adherencia_promedio ?? 0) >= 70 ? 'green' : 'red'}/></section>

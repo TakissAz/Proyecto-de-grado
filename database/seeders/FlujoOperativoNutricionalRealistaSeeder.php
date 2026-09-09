@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Cita;
 use App\Models\ComidaPlanAlimentario;
+use App\Models\ComponenteComidaPlan;
 use App\Models\DerivacionNutricional;
 use App\Models\DiaPlanAlimentario;
 use App\Models\EvaluacionNutricional;
@@ -11,6 +12,7 @@ use App\Models\Paciente;
 use App\Models\PlanAlimentario;
 use App\Models\RequerimientoNutricional;
 use App\Models\RecomendacionNutricionalExperta;
+use App\Models\Receta;
 use App\Models\RetroalimentacionPaciente;
 use App\Models\SeguimientoComida;
 use App\Models\SeguimientoSintomaPaciente;
@@ -22,13 +24,18 @@ use RuntimeException;
 
 class FlujoOperativoNutricionalRealistaSeeder extends Seeder
 {
-    private const HOY = '2026-08-31';
+    /** @var array<string, \Illuminate\Support\Collection<int, Receta>> */
+    private array $recetasPorTiempo = [];
 
     public function run(): void
     {
-        $endocrinologo = User::query()->where('email', 'endocrinologia.datos@nutrigo.test')->first();
-        $nutricionista = User::query()->where('email', 'nutricion.datos@nutrigo.test')->first();
-        $pacientes = Paciente::query()->with('user')->where('ci', 'like', 'DEMO-%')->orderBy('ci')->get();
+        $endocrinologo = User::query()->where('email', DatosClinicosNutricionalesRealistasSeeder::EMAIL_ENDOCRINOLOGIA)->first();
+        $nutricionista = User::query()->where('email', DatosClinicosNutricionalesRealistasSeeder::EMAIL_NUTRICION)->first();
+        $pacientes = Paciente::query()
+            ->with('user')
+            ->whereIn('ci', DatosClinicosNutricionalesRealistasSeeder::identificacionesPacientes())
+            ->orderBy('ci')
+            ->get();
 
         if (! $endocrinologo || ! $nutricionista || $pacientes->count() !== 70) {
             throw new RuntimeException('Primero ejecuta DatosClinicosNutricionalesRealistasSeeder.');
@@ -40,13 +47,14 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
             }
         });
 
-        $this->command?->info('Flujo operativo: 70 derivaciones, 140 citas, 70 planes y seguimientos semanales creados o actualizados.');
+        $this->command?->info('Flujo operativo: 70 pacientes distribuidos entre planes programados, en curso y finalizados.');
     }
 
     public function crearFlujo(int $numero, Paciente $paciente, User $endocrinologo, User $nutricionista): void
     {
-        $inicio = Carbon::parse(self::HOY)->subDays(6);
-        $estadoDerivacion = ['pendiente', 'vista', 'aceptada', 'atendida'][$numero % 4];
+        $escenario = $this->escenarioPlan($numero);
+        $inicio = $escenario['inicio'];
+        $estadoDerivacion = $escenario['dias_registrados'] > 0 ? 'atendida' : 'aceptada';
         DerivacionNutricional::withTrashed()->updateOrCreate(
             ['id_paciente'=>$paciente->getKey(), 'origen'=>'diagnostico_endocrinologico'],
             ['id_endocrinologo'=>$endocrinologo->id, 'id_nutricionista'=>$nutricionista->id,
@@ -61,14 +69,31 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
         );
 
         $this->cita($paciente, $endocrinologo, $inicio->copy()->subDays(14), 'endocrinologo', 'control_endocrinologico', 'atendida', $numero);
-        $estadoCitaNutri = ['programada','confirmada','atendida','cancelada'][$numero % 4];
-        $fechaNutri = in_array($estadoCitaNutri, ['programada','confirmada'], true)
-            ? Carbon::parse(self::HOY)->addDays(1 + ($numero % 21))
-            : $inicio->copy()->subDays(7);
+        $estadoCitaNutri = $escenario['estado'] === 'finalizado'
+            ? 'atendida'
+            : ($numero % 11 === 0 ? 'cancelada' : ($escenario['dias_registrados'] > 0 ? 'confirmada' : 'programada'));
+        $fechaNutri = $escenario['estado'] === 'finalizado'
+            ? $inicio->copy()->addDays(8)
+            : Carbon::today('America/La_Paz')->addDays(2 + ($numero % 4));
         $this->cita($paciente, $nutricionista, $fechaNutri, 'nutricionista', 'seguimiento_nutricional', $estadoCitaNutri, $numero);
 
         $requerimiento = RequerimientoNutricional::query()->where('id_paciente', $paciente->getKey())->latest('fecha_calculo')->firstOrFail();
-        $this->crearEvaluacionSeguimiento($numero, $paciente, $requerimiento, $nutricionista);
+        EvaluacionNutricional::query()
+            ->where('id_paciente', $paciente->getKey())
+            ->whereIn('observaciones', [
+                'Control antropométrico semanal para visualizar evolución.',
+                'Control antropométrico semanal y revisión de tolerancia al plan.',
+            ])
+            ->delete();
+        if ($escenario['dias_registrados'] >= 4) {
+            $this->crearEvaluacionSeguimiento(
+                $numero,
+                $paciente,
+                $requerimiento,
+                $nutricionista,
+                $inicio->copy()->addDays(7)->min(Carbon::today('America/La_Paz')),
+            );
+        }
         $recomendacion = RecomendacionNutricionalExperta::withTrashed()->updateOrCreate(
             [
                 'id_paciente' => $paciente->getKey(),
@@ -101,16 +126,16 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                 'estado_validacion_experta' => 'aprobado',
                 'validado_por' => $nutricionista->id,
                 'fecha_validacion' => $inicio->copy()->subDay(),
-                'observacion_validacion' => 'Recomendación revisada para escenario de seguimiento.',
-                'estado' => 'pendiente',
+                'observacion_validacion' => 'Recomendación revisada y ajustada al perfil clínico, hábitos y preferencias de la paciente.',
+                'estado' => 'activo',
                 'deleted_at' => null,
             ]
         );
         if ($recomendacion->trashed()) $recomendacion->restore();
-        $estadoPlan = $numero % 5 === 0 ? 'finalizado' : 'activo';
+        $estadoPlan = $escenario['estado'];
         $plan = PlanAlimentario::withTrashed()->updateOrCreate(
-            ['id_paciente'=>$paciente->getKey(), 'nombre'=>'Plan semanal de seguimiento'],
-            ['id_nutricionista'=>$nutricionista->id,
+            ['id_paciente'=>$paciente->getKey(), 'id_recomendacion_nutricional_experta'=>$recomendacion->getKey()],
+            ['nombre'=>$escenario['nombre'], 'id_nutricionista'=>$nutricionista->id,
                 'id_recomendacion_nutricional_experta'=>$recomendacion->getKey(),
                 'id_requerimiento_nutricional'=>$requerimiento->getKey(),
                 'fecha_inicio'=>$inicio->toDateString(), 'fecha_fin'=>$inicio->copy()->addDays(6)->toDateString(),
@@ -125,11 +150,26 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                 'grasas_totales'=>round($requerimiento->grasas_diarias * 7 * .9, 2),
                 'fibra_total'=>round($requerimiento->fibra_diaria * 7 * .94, 2),
                 'estado_plan'=>$estadoPlan, 'generado_por_sistema_experto'=>true,
-                'observaciones'=>'Plan semanal de demostración revisado por nutrición.',
+                'observaciones'=>$escenario['observaciones'],
                 'fecha_aprobacion'=>$inicio->copy()->subDay(), 'aprobado_por'=>$nutricionista->id,
                 'estado'=>'activo', 'deleted_at'=>null]
         );
         if ($plan->trashed()) $plan->restore();
+
+        SeguimientoComida::query()
+            ->where('id_plan_alimentario', $plan->getKey())
+            ->delete();
+        SeguimientoSintomaPaciente::query()
+            ->where('id_paciente', $paciente->getKey())
+            ->whereIn('observaciones', [
+                'Registro diario de síntomas y bienestar.',
+                'Autoregistro diario de síntomas, descanso y actividad física.',
+            ])
+            ->delete();
+        RetroalimentacionPaciente::query()
+            ->where('id_plan_alimentario', $plan->getKey())
+            ->where('tipo_retroalimentacion', 'seguimiento_semanal')
+            ->delete();
 
         foreach (range(1, 7) as $diaNumero) {
             $fechaDia = $inicio->copy()->addDays($diaNumero - 1);
@@ -159,10 +199,14 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                         'estado'=>'activo', 'deleted_at'=>null]
                 );
                 if ($comida->trashed()) $comida->restore();
-                $this->seguimientoComida($numero, $diaNumero, $orden, $paciente, $plan, $dia, $comida, $nutricionista);
+                $this->componenteReceta($numero, $diaNumero, $orden, $tipo, $comida);
+                if ($diaNumero <= $escenario['dias_registrados']) {
+                    $this->seguimientoComida($numero, $diaNumero, $orden, $paciente, $plan, $dia, $comida, $nutricionista);
+                }
             }
 
-            $sintoma = SeguimientoSintomaPaciente::withTrashed()->updateOrCreate(
+            if ($diaNumero <= $escenario['dias_registrados']) {
+                $sintoma = SeguimientoSintomaPaciente::withTrashed()->updateOrCreate(
                 ['id_paciente'=>$paciente->getKey(), 'fecha_registro'=>$fechaDia->toDateString()],
                 ['nivel_energia'=>['baja','media','alta'][($numero + $diaNumero) % 3],
                     'hambre_durante_dia'=>['baja','moderada','alta'][($numero + $diaNumero) % 3],
@@ -179,13 +223,15 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                     'actividad_fisica'=>$numero % 3 === 0 ? 'caminata' : 'entrenamiento ligero',
                     'minutos_actividad'=>20 + (($numero + $diaNumero) % 4) * 10,
                     'consumo_agua_litros'=>1.4 + (($numero + $diaNumero) % 5) * .2,
-                    'observaciones'=>'Registro diario de síntomas y bienestar.', 'registrado_por'=>$paciente->user_id,
+                    'observaciones'=>'Autoregistro diario de síntomas, descanso y actividad física.', 'registrado_por'=>$paciente->user_id,
                     'deleted_at'=>null]
-            );
-            if ($sintoma->trashed()) $sintoma->restore();
+                );
+                if ($sintoma->trashed()) $sintoma->restore();
+            }
         }
 
-        RetroalimentacionPaciente::withTrashed()->updateOrCreate(
+        if ($escenario['dias_registrados'] >= 4) {
+            RetroalimentacionPaciente::withTrashed()->updateOrCreate(
             ['id_paciente'=>$paciente->getKey(), 'id_plan_alimentario'=>$plan->getKey(), 'tipo_retroalimentacion'=>'seguimiento_semanal'],
             ['id_usuario_emisor'=>$nutricionista->id, 'rol_emisor'=>'nutricionista',
                 'mensaje'=>$numero % 4 === 0
@@ -194,8 +240,9 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                 'prioridad'=>$numero % 4 === 0 ? 'alta' : 'normal', 'visible_para_paciente'=>true,
                 'leido_por_paciente'=>$numero % 3 !== 0,
                 'fecha_lectura_paciente'=>$numero % 3 !== 0 ? $inicio->copy()->addDays(7) : null,
-                'estado'=>'activo', 'deleted_at'=>null]
-        );
+                    'estado'=>'activo', 'deleted_at'=>null]
+            );
+        }
     }
 
     private function cita(Paciente $paciente, User $profesional, Carbon $fecha, string $tipoProfesional, string $tipoCita, string $estado, int $numero): void
@@ -243,20 +290,61 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
         );
     }
 
-    private function crearEvaluacionSeguimiento(int $numero, Paciente $paciente, RequerimientoNutricional $requerimiento, User $nutricionista): void
+    private function componenteReceta(
+        int $numero,
+        int $diaNumero,
+        int $orden,
+        string $tipo,
+        ComidaPlanAlimentario $comida,
+    ): void {
+        $recetas = $this->recetasPorTiempo[$tipo] ??= Receta::query()
+            ->where('estado', 'activo')
+            ->where('tipo_comida', $tipo)
+            ->orderBy('id_receta')
+            ->get();
+
+        if ($recetas->isEmpty()) {
+            ComponenteComidaPlan::withTrashed()->updateOrCreate(
+                ['id_comida_plan_alimentario'=>$comida->getKey(), 'orden'=>1],
+                ['tipo_componente'=>'manual', 'id_receta'=>null, 'id_alimento'=>null,
+                    'nombre_manual'=>'Preparación saludable por definir', 'cantidad'=>1, 'unidad'=>'porción',
+                    'calorias'=>$comida->calorias_totales, 'proteinas'=>$comida->proteinas_totales,
+                    'carbohidratos'=>$comida->carbohidratos_totales, 'grasas'=>$comida->grasas_totales,
+                    'fibra'=>$comida->fibra_total, 'observaciones'=>'Pendiente de revisión por nutrición.',
+                    'estado'=>'activo', 'deleted_at'=>null]
+            );
+            return;
+        }
+
+        /** @var Receta $receta */
+        $receta = $recetas->values()[($numero + $diaNumero + $orden) % $recetas->count()];
+        $componente = ComponenteComidaPlan::withTrashed()->updateOrCreate(
+            ['id_comida_plan_alimentario'=>$comida->getKey(), 'orden'=>1],
+            ['tipo_componente'=>'receta', 'id_receta'=>$receta->getKey(), 'id_alimento'=>null,
+                'nombre_manual'=>null, 'cantidad'=>1, 'unidad'=>'porción',
+                'calorias'=>$receta->calorias_totales, 'proteinas'=>$receta->proteinas_totales,
+                'carbohidratos'=>$receta->carbohidratos_totales, 'grasas'=>$receta->grasas_totales,
+                'fibra'=>$receta->fibra_total,
+                'observaciones'=>'Puntaje experto: '.(82 + (($numero + $diaNumero + $orden) % 17)).'/100. Seleccionada por compatibilidad con el tiempo de comida y el objetivo nutricional.',
+                'estado'=>'activo', 'deleted_at'=>null]
+        );
+        if ($componente->trashed()) $componente->restore();
+    }
+
+    private function crearEvaluacionSeguimiento(int $numero, Paciente $paciente, RequerimientoNutricional $requerimiento, User $nutricionista, Carbon $fechaControl): void
     {
         $inicial = EvaluacionNutricional::query()
             ->where('id_paciente', $paciente->getKey())
             ->oldest('fecha_evaluacion')
             ->firstOrFail();
-        if ($inicial->fecha_evaluacion?->toDateString() === self::HOY) {
+        if ($inicial->fecha_evaluacion?->toDateString() === Carbon::today('America/La_Paz')->toDateString()) {
             $datosBase = $inicial->only([
                 'id_nutricionista','id_consulta_nutricional','peso','talla','imc',
                 'circunferencia_cintura','circunferencia_cadera','indice_cintura_cadera',
                 'porcentaje_grasa','masa_muscular','nivel_actividad','estado',
             ]);
             $inicial = EvaluacionNutricional::withTrashed()->updateOrCreate(
-                ['id_paciente'=>$paciente->getKey(), 'fecha_evaluacion'=>Carbon::parse(self::HOY)->subDays(30)->toDateString()],
+                ['id_paciente'=>$paciente->getKey(), 'fecha_evaluacion'=>Carbon::today('America/La_Paz')->subDays(30)->toDateString()],
                 $datosBase + ['observaciones'=>'Medición antropométrica inicial de referencia.', 'deleted_at'=>null]
             );
         }
@@ -266,7 +354,7 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
         $cintura = round((float) $inicial->circunferencia_cintura + min(0, $cambioPeso * 1.2), 2);
 
         EvaluacionNutricional::withTrashed()->updateOrCreate(
-            ['id_paciente'=>$paciente->getKey(), 'fecha_evaluacion'=>self::HOY],
+            ['id_paciente'=>$paciente->getKey(), 'fecha_evaluacion'=>$fechaControl->toDateString()],
             ['id_nutricionista'=>$nutricionista->id,
                 'id_consulta_nutricional'=>$requerimiento->id_consulta_nutricional,
                 'peso'=>$peso, 'talla'=>$talla, 'imc'=>round($peso / ($talla ** 2), 2),
@@ -275,9 +363,46 @@ class FlujoOperativoNutricionalRealistaSeeder extends Seeder
                 'indice_cintura_cadera'=>round($cintura / max((float) $inicial->circunferencia_cadera, 1), 2),
                 'porcentaje_grasa'=>max(18, round((float) $inicial->porcentaje_grasa + $cambioPeso * .35, 2)),
                 'masa_muscular'=>$inicial->masa_muscular, 'nivel_actividad'=>$inicial->nivel_actividad,
-                'observaciones'=>'Control antropométrico semanal para visualizar evolución.',
+                'observaciones'=>'Control antropométrico semanal y revisión de tolerancia al plan.',
                 'estado'=>true, 'deleted_at'=>null]
         );
+    }
+
+    /** @return array{estado:string,inicio:Carbon,dias_registrados:int,nombre:string,observaciones:string} */
+    private function escenarioPlan(int $numero): array
+    {
+        $hoy = Carbon::today('America/La_Paz');
+
+        return match ($numero % 4) {
+            0 => [
+                'estado' => 'finalizado',
+                'inicio' => $hoy->copy()->subDays(13),
+                'dias_registrados' => 7,
+                'nombre' => 'Plan de control metabólico - ciclo completado',
+                'observaciones' => 'Periodo concluido con seguimiento completo y revisión profesional.',
+            ],
+            1 => [
+                'estado' => 'activo',
+                'inicio' => $hoy->copy(),
+                'dias_registrados' => 1,
+                'nombre' => 'Plan nutricional inicial - semana inicial',
+                'observaciones' => 'Periodo iniciado con orientación sobre horarios, porciones y registro diario.',
+            ],
+            2 => [
+                'estado' => 'activo',
+                'inicio' => $hoy->copy()->subDays(3),
+                'dias_registrados' => 4,
+                'nombre' => 'Plan de alimentación equilibrada - seguimiento',
+                'observaciones' => 'Plan en curso con cuatro días de seguimiento y control de adherencia.',
+            ],
+            default => [
+                'estado' => 'aprobado',
+                'inicio' => $hoy->copy()->addDays(2),
+                'dias_registrados' => 0,
+                'nombre' => 'Plan de inicio nutricional programado',
+                'observaciones' => 'Plan aprobado y programado; pendiente de iniciar el registro diario.',
+            ],
+        };
     }
 
     private function tiempos(): array

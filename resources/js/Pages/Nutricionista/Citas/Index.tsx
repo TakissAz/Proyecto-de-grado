@@ -7,14 +7,15 @@ import type { CitaData, PacienteOption, ProfesionalOption } from '@/Components/C
 import type { PageProps } from '@/types';
 
 interface Props extends PageProps {
-    citas: { data: CitaData[]; current_page: number; last_page: number };
+    citas: { data: CitaData[]; current_page: number; last_page: number; total: number; from: number | null; to: number | null; per_page: number };
+    citasAgenda: CitaData[];
     filtros: { fecha?: string; estado?: string; paciente?: string };
     pacientes: PacienteOption[];
     profesional: ProfesionalOption;
     tipoProfesional: string;
 }
 
-export default function CitasIndex({ citas, filtros, pacientes, profesional, tipoProfesional }: Props) {
+export default function CitasIndex({ citas, citasAgenda, filtros, pacientes, profesional, tipoProfesional }: Props) {
     const [modalAbierto, setModalAbierto] = useState(false);
 
     return (
@@ -22,6 +23,7 @@ export default function CitasIndex({ citas, filtros, pacientes, profesional, tip
             <Head title="Calendario" />
             <AgendaCitas
                 citas={citas}
+                citasAgenda={citasAgenda}
                 filtros={filtros}
                 prefijo="nutricionista"
                 onNuevaCita={() => setModalAbierto(true)}

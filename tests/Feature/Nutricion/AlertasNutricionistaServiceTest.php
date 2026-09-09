@@ -12,6 +12,7 @@ use App\Models\SeguimientoSintomaPaciente;
 use App\Models\User;
 use App\Services\Nutricion\AlertasNutricionistaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AlertasNutricionistaServiceTest extends TestCase
@@ -27,7 +28,9 @@ class AlertasNutricionistaServiceTest extends TestCase
 
     public function test_genera_alertas_de_adherencia_tipo_y_falta_de_registros(): void
     {
-        [$paciente] = $this->escenario();
+        [$paciente, $plan, $comidas] = $this->escenario();
+        $plan->update(['fecha_inicio' => today()->subDays(4), 'fecha_fin' => today()->addDays(2)]);
+        $this->seguimiento($paciente, $plan, $comidas[0], ['fecha_seguimiento' => today()->subDays(4)]);
         $codigos = $this->codigos($paciente);
         $this->assertContains('adherencia_baja', $codigos);
         $this->assertContains('adherencia_baja_desayuno', $codigos);
@@ -50,10 +53,25 @@ class AlertasNutricionistaServiceTest extends TestCase
     public function test_genera_alertas_por_sintomas_frecuentes(): void
     {
         $paciente = $this->paciente(); $usuario = User::factory()->create();
+        PlanAlimentario::query()->create(['id_paciente'=>$paciente->getKey(),'nombre'=>'Plan activo','estado_plan'=>'activo','fecha_inicio'=>today()->subDays(6),'fecha_fin'=>today(),'estado'=>'activo']);
         foreach (range(1, 3) as $dia) SeguimientoSintomaPaciente::query()->create(['id_paciente'=>$paciente->getKey(),'fecha_registro'=>today()->subDays($dia),'hambre_nocturna'=>true,'ansiedad_por_comida'=>'alta','registrado_por'=>$usuario->getKey()]);
         $codigos = $this->codigos($paciente);
         $this->assertContains('hambre_nocturna_frecuente', $codigos);
         $this->assertContains('ansiedad_comida_frecuente', $codigos);
+    }
+
+    public function test_no_genera_alertas_de_seguimiento_si_el_plan_inicia_manana(): void
+    {
+        [$paciente, $plan, $comidas] = $this->escenario();
+        $plan->update(['fecha_inicio' => today()->addDay(), 'fecha_fin' => today()->addDays(7)]);
+        $plan->dias()->update(['fecha' => today()->addDay()]);
+        $this->seguimiento($paciente, $plan, $comidas[0], ['fecha_seguimiento' => today()->addDay()]);
+
+        $codigos = $this->codigos($paciente);
+
+        foreach (['adherencia_baja', 'adherencia_media', 'adherencia_baja_desayuno', 'sin_registros_recientes'] as $codigo) {
+            $this->assertNotContains($codigo, $codigos);
+        }
     }
 
     public function test_genera_alertas_de_comunicacion_y_plan_pendiente(): void
@@ -66,12 +84,27 @@ class AlertasNutricionistaServiceTest extends TestCase
         $this->assertContains('plan_pendiente_revision', $codigos);
     }
 
+    public function test_alerta_desayuno_no_marcado_solo_despues_de_su_horario(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-07 10:00:00', 'America/La_Paz'));
+        [$paciente, , $comidas] = $this->escenario();
+        $comidas[0]->update(['hora_sugerida' => '08:00']);
+        $comidas[1]->update(['hora_sugerida' => '13:00']);
+
+        $resultado = $this->servicio()->generarParaPaciente($paciente);
+        $alerta = collect($resultado['alertas'])->firstWhere('codigo', 'comidas_sin_marcar');
+
+        $this->assertNotNull($alerta);
+        $this->assertStringContainsString('desayuno', $alerta['mensaje']);
+        $this->assertStringNotContainsString('almuerzo', $alerta['mensaje']);
+    }
+
     public function test_no_genera_codigos_duplicados_y_calcula_resumen(): void
     {
         [$paciente] = $this->escenario(); $resultado = $this->servicio()->generarParaPaciente($paciente); $codigos = collect($resultado['alertas'])->pluck('codigo');
         $this->assertSame($codigos->unique()->count(), $codigos->count());
         $this->assertSame($codigos->count(), $resultado['resumen']['total']);
-        $this->assertTrue($resultado['resumen']['tiene_alertas_criticas']);
+        $this->assertFalse($resultado['resumen']['tiene_alertas_criticas']);
     }
 
     private function escenario(): array

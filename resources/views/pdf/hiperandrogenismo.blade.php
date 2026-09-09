@@ -1,106 +1,14 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Historial de hiperandrogenismo</title>
-<style>
-@page{margin:28px 34px}
-body{font-family:DejaVu Sans,sans-serif;color:#243632;font-size:9.5px;line-height:1.45}
-.brand{color:#176b5b;font-size:9px;font-weight:bold;letter-spacing:1.2px}
-.header{border-bottom:3px solid #1f8a70;padding-bottom:12px}
-.header h1{font-size:20px;margin:4px 0;color:#123d35}
-.meta{color:#657a75}
-.hero{margin:14px 0;padding:12px 14px;background:#eaf7f3;border-radius:8px}
-.hero .label{font-size:8px;text-transform:uppercase;color:#667b76}
-.hero strong{font-size:15px;color:#176b5b}
-h2{font-size:12px;color:#176b5b;border-bottom:1px solid #b9d8d0;padding-bottom:4px;margin:15px 0 7px}
-table{width:100%;border-collapse:collapse;margin:5px 0}
-td,th{border:1px solid #d6e2df;padding:5px 6px;text-align:left;font-size:8.5px}
-th{background:#f2f7f5;color:#365d54}
-.label{font-size:8px;text-transform:uppercase;color:#667b76}
-.stats td{width:25%;text-align:center;background:#f7fbfa}
-.stats .num{font-size:16px;font-weight:bold;color:#176b5b}
-.chip{display:inline-block;padding:2px 6px;border-radius:8px;font-size:7.5px;font-weight:bold;background:#fff2e0;color:#b45d00;margin:1px}
-.chip-green{background:#e3f5e0;color:#1e7a2e}
-.filtro{display:inline-block;padding:3px 8px;background:#fff;border:1px solid #80bcae;border-radius:10px;font-size:8px;margin-right:5px}
-.footer{position:fixed;bottom:-15px;left:0;right:0;text-align:center;color:#78908a;font-size:8px}
-.note{padding:9px;background:#fff8df;border:1px solid #e3cb75;border-radius:6px;margin-top:14px}
+﻿<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Evolución del hiperandrogenismo</title><style>
+@page{margin:26px 32px 38px}body{font-family:DejaVu Sans,sans-serif;color:#263833;font-size:8.7px;line-height:1.4}h1{margin:3px 0;font-size:20px;color:#153f35}h2{margin:15px 0 7px;border-bottom:1px solid #bfd4cd;padding-bottom:4px;color:#176b5b;font-size:11.5px}.header{border-bottom:3px solid #25836b;padding-bottom:10px}.brand{color:#25836b;font-size:8px;font-weight:bold;letter-spacing:1.2px}.right{float:right;text-align:right}.clear{clear:both}.muted{color:#6b7f79}.hero{margin:11px 0;padding:10px 12px;border:1px solid #d5e5df;background:#f3f8f6}.hero strong{font-size:14px;color:#164d40}.grid{width:100%;border-collapse:separate;border-spacing:5px}.grid td{vertical-align:top}.stat{border:1px solid #d8e4e0;background:#f8faf9;padding:8px}.stat b{display:block;margin-top:2px;color:#176b5b;font-size:14px}.label{color:#6d817a;font-size:7px;font-weight:bold;text-transform:uppercase;letter-spacing:.4px}.panel{border:1px solid #d8e4e0;padding:9px;background:#fff}.bar-row{margin:7px 0}.bar-value{float:right;font-weight:bold;color:#ad6500}.track{height:8px;background:#edf0ef}.fill{height:8px;background:#e39422}.purple{background:#9c4dcc}.red{background:#d64a3b}.green{background:#3b9a60}.scale{font-size:6.8px;color:#899792}.interpretation{margin:10px 0;border-left:4px solid #e39422;background:#fff7e9;padding:9px}.interpretation strong{color:#9b5900}.filter{display:inline-block;margin:4px 3px 0 0;border:1px solid #b8d4ca;padding:2px 6px;color:#37685b}.timeline{width:100%;border-collapse:collapse}.timeline th,.timeline td{border:1px solid #d8e2df;padding:5px;vertical-align:top}.timeline th{background:#eaf2ef;color:#24594c;font-size:7.5px}.fg{font-weight:bold}.high{color:#b04438}.note{margin-top:12px;border:1px solid #d7e2de;background:#f6f9f8;padding:8px}.footer{position:fixed;bottom:-22px;left:0;right:0;border-top:1px solid #cad5d1;padding-top:5px;text-align:center;color:#7b8d87;font-size:7px}.avoid{page-break-inside:avoid}
 </style></head><body>
-
-<div class="header">
-    <div class="brand">HISTORIA CLÍNICA · HIPERANDROGENISMO</div>
-    <h1>Reporte de hiperandrogenismo clínico</h1>
-    <div class="meta">Documento clínico · Generado {{ $fechaGeneracion->format('d/m/Y H:i') }}</div>
-</div>
-
-<div class="hero">
-    <div class="label">Paciente</div>
-    <strong>{{ $nombrePaciente ?: 'Sin nombre' }}</strong>
-    <div>CI: {{ $paciente->ci ?: 'N/D' }} · Edad: {{ $paciente->fecha_nacimiento?->age ?? 'N/D' }} años</div>
-</div>
-
-@if($filtros['signo'] ?? $filtros['progresion'] ?? $filtros['desde'] ?? $filtros['hasta'] ?? false)
-<h2>Filtros aplicados</h2>
-<div>
-    @if($filtros['signo'] ?? false)<span class="filtro">Signo: {{ str_replace('_', ' ', $filtros['signo']) }}</span>@endif
-    @if($filtros['progresion'] ?? false)<span class="filtro">Progresión: {{ ucfirst($filtros['progresion']) }}</span>@endif
-    @if($filtros['desde'] ?? false)<span class="filtro">Desde: {{ $filtros['desde'] }}</span>@endif
-    @if($filtros['hasta'] ?? false)<span class="filtro">Hasta: {{ $filtros['hasta'] }}</span>@endif
-</div>
-@endif
-
-<h2>Resumen estadístico</h2>
-<table class="stats">
-    <tr>
-        <td><div class="num">{{ $stats['total'] }}</div><div class="label">Registros</div></td>
-        <td><div class="num">{{ $stats['con_acne'] }}</div><div class="label">Con acné</div></td>
-        <td><div class="num">{{ $stats['con_hirsutismo'] }}</div><div class="label">Con hirsutismo</div></td>
-        <td><div class="num">{{ $stats['ferriman_promedio'] ? round($stats['ferriman_promedio'], 1) : '—' }}</div><div class="label">Ferriman prom.</div></td>
-    </tr>
-</table>
-
-<h2>Registros cronológicos ({{ $registros->count() }})</h2>
-@if($registros->isEmpty())
-    <p style="color:#657a75;font-style:italic">No se encontraron registros con los filtros seleccionados.</p>
-@else
-<table>
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Ferriman-Gallwey</th>
-            <th>Zona hirsutismo</th>
-            <th>Inicio síntomas</th>
-            <th>Progresión</th>
-            <th>Signos presentes</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($registros as $r)
-        <tr>
-            <td>{{ $r->created_at?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $r->puntaje_ferriman_gallwey !== null ? $r->puntaje_ferriman_gallwey.' / 36' : '—' }}</td>
-            <td>{{ $r->hirsutismo_zona ?: '—' }}</td>
-            <td>{{ $r->inicio_sintomas ?: '—' }}</td>
-            <td>{{ ['estable'=>'Estable','progresivo'=>'Progresivo','regresivo'=>'Regresivo'][$r->progresion_sintomas] ?? '—' }}</td>
-            <td>
-                @if($r->acne)<span class="chip">Acné{{ $r->acne_grado && $r->acne_grado !== 'no_aplica' ? ' ('.$r->acne_grado.')' : '' }}</span>@endif
-                @if($r->hirsutismo)<span class="chip">Hirsutismo</span>@endif
-                @if($r->alopecia_androgenica)<span class="chip">Alopecia androgénica</span>@endif
-                @if($r->seborrea)<span class="chip">Seborrea</span>@endif
-                @if(!$r->acne && !$r->hirsutismo && !$r->alopecia_androgenica && !$r->seborrea)
-                    <span class="chip chip-green">Sin signos</span>
-                @endif
-            </td>
-        </tr>
-        @if($r->observaciones)
-        <tr>
-            <td colspan="6" style="background:#fdf9f3;color:#8a6a45;font-style:italic">Obs.: {{ $r->observaciones }}</td>
-        </tr>
-        @endif
-        @endforeach
-    </tbody>
-</table>
-@endif
-
-<div class="note">
-    <b>Nota clínica:</b> Este reporte refleja los registros de hiperandrogenismo de la paciente según los filtros aplicados. La interpretación clínica es responsabilidad del profesional tratante.
-</div>
-
-<div class="footer">Reporte confidencial · Hiperandrogenismo de {{ $nombrePaciente }}</div>
-</body></html>
+<div class="header"><div class="right"><b>{{ $fechaGeneracion->format('d/m/Y H:i') }}</b><br><span class="muted">Hora de Bolivia</span></div><div class="brand">Almendra Nutrición · SEGUIMIENTO ENDOCRINOLÓGICO</div><h1>Evolución del hiperandrogenismo</h1><div class="muted">Informe clínico longitudinal de signos androgénicos</div><div class="clear"></div></div>
+<div class="hero"><div class="right"><span class="label">Profesional responsable</span><br><b>{{ $profesional->name ?? 'Sin registro' }}</b></div><span class="label">Paciente</span><br><strong>{{ $nombrePaciente ?: 'Sin nombre' }}</strong><br>CI: {{ $paciente->ci ?: 'N/D' }} · Edad: {{ $paciente->fecha_nacimiento?->age ?? 'N/D' }} años<div class="clear"></div></div>
+@if($filtros['signo'] ?? $filtros['progresion'] ?? $filtros['desde'] ?? $filtros['hasta'] ?? false)<div><b>Alcance filtrado:</b> @if($filtros['signo'] ?? false)<span class="filter">{{ ucfirst(str_replace('_',' ',$filtros['signo'])) }}</span>@endif @if($filtros['progresion'] ?? false)<span class="filter">{{ ucfirst($filtros['progresion']) }}</span>@endif @if($filtros['desde'] ?? false)<span class="filter">Desde {{ $filtros['desde'] }}</span>@endif @if($filtros['hasta'] ?? false)<span class="filter">Hasta {{ $filtros['hasta'] }}</span>@endif</div>@endif
+<h2>1. Panorama clínico</h2><table class="grid"><tr><td class="stat"><span class="label">Controles</span><b>{{ $stats['total'] }}</b></td><td class="stat"><span class="label">F-G evaluados</span><b>{{ $stats['ferriman_evaluados'] }}/{{ $stats['total'] }}</b></td><td class="stat"><span class="label">F-G positivos (≥8)</span><b>{{ $stats['ferriman_positivos'] }}</b></td><td class="stat"><span class="label">Promedio F-G</span><b>{{ $stats['ferriman_promedio'] !== null ? round($stats['ferriman_promedio'],1) : '—' }}</b></td></tr></table>
+@if($registros->isNotEmpty())
+<table class="grid"><tr><td style="width:50%" class="panel avoid"><span class="label">Frecuencia dentro de los controles</span>@foreach($stats['prevalencias'] as $signo=>$pct)<div class="bar-row"><b>{{ $signo }}</b><span class="bar-value">{{ $pct }}%</span><div class="clear"></div><div class="track"><div class="fill {{ $signo==='Alopecia'?'purple':($signo==='Acné'?'red':($signo==='Seborrea'?'green':'')) }}" style="width:{{ $pct }}%"></div></div><div class="scale">{{ round($pct*$stats['total']/100) }} de {{ $stats['total'] }} controles</div></div>@endforeach</td>
+<td style="width:50%" class="panel avoid"><span class="label">Cambio Ferriman–Gallwey</span>@if($stats['ferriman_cambio'] !== null)<table style="width:100%;margin-top:14px"><tr><td style="text-align:center"><span class="label">Inicial</span><br><b style="font-size:18px">{{ $stats['ferriman_inicial'] }}</b></td><td style="text-align:center;font-size:16px">→</td><td style="text-align:center"><span class="label">Actual</span><br><b style="font-size:18px;color:#ad6500">{{ $stats['ferriman_actual'] }}</b></td></tr></table><div class="interpretation"><strong>{{ $stats['ferriman_cambio'] > 0 ? 'Aumento' : ($stats['ferriman_cambio'] < 0 ? 'Disminución' : 'Sin cambio') }} de {{ abs($stats['ferriman_cambio']) }} punto(s).</strong><br>Umbral orientativo de positividad: ≥ 8.</div>@else<p class="muted" style="margin-top:15px">Se requieren al menos dos controles con puntaje para calcular tendencia.</p>@endif</td></tr></table>
+<h2>2. Trayectoria Ferriman–Gallwey</h2>@forelse($cronologicos->whereNotNull('puntaje_ferriman_gallwey') as $r)<div class="bar-row avoid"><b>{{ $r->created_at?->format('d/m/Y') }}</b><span class="right fg {{ $r->puntaje_ferriman_gallwey>=8?'high':'' }}">{{ $r->puntaje_ferriman_gallwey }} / 36 · {{ $r->puntaje_ferriman_gallwey>=8?'sobre umbral':'bajo umbral' }}</span><div class="clear"></div><div class="track"><div class="fill" style="width:{{ min(100,($r->puntaje_ferriman_gallwey/36)*100) }}%"></div></div></div>@empty<p class="muted">No hay puntajes registrados.</p>@endforelse
+<h2>3. Detalle cronológico</h2><table class="timeline"><thead><tr><th>Fecha</th><th>F-G</th><th>Acné</th><th>Hirsutismo / zona</th><th>Alopecia</th><th>Seborrea</th><th>Progresión</th></tr></thead><tbody>@foreach($cronologicos as $r)<tr><td>{{ $r->created_at?->format('d/m/Y') ?? '—' }}</td><td class="fg {{ ($r->puntaje_ferriman_gallwey??0)>=8?'high':'' }}">{{ $r->puntaje_ferriman_gallwey ?? '—' }}</td><td>{{ $r->acne ? ucfirst($r->acne_grado ?: 'Sí') : 'No' }}</td><td>{{ $r->hirsutismo ? 'Sí'.($r->hirsutismo_zona?' · '.$r->hirsutismo_zona:'') : 'No' }}</td><td>{{ $r->alopecia_androgenica?'Sí':'No' }}</td><td>{{ $r->seborrea?'Sí':'No' }}</td><td>{{ ['estable'=>'Estable','progresivo'=>'Progresivo','progresiva'=>'Progresivo','gradual'=>'Progresivo','regresivo'=>'Regresivo','sin_sintomas'=>'Estable'][$r->progresion_sintomas] ?? '—' }}</td></tr>@if($r->observaciones)<tr><td colspan="7" class="muted"><b>Observación:</b> {{ $r->observaciones }}</td></tr>@endif @endforeach</tbody></table>
+@else<div class="note">No se encontraron registros con los filtros seleccionados.</div>@endif
+<div class="note"><b>Lectura profesional:</b> Las barras expresan frecuencia dentro de los controles incluidos, no prevalencia poblacional. Los cambios deben correlacionarse con tratamiento, temporalidad, examen físico y criterio profesional.</div><div class="footer">Documento confidencial · {{ $nombrePaciente }} · Almendra Nutrición</div></body></html>

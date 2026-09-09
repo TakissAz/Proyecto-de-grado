@@ -77,7 +77,7 @@ export default function ModalComponentePlan({ abierto, cerrar, comida, component
 
     const crearYAsignar = async (receta: RecetaCreada) => {
         const datos = {
-            tipo_componente: 'receta', id_receta: receta.id_receta, cantidad: 1, unidad: 'porciÃ³n',
+            tipo_componente: 'receta', id_receta: receta.id_receta, cantidad: 1, unidad: 'porción',
             observaciones: 'Receta personalizada creada y asignada por la nutricionista.',
         };
         if (componente) await axios.patch(`/nutricionista/componentes-plan/${componente.id_componente_comida_plan}`, datos, { headers: { Accept: 'application/json' } });
@@ -106,11 +106,15 @@ export default function ModalComponentePlan({ abierto, cerrar, comida, component
                 </div>
 
                 <form className="mt-5 space-y-4" onSubmit={guardar}>
-                    <div className="flex items-start gap-3 rounded-xl border border-brand-green/20 bg-brand-green/5 p-4">
-                        <CookingPot size={18} className="mt-0.5 shrink-0 text-brand-green-dark dark:text-brand-green" />
+                    <div className="flex items-start gap-3 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] p-3.5 dark:bg-brand-green/[0.05]">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-green/15">
+                            <CookingPot size={15} className="text-brand-green-dark dark:text-brand-green" />
+                        </div>
                         <div>
-                            <p className="text-[12px] font-semibold text-ink dark:text-ink-dark">PlanificaciÃ³n basada en recetas</p>
-                            <p className="mt-0.5 text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Seleccione una receta existente o cree una personalizada usando alimentos del catÃ¡logo.</p>
+                            <p className="text-[12px] font-bold text-ink dark:text-ink-dark">Planificación basada en recetas</p>
+                            <p className="mt-0.5 text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                                Selecciona una receta existente o crea una personalizada usando alimentos del catálogo.
+                            </p>
                         </div>
                     </div>
 
@@ -146,15 +150,16 @@ export default function ModalComponentePlan({ abierto, cerrar, comida, component
                     )}
 
                     {/* Cantidad y unidad */}
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className={clsx('grid gap-3', tipo !== 'receta' && 'sm:grid-cols-2')}>
                         <div>
-                            <label className={labelClass}>Cantidad</label>
+                            <label className={labelClass}>{tipo === 'receta' ? 'Porciones de la receta' : 'Cantidad'}</label>
                             <input className={inputClass} required type="number" min="0.01" step="0.01" value={cantidad} onChange={ev => setCantidad(ev.target.value)} />
+                            {tipo === 'receta' && <p className="mt-1.5 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Al cambiar las porciones se actualizan automáticamente las calorías y los nutrientes del tiempo de comida, del día y de toda la semana.</p>}
                         </div>
-                        <div>
+                        {tipo !== 'receta' && <div>
                             <label className={labelClass}>Unidad</label>
                             <input className={inputClass} required value={unidad} onChange={ev => setUnidad(ev.target.value)} />
-                        </div>
+                        </div>}
                     </div>
 
                     {/* Macros manuales */}
@@ -200,7 +205,7 @@ export default function ModalComponentePlan({ abierto, cerrar, comida, component
                         <Boton type="button" variante="ghost" tamano="sm" onClick={cerrar}>Cancelar</Boton>
                         <Boton type="submit" variante="primary" tamano="sm" disabled={guardando}>
                             {guardando && <LoaderCircle className="animate-spin" size={14} />}
-                            {componente ? 'Cambiar receta' : 'Asignar receta'}
+                            {componente ? 'Guardar ajustes' : 'Asignar receta'}
                         </Boton>
                     </div>
                 </form>

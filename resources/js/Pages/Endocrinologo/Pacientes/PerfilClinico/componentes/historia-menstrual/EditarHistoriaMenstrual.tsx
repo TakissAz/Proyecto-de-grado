@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { X, Save, Heart, Clock, AlertTriangle, FileText } from 'lucide-react';
 import { Boton } from '@/Components/ui/boton';
 import type { HistoriaMenstrualData } from '../../tipos';
@@ -28,9 +29,9 @@ interface FormData {
 }
 
 export default function EditarHistoriaMenstrual({ abierto, idPaciente, historia, onCerrar }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+    const valoresHistoria = (): FormData => ({
         id_consulta_endocrinologica: historia.id_consulta_endocrinologica,
-        fecha_ultima_menstruacion: historia.fecha_ultima_menstruacion ?? '',
+        fecha_ultima_menstruacion: historia.fecha_ultima_menstruacion?.slice(0, 10) ?? '',
         edad_menarquia: historia.edad_menarquia?.toString() ?? '',
         regularidad_ciclo: historia.regularidad_ciclo ?? '',
         duracion_ciclo_dias: historia.duracion_ciclo_dias?.toString() ?? '',
@@ -45,15 +46,28 @@ export default function EditarHistoriaMenstrual({ abierto, idPaciente, historia,
         observaciones: historia.observaciones ?? '',
     });
 
+    const { data, setData, put, processing, errors, clearErrors } = useForm<FormData>(valoresHistoria());
+
+    useEffect(() => {
+        if (!abierto) return;
+
+        setData(valoresHistoria());
+        clearErrors();
+    }, [abierto, historia.id_historia_menstrual, historia.updated_at]);
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(`/endocrinologo/pacientes/${idPaciente}/historia-menstrual/${historia.id_historia_menstrual}?_method=PUT`, {
+        put(`/endocrinologo/pacientes/${idPaciente}/historia-menstrual/${historia.id_historia_menstrual}`, {
             preserveScroll: true,
-            onSuccess: () => { reset(); onCerrar(); },
+            preserveState: true,
+            onSuccess: () => onCerrar(),
         });
     }
 
-    function handleCerrar() { reset(); onCerrar(); }
+    function handleCerrar() {
+        clearErrors();
+        onCerrar();
+    }
 
     if (!abierto) return null;
 
@@ -78,6 +92,14 @@ export default function EditarHistoriaMenstrual({ abierto, idPaciente, historia,
 
                 {/* Body */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {Object.keys(errors).length > 0 && (
+                        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                            <p className="text-[12px] font-bold text-red-500">No se pudieron guardar algunos datos</p>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-red-400">
+                                {Object.values(errors).map((error, index) => <li key={`${error}-${index}`}>{error}</li>)}
+                            </ul>
+                        </div>
+                    )}
                     {/* Seccion: Ciclo menstrual */}
                     <div>
                         <label className="flex items-center gap-2 mb-3 text-[11.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">

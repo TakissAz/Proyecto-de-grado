@@ -13,6 +13,20 @@ use Inertia\Response;
 
 class HiperandrogenismoController extends Controller
 {
+    private function normalizarProgresion(mixed $valor): ?string
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+
+        return match (strtolower(trim((string) $valor))) {
+            'progresiva', 'gradual' => 'progresivo',
+            'sin_sintomas' => 'estable',
+            'estable', 'progresivo', 'regresivo' => strtolower(trim((string) $valor)),
+            default => null,
+        };
+    }
+
     private function reglas(): array
     {
         return [
@@ -32,6 +46,7 @@ class HiperandrogenismoController extends Controller
 
     public function store(Request $request, Paciente $paciente): RedirectResponse
     {
+        $request->merge(['progresion_sintomas' => $this->normalizarProgresion($request->input('progresion_sintomas'))]);
         $validated = $request->validate($this->reglas());
 
         HistoriaHiperandrogenica::create([
@@ -55,6 +70,8 @@ class HiperandrogenismoController extends Controller
 
     public function update(Request $request, Paciente $paciente, HistoriaHiperandrogenica $hiperandrogenismo): RedirectResponse
     {
+        abort_unless($hiperandrogenismo->id_paciente === $paciente->id_paciente, 404);
+        $request->merge(['progresion_sintomas' => $this->normalizarProgresion($request->input('progresion_sintomas'))]);
         $validated = $request->validate($this->reglas());
 
         $hiperandrogenismo->update([
@@ -78,6 +95,7 @@ class HiperandrogenismoController extends Controller
      */
     public function historial(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $registros = HistoriaHiperandrogenica::where('id_paciente', $paciente->id_paciente)
             ->latest('created_at')
             ->get()
@@ -104,6 +122,7 @@ class HiperandrogenismoController extends Controller
                 'id_paciente'     => $paciente->id_paciente,
                 'nombre_completo' => trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' ')),
                 'ci'              => $paciente->ci,
+                'avatar_url'      => $paciente->user?->avatar_url,
             ],
             'registros' => $registros,
         ]);

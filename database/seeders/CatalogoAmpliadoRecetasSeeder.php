@@ -23,6 +23,8 @@ class CatalogoAmpliadoRecetasSeeder extends Seeder
             foreach ($this->recetas() as $datos) {
                 $ingredientes = $datos['ingredientes'];
                 unset($datos['ingredientes']);
+                $datos['imagen_url'] = $this->imagenes()[$datos['nombre']]
+                    ?? '/images/recetas/receta-saludable-portada.png';
                 $receta = Receta::withTrashed()->updateOrCreate(['nombre' => $datos['nombre']], $datos + [
                     'porciones' => 1, 'estado' => 'activo',
                     'preparacion' => 'Lavar y medir los ingredientes. Cocinar con el método indicado, controlar la porción y servir.',
@@ -79,6 +81,42 @@ class CatalogoAmpliadoRecetasSeeder extends Seeder
             'Mantequilla de maní sin azúcar'=>$a('grasas_saludables',588,25,20,50,6,14),
             'Bebida de almendra sin azúcar'=>$a('bebidas',15,.6,.6,1.2,.3,25),
             'Yogur sin lactosa natural'=>$a('lacteos',63,5.3,7,1.6,0,35),
+        ];
+    }
+
+    private function imagenes(): array
+    {
+        return [
+            'Porridge de amaranto con pera y canela' => '/images/recetas/porridge-amaranto-pera.png',
+            'Tortilla integral de pavo y palta' => '/images/recetas/tortilla-pavo-palta.png',
+            'Bowl de yogur sin lactosa con arándanos' => '/images/recetas/bowl-yogur-arandanos.png',
+            'Omelette de claras con champiñón' => '/images/recetas/omelette-champinon.png',
+            'Avena nocturna con bebida de almendra y kiwi' => '/images/recetas/avena-nocturna-kiwi.png',
+            'Tostada integral con pavo y rúcula' => '/images/recetas/tostada-pavo-rucula.png',
+            'Granola sin azúcar con yogur y durazno' => '/images/recetas/granola-yogur-durazno.png',
+            'Revuelto de tofu con verduras' => '/images/recetas/revuelto-tofu-verduras.png',
+            'Trucha al horno con cebada y vainitas' => '/images/recetas/trucha-cebada-vainitas.png',
+            'Pavo salteado con fideo integral y verduras' => '/images/recetas/pavo-fideo-verduras.png',
+            'Bowl de poroto negro, quinua y palta' => '/images/recetas/bowl-poroto-quinua.png',
+            'Salmón con camote y ensalada de rúcula' => '/images/recetas/salmon-camote-rucula.png',
+            'Tofu dorado con arroz integral y brócoli' => '/images/recetas/tofu-arroz-brocoli.png',
+            'Ensalada de lentejas con remolacha y huevo' => '/images/recetas/ensalada-lentejas-remolacha.png',
+            'Pollo al horno con coliflor y papa' => '/images/recetas/pollo-coliflor-papa.png',
+            'Carne magra con puré de zapallo y ensalada' => '/images/recetas/carne-zapallo-ensalada.png',
+            'Pera con mantequilla de maní' => '/images/recetas/pera-mantequilla-mani.png',
+            'Yogur sin lactosa con semillas de calabaza' => '/images/recetas/yogur-semillas-calabaza.png',
+            'Mandarina con almendras' => '/images/recetas/mandarina-almendras.png',
+            'Batido de bebida de almendra, cacao y plátano' => '/images/recetas/batido-almendra-cacao-platano.png',
+            'Tostada integral con pavo' => '/images/recetas/merienda-tostada-integral-pavo.png',
+            'Kiwi con yogur sin lactosa y chía' => '/images/recetas/merienda-kiwi-yogur-chia.png',
+            'Durazno con nueces' => '/images/recetas/merienda-durazno-nueces.png',
+            'Crema de coliflor con pollo desmenuzado' => '/images/recetas/cena-crema-coliflor-pollo.png',
+            'Ensalada de salmón, palta y rúcula' => '/images/recetas/cena-ensalada-salmon-palta-rucula.png',
+            'Sopa de cebada con verduras y pavo' => '/images/recetas/cena-sopa-cebada-pavo.png',
+            'Tortilla de calabacín y champiñones' => '/images/recetas/cena-tortilla-calabacin-champinones.png',
+            'Ensalada tibia de tofu y vainitas' => '/images/recetas/cena-ensalada-tofu-vainitas.png',
+            'Pescado al vapor con puré de coliflor' => '/images/recetas/cena-pescado-pure-coliflor.png',
+            'Crema de calabacín con huevo pochado' => '/images/recetas/cena-crema-calabacin-huevo.png',
         ];
     }
 

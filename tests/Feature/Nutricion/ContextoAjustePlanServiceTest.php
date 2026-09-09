@@ -60,12 +60,26 @@ class ContextoAjustePlanServiceTest extends TestCase
 
     public function test_integra_sintomas_y_retroalimentacion_profesional_reciente(): void
     {
-        [$paciente] = $this->escenario(); $nutricionista = User::factory()->create();
+        [$paciente, $plan, , $comida] = $this->escenario(); $nutricionista = User::factory()->create();
+        $this->seguimiento($paciente, $plan, $comida, []);
         foreach (range(1, 3) as $dia) SeguimientoSintomaPaciente::query()->create(['id_paciente' => $paciente->getKey(), 'fecha_registro' => today()->subDays($dia), 'hambre_nocturna' => true, 'ansiedad_por_comida' => 'alta', 'registrado_por' => $paciente->user_id]);
         RetroalimentacionPaciente::query()->create(['id_paciente' => $paciente->getKey(), 'id_usuario_emisor' => $nutricionista->getKey(), 'rol_emisor' => 'nutricionista', 'tipo_retroalimentacion' => 'ajuste_plan', 'mensaje' => 'Aumentar saciedad y más fibra.', 'estado' => 'activo']);
         $contexto = $this->contexto($paciente);
         $this->assertTrue($contexto['hambre_nocturna_frecuente']); $this->assertTrue($contexto['ansiedad_comida_frecuente']);
         $this->assertContains('Aumentar saciedad y más fibra.', $contexto['recomendaciones_nutricionista']); $this->assertTrue($contexto['banderas_profesionales']['mas_fibra']);
+    }
+
+    public function test_plan_iniciado_hoy_sin_registros_no_inventa_contexto_de_ajuste(): void
+    {
+        [$paciente, $plan] = $this->escenario();
+        $plan->update(['fecha_inicio' => today(), 'fecha_fin' => today()->addDays(6)]);
+
+        $contexto = $this->contexto($paciente);
+
+        $this->assertSame('sin_registros', $contexto['estado_periodo']);
+        $this->assertSame([], $contexto['resumen_ajuste']);
+        $this->assertSame([], $contexto['recetas_bien_aceptadas']);
+        $this->assertSame([], $contexto['recomendaciones_nutricionista']);
     }
 
     public function test_clasificador_bonifica_y_penaliza_sin_romper_contexto_vacio(): void

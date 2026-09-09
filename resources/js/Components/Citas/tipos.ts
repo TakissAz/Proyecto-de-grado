@@ -1,6 +1,6 @@
 export interface CitaData {
     id_cita: number;
-    paciente: { id_paciente: number; nombre_completo: string; ci: string } | null;
+    paciente: { id_paciente: number; nombre_completo: string; ci: string; avatar_url?: string | null } | null;
     profesional: { id: number; name: string } | null;
     tipo_profesional: string;
     fecha_cita: string;
@@ -27,6 +27,7 @@ export interface PacienteOption {
     id_paciente: number;
     nombre_completo: string;
     ci: string;
+    avatar_url?: string | null;
 }
 
 export interface ProfesionalOption {

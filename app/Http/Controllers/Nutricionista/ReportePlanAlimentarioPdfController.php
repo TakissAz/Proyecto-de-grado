@@ -7,6 +7,7 @@ use App\Models\PlanAlimentario;
 use App\Services\Nutricion\ExplicacionComponentePlanService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class ReportePlanAlimentarioPdfController extends Controller
 {
@@ -35,8 +36,13 @@ class ReportePlanAlimentarioPdfController extends Controller
             ['nombre' => 'Fibra', 'unidad' => 'g', 'objetivo' => (float) $plan->fibra_objetivo * $dias, 'planificado' => (float) $plan->fibra_total],
         ])->map(function (array $fila): array {
             $fila['diferencia'] = $fila['planificado'] - $fila['objetivo'];
-            $fila['porcentaje'] = $fila['objetivo'] > 0 ? ($fila['diferencia'] / $fila['objetivo']) * 100 : 0;
-            $fila['alerta'] = $fila['objetivo'] > 0 && abs($fila['porcentaje']) > 15;
+            $fila['porcentaje'] = $fila['objetivo'] > 0 ? ($fila['planificado'] / $fila['objetivo']) * 100 : 0;
+            $esFibra = $fila['nombre'] === 'Fibra';
+            $fila['alerta'] = $fila['objetivo'] > 0
+                && ($fila['porcentaje'] < 85 || (! $esFibra && $fila['porcentaje'] > 115));
+            $fila['evaluacion'] = $esFibra && $fila['porcentaje'] >= 100
+                ? 'Mínimo recomendado cubierto'
+                : ($fila['alerta'] ? 'Requiere revisión' : 'Dentro del margen');
             return $fila;
         });
 
@@ -53,18 +59,16 @@ class ReportePlanAlimentarioPdfController extends Controller
             'requerimiento' => $plan->requerimientoNutricional,
             'hechos' => $hechos,
             'fechaGeneracion' => now(),
+            'avatarPaciente' => $this->avatarPaciente($plan->paciente?->user),
             'resumen' => $resumen,
             'datosClinicos' => $this->datosClinicos($hechos),
             'datosNutricionales' => $this->datosNutricionales($hechos, $recomendacion),
             'contextoAlimentario' => $this->contextoAlimentario($hechos),
-            'componentesManuales' => $componentes->where('tipo_componente', 'manual')->count(),
-            'repeticiones' => $componentes->filter(fn ($c): bool => ($c->explicacion_pdf['advertencias'] ?? []) !== [])->count(),
-            'desviaciones' => $resumen->where('alerta', true),
         ];
 
         return Pdf::loadView('pdf.nutricion.reporte-plan-alimentario', $datos)
             ->setPaper('a4')
-            ->stream("reporte-plan-alimentario-{$plan->getKey()}.pdf");
+            ->download("reporte-plan-alimentario-{$plan->getKey()}.pdf");
     }
 
     private function datosClinicos(array $h): array
@@ -152,5 +156,33 @@ class ReportePlanAlimentarioPdfController extends Controller
     private function siNoEstudio(mixed $valor): string
     {
         return $valor === null ? 'En estudio' : ((bool) $valor ? 'Sí' : 'No');
+    }
+
+    private function avatarPaciente(mixed $usuario): ?string
+    {
+        $avatar = $usuario?->avatar;
+        if (! is_string($avatar) || trim($avatar) === '' || filter_var($avatar, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $ruta = ltrim(str_replace('\\', '/', $avatar), '/');
+        if (! Storage::disk('public')->exists($ruta)) {
+            return null;
+        }
+
+        $contenido = Storage::disk('public')->get($ruta);
+        $extension = strtolower(pathinfo($ruta, PATHINFO_EXTENSION));
+
+        $mime = match ($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => null,
+        };
+        if ($mime === null || ($mime !== 'image/jpeg' && ! extension_loaded('gd'))) {
+            return null;
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($contenido);
     }
 }

@@ -44,6 +44,7 @@ class PerfilClinicoResource extends JsonResource
                     'id' => $paciente->user->id,
                     'name' => $paciente->user->name,
                     'email' => $paciente->user->email,
+                    'avatar_url' => $paciente->user->avatar_url,
                 ] : null,
             ],
             'resumen_clinico' => $data['resumen_clinico'],

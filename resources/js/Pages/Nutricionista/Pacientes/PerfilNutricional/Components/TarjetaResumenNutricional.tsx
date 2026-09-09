@@ -7,7 +7,7 @@ export default function TarjetaResumenNutricional({ evaluacion, completadas }: {
         ['Peso', evaluacion?.peso ? `${evaluacion.peso} kg` : '—', <Scale size={16} strokeWidth={1.8} />, 'text-brand-green-dark dark:text-brand-green'],
         ['IMC', evaluacion?.imc ? String(evaluacion.imc) : '—', <Activity size={16} strokeWidth={1.8} />, imcColor(Number(evaluacion?.imc))],
         ['ICC', evaluacion?.indice_cintura_cadera ? String(evaluacion.indice_cintura_cadera) : '—', <Ruler size={16} strokeWidth={1.8} />, 'text-brand-orange'],
-        ['Secciones', `${completadas}/6`, <CheckCircle2 size={16} strokeWidth={1.8} />, 'text-brand-green-dark dark:text-brand-green'],
+        ['Secciones', `${completadas}/5`, <CheckCircle2 size={16} strokeWidth={1.8} />, 'text-brand-green-dark dark:text-brand-green'],
     ];
 
     return (

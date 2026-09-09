@@ -23,6 +23,7 @@ export interface DatosPaciente {
         id: number;
         name: string;
         email: string;
+        avatar_url?: string | null;
     } | null;
 }
 

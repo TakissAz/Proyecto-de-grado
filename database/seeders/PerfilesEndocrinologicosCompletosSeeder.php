@@ -25,8 +25,10 @@ class PerfilesEndocrinologicosCompletosSeeder extends Seeder
 {
     public function run(): void
     {
-        $endocrinologo = User::query()->where('email', 'endocrinologia.datos@nutrigo.test')->first();
-        $pacientes = Paciente::query()->where('ci', 'like', 'DEMO-%')
+        $endocrinologo = User::query()
+            ->where('email', DatosClinicosNutricionalesRealistasSeeder::EMAIL_ENDOCRINOLOGIA)
+            ->first();
+        $pacientes = Paciente::query()->whereIn('ci', DatosClinicosNutricionalesRealistasSeeder::identificacionesPacientes())
             ->with(['consultasEndocrinologicas', 'diagnosticosPmos', 'diagnosticosResistenciaInsulina', 'evaluacionesNutricionales'])
             ->orderBy('ci')->get();
 

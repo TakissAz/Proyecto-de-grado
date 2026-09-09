@@ -24,7 +24,10 @@ class PacienteController extends Controller
     {
         return Inertia::render('Nutricionista/Pacientes/Index', [
             'pacientes' => PacienteResource::collection(
-                $this->pacienteService->listar($request->only(['buscar', 'estado']))
+                $this->pacienteService->listar(
+                    $request->only(['buscar', 'estado']),
+                    PacienteService::ORIGEN_NUTRICIONISTA
+                )
             ),
             'filtros' => [
                 'buscar' => $request->input('buscar', ''),
@@ -49,8 +52,45 @@ class PacienteController extends Controller
 
     public function show(Paciente $paciente): Response
     {
+        $paciente = $this->pacienteService->cargar($paciente);
+        $consultaEndocrino = $paciente->consultasEndocrinologicas()->latest('fecha_consulta')->first();
+        $pmos = $paciente->diagnosticosPmos()->latest('fecha_diagnostico')->first();
+        $resistencia = $paciente->diagnosticosResistenciaInsulina()->latest('fecha_diagnostico')->first();
+        $fisica = $paciente->evaluacionesFisicasEndocrinas()->latest('id_evaluacion_fisica')->first();
+
+        $diagnosticos = collect([
+            $pmos ? [
+                'titulo' => 'PMOS',
+                'estado' => $pmos->diagnostico_confirmado ? 'Confirmado' : 'No confirmado',
+                'detalle' => $pmos->fenotipo_pmos ? 'Fenotipo '.str_replace('_', ' ', $pmos->fenotipo_pmos) : null,
+                'riesgo' => $pmos->riesgo_metabolico,
+            ] : null,
+            $resistencia ? [
+                'titulo' => 'Resistencia a la insulina',
+                'estado' => $resistencia->resistencia_confirmada ? 'Confirmada' : 'No confirmada',
+                'detalle' => $resistencia->grado_resistencia ? 'Grado '.str_replace('_', ' ', $resistencia->grado_resistencia) : null,
+                'riesgo' => $resistencia->riesgo_cardiometabolico,
+            ] : null,
+        ])->filter()->values();
+
+        $indicadores = collect([
+            $fisica?->imc !== null ? ['etiqueta' => 'IMC', 'valor' => (string) $fisica->imc] : null,
+            $fisica?->circunferencia_cintura !== null ? ['etiqueta' => 'Cintura', 'valor' => $fisica->circunferencia_cintura.' cm'] : null,
+            $resistencia?->homa_ir !== null ? ['etiqueta' => 'HOMA-IR', 'valor' => (string) $resistencia->homa_ir] : null,
+        ])->filter()->values();
+
         return Inertia::render('Nutricionista/Pacientes/Show', [
-            'paciente' => new PacienteResource($this->pacienteService->cargar($paciente)),
+            'paciente' => new PacienteResource($paciente),
+            'contextoEndocrinologico' => [
+                'hay_registros' => $consultaEndocrino !== null || $diagnosticos->isNotEmpty() || $indicadores->isNotEmpty(),
+                'consulta' => $consultaEndocrino ? [
+                    'fecha' => $consultaEndocrino->fecha_consulta?->format('Y-m-d'),
+                    'motivo' => $consultaEndocrino->motivo_consulta,
+                ] : null,
+                'diagnosticos' => $diagnosticos,
+                'indicadores' => $indicadores,
+                'orientacion' => $resistencia?->recomendaciones_medicas ?? $pmos?->recomendaciones_medicas,
+            ],
         ]);
     }
 

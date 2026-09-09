@@ -19,8 +19,11 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PlanAlimentarioController extends Controller
 {
@@ -41,7 +44,11 @@ class PlanAlimentarioController extends Controller
 
     public function generarDesdeRecomendacion(Request $request, RecomendacionNutricionalExperta $recomendacion): JsonResponse
     {
-        $datos = $request->validate(['fecha_inicio' => ['nullable', 'date', 'after_or_equal:tomorrow']]);
+        $datos = $request->validate([
+            // La nutricionista puede preparar un plan para cualquier periodo requerido.
+            'fecha_inicio' => ['nullable', 'date'],
+            'reemplazar_plan_id' => ['nullable', 'integer'],
+        ]);
         $paciente = Paciente::query()->findOrFail($recomendacion->id_paciente);
         $elegibilidad = $this->elegibilidadService->evaluar($paciente);
         if (! $elegibilidad['elegible']) {
@@ -56,14 +63,113 @@ class PlanAlimentarioController extends Controller
         }
         /** @var User $usuario */
         $usuario = Auth::user();
-        $plan = $this->generador->generarDesdeRecomendacion($recomendacion, $usuario, $datos);
+        $planAnterior = null;
+        if (! empty($datos['reemplazar_plan_id'])) {
+            $planAnterior = $paciente->planesAlimentarios()
+                ->whereKey($datos['reemplazar_plan_id'])
+                ->firstOrFail();
 
-        return response()->json(['success' => true, 'message' => 'Plan semanal generado correctamente.', 'data' => $this->detalle($plan)], 201);
+            if ($planAnterior->generado_por_sistema_experto || ! in_array($planAnterior->estado_plan, ['sugerido', 'en_revision'], true)) {
+                throw ValidationException::withMessages([
+                    'plan' => 'Solo se puede reemplazar un borrador manual que aún esté en revisión.',
+                ]);
+            }
+        } elseif ($paciente->planesAlimentarios()->whereIn('estado_plan', ['activo', 'aprobado', 'sugerido', 'en_revision'])->exists()) {
+            throw ValidationException::withMessages([
+                'plan' => 'El paciente ya tiene un plan vigente. Finalízalo antes de generar una nueva propuesta.',
+            ]);
+        }
+
+        $plan = DB::transaction(function () use ($planAnterior, $recomendacion, $usuario, $datos) {
+            if ($planAnterior) {
+                $planAnterior->update([
+                    'estado_plan' => 'rechazado',
+                    'observaciones' => trim(($planAnterior->observaciones ? $planAnterior->observaciones.' ' : '').'Borrador manual reemplazado por una propuesta del sistema experto.'),
+                ]);
+            }
+
+            return $this->generador->generarDesdeRecomendacion($recomendacion, $usuario, $datos);
+        });
+
+        return response()->json(['success' => true, 'message' => $planAnterior ? 'Borrador manual reemplazado por una propuesta experta.' : 'Plan semanal generado correctamente.', 'data' => $this->detalle($plan)], 201);
+    }
+
+    public function crearManual(Request $request, Paciente $paciente): JsonResponse
+    {
+        $datos = $request->validate([
+            'nombre' => ['required', 'string', 'max:150'],
+            // Un borrador manual también puede corresponder a un periodo anterior o futuro.
+            'fecha_inicio' => ['required', 'date'],
+            'objetivo_plan' => ['nullable', 'string', 'max:500'],
+        ]);
+        if ($paciente->planesAlimentarios()->whereIn('estado_plan', ['sugerido', 'en_revision', 'aprobado', 'activo'])->exists()) {
+            throw ValidationException::withMessages(['plan' => 'El paciente ya tiene una planificación vigente o pendiente de revisión.']);
+        }
+
+        $requerimiento = $paciente->requerimientosNutricionales()->latest('id_requerimiento_nutricional')->first();
+        if (! $requerimiento) {
+            throw ValidationException::withMessages(['requerimiento' => 'Primero registra el cálculo nutricional para usar sus metas en el plan manual.']);
+        }
+        $inicio = CarbonImmutable::parse($datos['fecha_inicio'])->startOfDay();
+        $nombres = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+        $tiempos = [
+            'desayuno' => ['hora' => '08:00', 'orden' => 1],
+            'almuerzo' => ['hora' => '13:00', 'orden' => 2],
+            'merienda' => ['hora' => '16:30', 'orden' => 3],
+            'cena' => ['hora' => '19:30', 'orden' => 4],
+        ];
+
+        /** @var PlanAlimentario $plan */
+        $plan = DB::transaction(function () use ($paciente, $requerimiento, $datos, $inicio, $nombres, $tiempos): PlanAlimentario {
+            $plan = PlanAlimentario::query()->create([
+                'id_paciente' => $paciente->getKey(),
+                'id_nutricionista' => Auth::id(),
+                'id_requerimiento_nutricional' => $requerimiento->getKey(),
+                'id_recomendacion_nutricional_experta' => null,
+                'nombre' => $datos['nombre'],
+                'fecha_inicio' => $inicio->toDateString(),
+                'fecha_fin' => $inicio->addDays(6)->toDateString(),
+                'duracion_dias' => 7,
+                'objetivo_plan' => $datos['objetivo_plan'] ?? 'Planificación alimentaria elaborada manualmente por nutrición.',
+                'calorias_objetivo' => $requerimiento->calorias_objetivo,
+                'proteinas_objetivo' => $requerimiento->proteinas_diarias,
+                'carbohidratos_objetivo' => $requerimiento->carbohidratos_diarios,
+                'grasas_objetivo' => $requerimiento->grasas_diarias,
+                'fibra_objetivo' => $requerimiento->fibra_diaria,
+                'estado_plan' => 'en_revision',
+                'generado_por_sistema_experto' => false,
+                'observaciones' => 'Plan creado manualmente por nutrición. Pendiente de completar y validar.',
+                'estado' => 'activo',
+            ]);
+            foreach (range(1, 7) as $numeroDia) {
+                $fecha = $inicio->addDays($numeroDia - 1);
+                $dia = $plan->dias()->create(['numero_dia' => $numeroDia, 'nombre_dia' => $nombres[$fecha->dayOfWeekIso], 'fecha' => $fecha->toDateString(), 'estado' => 'activo']);
+                foreach ($tiempos as $tipo => $configuracion) {
+                    $dia->comidas()->create(['tipo_comida' => $tipo, 'hora_sugerida' => $configuracion['hora'], 'nombre_comida' => ucfirst($tipo), 'orden' => $configuracion['orden'], 'estado' => 'activo']);
+                }
+            }
+            return $plan;
+        });
+
+        return response()->json(['success' => true, 'message' => 'Estructura manual de 7 días creada. Completa las recetas antes de aprobarla.', 'data' => $this->detalle($plan)], 201);
     }
 
     public function show(PlanAlimentario $plan): JsonResponse
     {
         return response()->json(['success' => true, 'data' => $this->detalle($plan)]);
+    }
+
+    public function detalleVista(PlanAlimentario $plan): Response
+    {
+        $plan = $this->detalle($plan);
+
+        return Inertia::render('Nutricionista/Planes/Detalle', [
+            'plan' => $plan,
+            'pacienteId' => $plan->id_paciente,
+            'recomendacion' => $plan->recomendacionNutricionalExperta,
+            'alimentos' => Alimento::query()->where('estado', 'activo')->orderBy('nombre')->get(),
+            'recetas' => Receta::query()->where('estado', 'activo')->with('recetaAlimentos.alimento')->orderBy('nombre')->limit(200)->get(),
+        ]);
     }
 
     public function actualizarEstado(Request $request, PlanAlimentario $plan): JsonResponse

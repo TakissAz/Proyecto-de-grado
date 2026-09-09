@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Paciente;
 use App\Http\Controllers\Controller;
 use App\Models\ComidaPlanAlimentario;
 use App\Services\Paciente\SeguimientoComidaPacienteService;
+use App\Services\Notificaciones\NotificacionInternaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class SeguimientoComidaController extends Controller
 {
-    public function guardar(Request $request, ComidaPlanAlimentario $comida, SeguimientoComidaPacienteService $service): JsonResponse
+    public function guardar(Request $request, ComidaPlanAlimentario $comida, SeguimientoComidaPacienteService $service, NotificacionInternaService $notificaciones): JsonResponse
     {
         $datos = $request->validate([
             'estado_cumplimiento' => ['required', Rule::in(['pendiente', 'completada', 'parcial', 'no_realizada', 'reemplazada'])],
@@ -31,6 +32,14 @@ class SeguimientoComidaController extends Controller
         abort_unless($paciente, 403, 'No existe un paciente vinculado a esta cuenta.');
         $seguimiento = $service->guardarSeguimiento($paciente, $comida, $datos);
 
-        return response()->json(['success' => true, 'message' => 'Seguimiento guardado correctamente.', 'data' => $seguimiento]);
+        // El registro de la paciente es prioritario: una incidencia al actualizar
+        // la alerta interna no debe impedir guardar desayuno, almuerzo, merienda o cena.
+        try {
+            $notificaciones->notificarAvanceDiario($seguimiento);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Seguimiento guardado correctamente.', 'data' => $seguimiento->fresh()]);
     }
 }

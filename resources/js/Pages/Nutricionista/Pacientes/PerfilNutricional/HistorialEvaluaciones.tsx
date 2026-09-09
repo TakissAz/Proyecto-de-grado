@@ -4,6 +4,7 @@ import HistorialGenerico from './Components/HistorialGenerico';
 export default function HistorialEvaluaciones({ paciente, registros }: any) {
     return (
         <HistorialGenerico
+            tipoHistorial="evaluaciones"
             titulo="Historial de evaluaciones"
             descripcion="Todos los registros de evaluación nutricional (antropometría y composición corporal)."
             icono={Scale}
@@ -12,6 +13,7 @@ export default function HistorialEvaluaciones({ paciente, registros }: any) {
             paciente={paciente}
             registros={registros}
             campoFecha="fecha_evaluacion"
+            camposGrafico={['peso', 'circunferencia_cintura', 'porcentaje_grasa', 'masa_muscular']}
             campos={[
                 { key: 'fecha_evaluacion', label: 'Fecha' },
                 { key: 'peso', label: 'Peso (kg)' },

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
 import { X, Save, AlertTriangle, Scissors, TrendingUp, FileText } from 'lucide-react';
 import { Boton } from '@/Components/ui/boton';
@@ -24,8 +25,14 @@ interface FormData {
     observaciones: string;
 }
 
+function normalizarProgresion(valor?: string | null): string {
+    if (valor === 'progresiva' || valor === 'gradual') return 'progresivo';
+    if (valor === 'sin_sintomas') return 'estable';
+    return ['estable', 'progresivo', 'regresivo'].includes(valor ?? '') ? valor! : '';
+}
+
 export default function EditarHiperandrogenismo({ abierto, idPaciente, hiperandrogenismo, onCerrar }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+    const { data, setData, put, processing, errors, reset } = useForm<FormData>({
         id_consulta_endocrinologica: hiperandrogenismo.id_consulta_endocrinologica,
         acne: hiperandrogenismo.acne,
         acne_grado: hiperandrogenismo.acne_grado,
@@ -35,15 +42,35 @@ export default function EditarHiperandrogenismo({ abierto, idPaciente, hiperandr
         alopecia_androgenica: hiperandrogenismo.alopecia_androgenica,
         seborrea: hiperandrogenismo.seborrea,
         inicio_sintomas: hiperandrogenismo.inicio_sintomas ?? '',
-        progresion_sintomas: hiperandrogenismo.progresion_sintomas ?? '',
+        progresion_sintomas: normalizarProgresion(hiperandrogenismo.progresion_sintomas),
         observaciones: hiperandrogenismo.observaciones ?? '',
     });
 
+    useEffect(() => {
+        if (!abierto) return;
+
+        setData({
+            id_consulta_endocrinologica: hiperandrogenismo.id_consulta_endocrinologica,
+            acne: hiperandrogenismo.acne,
+            acne_grado: hiperandrogenismo.acne_grado ?? 'no_aplica',
+            hirsutismo: hiperandrogenismo.hirsutismo,
+            hirsutismo_zona: hiperandrogenismo.hirsutismo_zona ?? '',
+            puntaje_ferriman_gallwey: hiperandrogenismo.puntaje_ferriman_gallwey?.toString() ?? '',
+            alopecia_androgenica: hiperandrogenismo.alopecia_androgenica,
+            seborrea: hiperandrogenismo.seborrea,
+            inicio_sintomas: hiperandrogenismo.inicio_sintomas ?? '',
+            progresion_sintomas: normalizarProgresion(hiperandrogenismo.progresion_sintomas),
+            observaciones: hiperandrogenismo.observaciones ?? '',
+        });
+        // Se sincroniza al abrir o cuando Inertia entrega el registro actualizado.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [abierto, hiperandrogenismo]);
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(`/endocrinologo/pacientes/${idPaciente}/hiperandrogenismo/${hiperandrogenismo.id_historia_hiperandrogenica}?_method=PUT`, {
+        put(`/endocrinologo/pacientes/${idPaciente}/hiperandrogenismo/${hiperandrogenismo.id_historia_hiperandrogenica}`, {
             preserveScroll: true,
-            onSuccess: () => { reset(); onCerrar(); },
+            onSuccess: () => onCerrar(),
         });
     }
 
@@ -72,6 +99,14 @@ export default function EditarHiperandrogenismo({ abierto, idPaciente, hiperandr
 
                 {/* Body */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {Object.keys(errors).length > 0 && (
+                        <div role="alert" className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3">
+                            <p className="text-[11px] font-bold text-red-500">No se pudieron guardar algunos datos</p>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[10.5px] text-red-500/90">
+                                {Object.values(errors).map((mensaje, index) => <li key={`${mensaje}-${index}`}>{mensaje}</li>)}
+                            </ul>
+                        </div>
+                    )}
                     {/* Signos principales */}
                     <div>
                         <label className="flex items-center gap-2 mb-3 text-[11.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">

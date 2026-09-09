@@ -9,6 +9,7 @@ export interface DatoSeveridad {
     referencia: string;
     color: string;
     colorTexto: string;
+    tipo?: 'escala' | 'binario';
 }
 
 interface Props {
@@ -25,7 +26,9 @@ export default function GraficoSeveridad({ datos, tieneHA }: Props) {
             </p>
             <div className="space-y-3">
                 {datos.map((d) => {
-                    const pct = Math.min((d.valor / d.max) * 100, 100);
+                    const pct = d.tipo === 'binario'
+                        ? (d.valor > 0 ? 100 : 0)
+                        : Math.min((d.valor / d.max) * 100, 100);
                     const activo = d.valor > 0;
                     return (
                         <div key={d.label}>
@@ -35,8 +38,8 @@ export default function GraficoSeveridad({ datos, tieneHA }: Props) {
                                     {d.descripcion}
                                 </span>
                             </div>
-                            <div className="h-2.5 w-full rounded-full bg-black/[0.04] dark:bg-white/[0.06] overflow-hidden">
-                                <div className={clsx('h-full rounded-full transition-all', activo ? d.color : 'bg-transparent')} style={{ width: `${pct}%` }} />
+                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/[0.05] ring-1 ring-inset ring-black/[0.025] dark:bg-white/[0.07] dark:ring-white/[0.03]">
+                                <div className={clsx('h-full rounded-full transition-[width] duration-500 ease-out', activo ? d.color : 'bg-transparent')} style={{ width: `${pct}%` }} />
                             </div>
                             <p className="text-[9px] text-ink-muted/60 dark:text-ink-muted-dark/60 mt-0.5">{d.referencia}</p>
                         </div>

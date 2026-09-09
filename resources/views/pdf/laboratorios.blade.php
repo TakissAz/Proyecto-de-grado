@@ -27,6 +27,13 @@ th{background:#f2f7f5;color:#365d54;font-size:7.5px}
 .interp{text-align:left;background:#fafcfb;color:#657a75;font-style:italic}
 .vacio{color:#657a75;font-style:italic;font-size:8.5px;padding:4px 0}
 .panel-tag{display:inline-block;font-size:7px;font-weight:bold;color:#176b5b;background:#eaf7f3;border-radius:6px;padding:2px 7px;margin-left:6px}
+.panel-summary{width:100%;border-collapse:separate;border-spacing:5px 0;margin:7px -5px 10px}
+.panel-summary td{width:20%;vertical-align:top;text-align:left;border:1px solid #d6e2df;background:#f8fbfa;padding:7px;border-radius:6px}
+.panel-summary .name{font-size:7.5px;text-transform:uppercase;color:#657a75;font-weight:bold}
+.panel-summary .count{font-size:15px;color:#176b5b;font-weight:bold;margin-top:2px}
+.panel-summary .status{font-size:7.5px;margin-top:2px}.panel-summary .warning{color:#c0392b}.panel-summary .ok{color:#1e7a2e}
+.mini-track{height:4px;background:#dfe9e6;border-radius:4px;margin-top:6px;overflow:hidden}.mini-fill{height:100%;background:#1f8a70;border-radius:4px}
+.mini-fill.warning{background:#d18a15}
 </style></head><body>
 
 <div class="header">
@@ -61,6 +68,26 @@ th{background:#f2f7f5;color:#365d54;font-size:7.5px}
         <td><div class="num {{ $resumen['ultimo_homa'] !== null && $resumen['ultimo_homa'] >= 2.5 ? 'alto' : '' }}">{{ $resumen['ultimo_homa'] ?? '—' }}</div><div class="label">Último HOMA-IR</div></td>
     </tr>
 </table>
+
+@if($esReporteGeneral)
+<h2>Mapa general de paneles</h2>
+<div class="meta" style="margin:-2px 0 5px">Cobertura registrada y hallazgos marcados por panel. La barra representa la cantidad de resultados respecto al panel con más registros.</div>
+<table class="panel-summary"><tr>
+@foreach($panelesResumen as $panelResumen)
+    @php($proporcion = min(100, round(($panelResumen['resultados'] / $maxResultadosPanel) * 100)))
+    <td>
+        <div class="name">{{ $panelResumen['nombre'] }}</div>
+        <div class="count">{{ $panelResumen['resultados'] }}</div>
+        <div class="meta">resultado(s)</div>
+        <div class="mini-track"><div class="mini-fill {{ $panelResumen['hallazgos'] ? 'warning' : '' }}" style="width: {{ $proporcion }}%"></div></div>
+        <div class="status {{ $panelResumen['hallazgos'] ? 'warning' : 'ok' }}">
+            {{ $panelResumen['hallazgos'] ? $panelResumen['hallazgos'].' con hallazgo' : ($panelResumen['resultados'] ? 'Sin hallazgo marcado' : 'Sin registro') }}
+        </div>
+        @if($panelResumen['ultimo'])<div class="meta">Último: {{ $panelResumen['ultimo']->format('d/m/Y') }}</div>@endif
+    </td>
+@endforeach
+</tr></table>
+@endif
 
 {{-- ─── Perfil androgénico ─── --}}
 @if($androgenico->isNotEmpty())
@@ -121,7 +148,6 @@ th{background:#f2f7f5;color:#365d54;font-size:7.5px}
     </tr></thead>
     <tbody>
         @foreach($diferencial as $r)
-        @php $desc = collect([$r->alteracion_tiroidea_descartada, $r->hiperprolactinemia_descartada, $r->hiperplasia_suprarrenal_descartada, $r->cushing_descartado])->filter()->count(); @endphp
         <tr>
             <td>{{ $r->fecha_resultado?->format('d/m/Y') ?? '—' }}</td>
             <td class="{{ $r->tsh && ($r->tsh < 0.4 || $r->tsh > 4) ? 'alto' : '' }}">{{ $r->tsh ?? '—' }}</td>
@@ -130,7 +156,7 @@ th{background:#f2f7f5;color:#365d54;font-size:7.5px}
             <td class="{{ $r->prolactina && $r->prolactina > 25 ? 'alto' : '' }}">{{ $r->prolactina ?? '—' }}</td>
             <td>{{ $r->diecisiete_oh_progesterona ?? '—' }}</td>
             <td>{{ $r->cortisol ?? '—' }}</td>
-            <td>@if($desc === 4)<span class="chip chip-green">4/4</span>@else<span class="chip">{{ $desc }}/4</span>@endif</td>
+            <td>@if($r->descartados_count === 4)<span class="chip chip-green">4/4</span>@else<span class="chip">{{ $r->descartados_count }}/4</span>@endif</td>
         </tr>
         @if($r->interpretacion)<tr><td colspan="8" class="interp">Interpretación: {{ $r->interpretacion }}</td></tr>@endif
         @endforeach

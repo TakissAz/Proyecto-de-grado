@@ -4,6 +4,7 @@ import HistorialGenerico from './Components/HistorialGenerico';
 export default function HistorialObjetivos({ paciente, registros }: any) {
     return (
         <HistorialGenerico
+            tipoHistorial="objetivos"
             titulo="Historial de objetivos"
             descripcion="Todos los objetivos nutricionales definidos para el paciente."
             icono={Target}

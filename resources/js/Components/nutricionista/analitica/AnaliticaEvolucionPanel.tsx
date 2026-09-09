@@ -1,13 +1,14 @@
-import { Activity, AlertTriangle, ArrowDown, ArrowRight, ArrowUp, ChartNoAxesCombined, Cookie, Ruler, Scale, ThumbsDown, ThumbsUp, Utensils, Weight } from 'lucide-react';
-import { useState } from 'react';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, ArrowUp, ChartNoAxesCombined, ChevronDown, Cookie, Ruler, Scale, ThumbsDown, ThumbsUp, Utensils, Weight } from 'lucide-react';
+import { useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Badge } from '@/Components/ui/badge';
+import { Link } from '@inertiajs/react';
 
 interface ResumenAntropometrico { peso_actual: number | null; cambio_peso: number | null; imc_actual: number | null; cambio_imc: number | null; cintura_actual: number | null; cambio_cintura: number | null; total_evaluaciones: number }
 interface Registro { fecha: string | null; peso: number | null; imc: number | null; cintura: number | null; cadera: number | null; icc: number | null; grasa_corporal: number | null; masa_muscular: number | null }
-interface Tipo { tipo_comida: string; total: number; registradas: number; porcentaje_adherencia: number; principal_problema: string }
+interface Tipo { tipo_comida: string; total: number; registradas: number; completadas: number; parciales: number; no_realizadas: number; reemplazadas: number; pendientes: number; porcentaje_adherencia: number; principal_problema: string }
 interface Receta { id_receta: number; nombre: string; tipo_comida: string; puntaje_aceptacion: number; motivos?: string[]; frecuencia?: number }
-export interface AnaliticaEvolucion { evolucion_antropometrica: { registros: Registro[]; resumen: ResumenAntropometrico }; evolucion_adherencia: { por_plan: Array<{ id_plan_alimentario: number; nombre_plan: string; estado_plan: string; porcentaje_adherencia: number; registradas: number; comidas_totales: number }>; resumen: { promedio_adherencia: number; mejor_plan: { nombre_plan: string; porcentaje_adherencia: number } | null; peor_plan: { nombre_plan: string; porcentaje_adherencia: number } | null; tendencia_adherencia: string } }; cumplimiento_por_tipo_comida: Tipo[]; analitica_sintomas: Record<string, unknown>; recetas_aceptadas: Receta[]; recetas_problematicas: Receta[]; problemas_practicos: { ingredientes_no_conseguidos: Array<{ nombre: string }>; recetas_dificiles: Array<{ nombre: string }>; comidas_reemplazadas: number; motivos_no_cumplimiento_frecuentes: Record<string, number>; horarios_problematicos: Record<string, number> }; alertas: Array<{ tipo: string; severidad: string; mensaje: string; recomendacion: string }>; recomendaciones_siguiente_plan: Array<{ texto: string; origen: string }> }
+export interface AnaliticaEvolucion { evolucion_antropometrica: { registros: Registro[]; resumen: ResumenAntropometrico }; evolucion_adherencia: { por_plan: Array<{ id_plan_alimentario: number; nombre_plan: string; estado_plan: string; porcentaje_adherencia: number; registradas: number; comidas_totales: number; completadas: number; parciales: number; no_realizadas: number; reemplazadas: number; pendientes: number }>; resumen: { promedio_adherencia: number; mejor_plan: { nombre_plan: string; porcentaje_adherencia: number } | null; peor_plan: { nombre_plan: string; porcentaje_adherencia: number } | null; tendencia_adherencia: string } }; cumplimiento_por_tipo_comida: Tipo[]; analitica_sintomas: Record<string, unknown>; recetas_aceptadas: Receta[]; recetas_problematicas: Receta[]; problemas_practicos: { ingredientes_no_conseguidos: Array<{ nombre: string }>; recetas_dificiles: Array<{ nombre: string }>; comidas_reemplazadas: number; motivos_no_cumplimiento_frecuentes: Record<string, number>; horarios_problematicos: Record<string, number> }; alertas: Array<{ tipo: string; severidad: string; mensaje: string; recomendacion: string }>; recomendaciones_siguiente_plan: Array<{ texto: string; origen: string }> }
 
 const n = (v: number | null | undefined) => v === null || v === undefined ? '—' : Number(v).toLocaleString('es-BO', { maximumFractionDigits: 2 });
 const etiqueta = (v: string) => v.replaceAll('_', ' ');
@@ -20,105 +21,161 @@ const TABS: { id: Tab; label: string; icon: typeof Scale; color: string }[] = [
     { id: 'problemas', label: 'Problemas', icon: AlertTriangle, color: 'text-category-fruits' },
 ];
 
-export default function AnaliticaEvolucionPanel({ analitica }: { analitica: AnaliticaEvolucion }) {
+export default function AnaliticaEvolucionPanel({ analitica, pacienteId }: { analitica: AnaliticaEvolucion; pacienteId?: number }) {
     const [tabActivo, setTabActivo] = useState<Tab>('antropometria');
+    const [expandido, setExpandido] = useState(false);
+    const detalleRef = useRef<HTMLDivElement>(null);
     const res = analitica.evolucion_antropometrica.resumen;
     const adh = analitica.evolucion_adherencia;
     const sintomas = Object.entries(analitica.analitica_sintomas).filter(([k, v]) => k.endsWith('_frecuente') && v === true).map(([k]) => etiqueta(k));
 
-    return (
+    const toggleExpandido = () => {
+        if (expandido) {
+            setExpandido(false);
+        } else {
+            setExpandido(true);
+            setTimeout(() => detalleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        }
+    };
+
+    if (pacienteId) return (
         <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-info/15 text-info">
-                    <ChartNoAxesCombined size={18} strokeWidth={1.8} />
-                </div>
-                <div>
-                    <h2 className="text-[14px] font-bold text-ink dark:text-ink-dark">Analítica de evolución</h2>
-                    <p className="text-[11px] text-ink-muted dark:text-ink-muted-dark">Resumen histórico para apoyar decisiones del siguiente plan.</p>
-                </div>
-            </div>
-
-            {/* ═══ MÉTRICAS RÁPIDAS ═══ */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2">
-                <MetricaCard icon={<Scale size={16} />} titulo="Peso" valor={`${n(res.peso_actual)} kg`} cambio={res.cambio_peso} positivo="down" color="green" />
-                <MetricaCard icon={<Activity size={16} />} titulo="IMC" valor={n(res.imc_actual)} cambio={res.cambio_imc} positivo="down" color="purple" />
-                <MetricaCard icon={<Ruler size={16} />} titulo="Cintura" valor={`${n(res.cintura_actual)} cm`} cambio={res.cambio_cintura} positivo="down" color="orange" />
-                <MetricaCard icon={<ChartNoAxesCombined size={16} />} titulo="Adherencia" valor={`${n(adh.resumen.promedio_adherencia)}%`} detalle={etiqueta(adh.resumen.tendencia_adherencia)} color="blue" />
-                <MetricaCard icon={<AlertTriangle size={16} />} titulo="Síntomas" valor={String(sintomas.length)} detalle={sintomas[0] ?? 'Sin alertas'} color="red" />
-            </div>
-
-            {/* ═══ ALERTAS (si hay) ═══ */}
-            {analitica.alertas.length > 0 && (
-                <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/[0.03] p-4 dark:bg-brand-orange/[0.05]">
-                    <p className="text-[11px] font-bold text-ink dark:text-ink-dark mb-2 flex items-center gap-1.5">
-                        <AlertTriangle size={13} className="text-brand-orange" /> {analitica.alertas.length} alerta{analitica.alertas.length > 1 ? 's' : ''} detectada{analitica.alertas.length > 1 ? 's' : ''}
-                    </p>
-                    <div className="space-y-1.5">
-                        {analitica.alertas.slice(0, 3).map((x, i) => (
-                            <div key={`${x.tipo}-${i}`} className="flex items-start gap-2">
-                                <span className={clsx('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', x.severidad === 'alta' ? 'bg-category-fruits' : x.severidad === 'media' ? 'bg-brand-orange' : 'bg-info')} />
-                                <div>
-                                    <p className="text-[11px] text-ink dark:text-ink-dark">{x.mensaje}</p>
-                                    <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">{x.recomendacion}</p>
-                                </div>
-                            </div>
-                        ))}
-                        {analitica.alertas.length > 3 && <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark ml-4">+{analitica.alertas.length - 3} más</p>}
-                    </div>
-                </div>
-            )}
-
-            {/* ═══ TABS DE NAVEGACIÓN ═══ */}
-            <div className="flex gap-1 rounded-xl bg-black/[0.03] p-1.5 dark:bg-white/[0.04] overflow-x-auto">
-                {TABS.map(tab => {
-                    const TabIcon = tab.icon;
-                    const activo = tabActivo === tab.id;
-                    return (
-                        <button key={tab.id} type="button" onClick={() => setTabActivo(tab.id)}
-                            className={clsx(
-                                'flex-1 min-w-[100px] flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-[11.5px] font-semibold transition-all',
-                                activo
-                                    ? 'bg-surface-card shadow-sm dark:bg-surface-card-dark'
-                                    : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark'
-                            )}
-                        >
-                            <TabIcon size={14} strokeWidth={1.8} className={activo ? tab.color : ''} />
-                            <span className={activo ? 'text-ink dark:text-ink-dark' : ''}>{tab.label}</span>
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* ═══ CONTENIDO DEL TAB ═══ */}
-            <div className="min-h-[200px]">
-                {tabActivo === 'antropometria' && <TabAntropometria registros={analitica.evolucion_antropometrica.registros} />}
-                {tabActivo === 'adherencia' && <TabAdherencia adh={adh} cumplimiento={analitica.cumplimiento_por_tipo_comida} />}
-                {tabActivo === 'recetas' && <TabRecetas aceptadas={analitica.recetas_aceptadas} problematicas={analitica.recetas_problematicas} />}
-                {tabActivo === 'problemas' && <TabProblemas problemas={analitica.problemas_practicos} />}
-            </div>
-
-            {/* ═══ RECOMENDACIONES PARA SIGUIENTE PLAN ═══ */}
-            {analitica.recomendaciones_siguiente_plan.length > 0 && (
-                <div className="rounded-xl border border-brand-green/20 bg-brand-green/[0.03] p-5 dark:bg-brand-green/[0.04]">
-                    <p className="text-[11px] font-bold text-brand-green-dark dark:text-brand-green mb-3 flex items-center gap-1.5">
-                        <Activity size={13} /> Recomendaciones para el siguiente plan
-                    </p>
-                    <div className="space-y-2">
-                        {analitica.recomendaciones_siguiente_plan.map((x, i) => (
-                            <div key={`${x.texto}-${i}`} className="flex items-start gap-2.5">
-                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-green shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-[11.5px] text-ink dark:text-ink-dark">{x.texto}</p>
-                                    <span className="text-[9px] text-ink-muted/50 dark:text-ink-muted-dark/50">{x.origen}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info/15 text-info"><ChartNoAxesCombined size={17}/></div><div><h2 className="text-[13px] font-bold text-ink dark:text-ink-dark">Evolución antropométrica</h2><p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">Cambios corporales registrados entre controles nutricionales.</p></div></div><Badge color="blue">{res.total_evaluaciones} controles</Badge></div>
+            <div className="grid gap-2 sm:grid-cols-3"><MetricaCard icon={<Scale size={14}/>} titulo="Peso" valor={`${n(res.peso_actual)} kg`} cambio={res.cambio_peso} positivo="down" color="green"/><MetricaCard icon={<Activity size={14}/>} titulo="IMC" valor={n(res.imc_actual)} cambio={res.cambio_imc} positivo="down" color="purple"/><MetricaCard icon={<Ruler size={14}/>} titulo="Cintura" valor={`${n(res.cintura_actual)} cm`} cambio={res.cambio_cintura} positivo="down" color="orange"/></div>
+            <Link href={route('nutricionista.pacientes.analitica-evolucion', pacienteId)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-info/25 bg-info/[.04] px-4 py-2.5 text-[11px] font-bold text-info transition hover:bg-info/[.08]">Ver evolución completa <ArrowRight size={13}/></Link>
         </div>
     );
+
+    return (
+        <div className="space-y-3">
+            {/* ═══ HEADER ═══ */}
+            <div className="flex items-center gap-3 px-1">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-info/15 text-info">
+                    <ChartNoAxesCombined size={16} strokeWidth={1.8} />
+                </div>
+                <div>
+                    <h2 className="text-[13px] font-bold text-ink dark:text-ink-dark">Analítica de evolución</h2>
+                    <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">Resumen histórico para apoyar decisiones del siguiente plan.</p>
+                </div>
+            </div>
+
+            {/* ═══ MÉTRICAS RÁPIDAS — siempre visibles ═══ */}
+            <div className="grid grid-cols-5 gap-2">
+                <MetricaCard icon={<Scale size={14} />} titulo="Peso" valor={`${n(res.peso_actual)} kg`} cambio={res.cambio_peso} positivo="down" color="green" />
+                <MetricaCard icon={<Activity size={14} />} titulo="IMC" valor={n(res.imc_actual)} cambio={res.cambio_imc} positivo="down" color="purple" />
+                <MetricaCard icon={<Ruler size={14} />} titulo="Cintura" valor={`${n(res.cintura_actual)} cm`} cambio={res.cambio_cintura} positivo="down" color="orange" />
+                <MetricaCard icon={<ChartNoAxesCombined size={14} />} titulo="Adherencia" valor={`${n(adh.resumen.promedio_adherencia)}%`} detalle={etiqueta(adh.resumen.tendencia_adherencia)} color="blue" />
+                <MetricaCard icon={<AlertTriangle size={14} />} titulo="Síntomas" valor={String(sintomas.length)} detalle={sintomas[0] ?? 'Sin alertas'} color="red" />
+            </div>
+
+            {/* ═══ BOTÓN VER ANÁLISIS COMPLETO ═══ */}
+            <button
+                type="button"
+                onClick={toggleExpandido}
+                className={clsx(
+                    'flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[11.5px] font-semibold transition-all',
+                    expandido
+                        ? 'border-info/25 bg-info/[0.06] text-info dark:bg-info/[0.05]'
+                        : 'border-surface-border bg-black/[0.02] text-ink-muted hover:border-info/20 hover:bg-info/[0.04] hover:text-ink dark:border-surface-border-dark dark:bg-white/[0.02] dark:text-ink-muted-dark dark:hover:text-ink-dark',
+                )}
+            >
+                <ChartNoAxesCombined size={13} strokeWidth={1.8} />
+                {expandido ? 'Ocultar análisis completo' : 'Ver análisis completo'}
+                <ChevronDown
+                    size={13}
+                    strokeWidth={2}
+                    className={clsx('ml-auto transition-transform duration-200', expandido && 'rotate-180')}
+                />
+            </button>
+
+            {/* ═══ SECCIÓN EXPANDIBLE ═══ */}
+            <div
+                ref={detalleRef}
+                className={clsx(
+                    'overflow-hidden transition-all duration-300',
+                    expandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+                )}
+            >
+                <div className="space-y-3 pt-1">
+
+                    {/* ── Alertas (si hay) ── */}
+                    {analitica.alertas.length > 0 && (
+                        <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/[0.03] p-4 dark:bg-brand-orange/[0.05]">
+                            <p className="text-[11px] font-bold text-ink dark:text-ink-dark mb-2.5 flex items-center gap-1.5">
+                                <AlertTriangle size={12} className="text-brand-orange" />
+                                {analitica.alertas.length} alerta{analitica.alertas.length > 1 ? 's' : ''} detectada{analitica.alertas.length > 1 ? 's' : ''}
+                            </p>
+                            <div className="grid sm:grid-cols-2 gap-2">
+                                {analitica.alertas.map((x, i) => (
+                                    <div key={`${x.tipo}-${i}`} className="flex items-start gap-2 rounded-lg bg-white/50 dark:bg-white/[0.02] px-3 py-2">
+                                        <span className={clsx('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', x.severidad === 'alta' ? 'bg-category-fruits' : x.severidad === 'media' ? 'bg-brand-orange' : 'bg-info')} />
+                                        <div>
+                                            <p className="text-[11px] font-semibold text-ink dark:text-ink-dark leading-tight">{x.mensaje}</p>
+                                            <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark leading-tight mt-0.5">{x.recomendacion}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Layout: tabs + recomendaciones ── */}
+                    <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+
+                        {/* Tabs de detalle */}
+                        <div className="space-y-2">
+                            <div className="flex gap-1 rounded-xl bg-black/[0.03] p-1 dark:bg-white/[0.04] overflow-x-auto">
+                                {TABS.map(tab => {
+                                    const TabIcon = tab.icon;
+                                    const activo = tabActivo === tab.id;
+                                    return (
+                                        <button key={tab.id} type="button" onClick={() => setTabActivo(tab.id)}
+                                            className={clsx(
+                                                'flex-1 min-w-[90px] flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-semibold transition-all',
+                                                activo
+                                                    ? 'bg-surface-card shadow-sm dark:bg-surface-card-dark text-ink dark:text-ink-dark'
+                                                    : 'text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark',
+                                            )}
+                                        >
+                                            <TabIcon size={13} strokeWidth={1.8} className={activo ? tab.color : ''} />
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div>
+                                {tabActivo === 'antropometria' && <TabAntropometria registros={analitica.evolucion_antropometrica.registros} />}
+                                {tabActivo === 'adherencia' && <TabAdherencia adh={adh} cumplimiento={analitica.cumplimiento_por_tipo_comida} />}
+                                {tabActivo === 'recetas' && <TabRecetas aceptadas={analitica.recetas_aceptadas} problematicas={analitica.recetas_problematicas} />}
+                                {tabActivo === 'problemas' && <TabProblemas problemas={analitica.problemas_practicos} />}
+                            </div>
+                        </div>
+
+                        {/* Recomendaciones para el siguiente plan */}
+                        {analitica.recomendaciones_siguiente_plan.length > 0 && (
+                            <div className="rounded-xl border border-brand-green/20 bg-brand-green/[0.03] p-4 dark:bg-brand-green/[0.04] self-start">
+                                <p className="text-[10.5px] font-bold text-brand-green-dark dark:text-brand-green mb-3 flex items-center gap-1.5">
+                                    <Activity size={12} /> Recomendaciones · siguiente plan
+                                </p>
+                                <div className="space-y-2">
+                                    {analitica.recomendaciones_siguiente_plan.map((x, i) => (
+                                        <div key={`${x.texto}-${i}`} className="flex items-start gap-2">
+                                            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-green shrink-0" />
+                                            <div>
+                                                <p className="text-[10.5px] text-ink dark:text-ink-dark leading-snug">{x.texto}</p>
+                                                <span className="text-[9px] text-ink-muted/50 dark:text-ink-muted-dark/50">{x.origen}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
 }
 
 /* ═══ Métrica Card ═══ */

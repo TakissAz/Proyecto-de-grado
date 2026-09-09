@@ -68,6 +68,7 @@ class PerfilNutricionalService
             ->map(fn ($item) => [
                 'id_retroalimentacion_paciente' => $item->getKey(),
                 'tipo_retroalimentacion' => $item->tipo_retroalimentacion,
+                'rol_emisor' => $item->rol_emisor,
                 'prioridad' => $item->prioridad,
                 'mensaje' => $item->mensaje,
                 'visible_para_paciente' => $item->visible_para_paciente,
@@ -104,15 +105,7 @@ class PerfilNutricionalService
     public function recomendacionExpertaPrincipal(
         Paciente $paciente
     ): ?RecomendacionNutricionalExperta {
-        $consulta = $paciente->recomendacionesNutricionalesExpertas();
-
-        $validada = (clone $consulta)
-            ->whereIn('estado_validacion_experta', ['aprobado', 'validado'])
-            ->latest('id_recomendacion_nutricional_experta')
-            ->first();
-
-        return $validada ?? (clone $consulta)
-            ->where('estado_validacion_experta', 'pendiente')
+        return $paciente->recomendacionesNutricionalesExpertas()
             ->latest('id_recomendacion_nutricional_experta')
             ->first();
     }

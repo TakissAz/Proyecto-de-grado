@@ -24,51 +24,93 @@ use Illuminate\Support\Str;
 
 class DatosClinicosNutricionalesRealistasSeeder extends Seeder
 {
-    private const FECHA = '2026-08-31';
+    public const TOTAL_PACIENTES = 70;
+    public const EMAIL_ENDOCRINOLOGIA = 'valeria.mendoza@nutrigo.bo';
+    public const EMAIL_NUTRICION = 'daniela.rojas@nutrigo.bo';
+
+    private const CI_BASE = 8308424;
 
     public function run(): void
     {
         DB::transaction(function (): void {
-            $endocrinologo = $this->profesional('endocrinologia.datos@nutrigo.test', 'Dra. Valeria Mendoza', 'endocrinologo');
-            $nutricionista = $this->profesional('nutricion.datos@nutrigo.test', 'Lic. Daniela Rojas', 'nutricionista');
+            $endocrinologo = $this->profesional(
+                self::EMAIL_ENDOCRINOLOGIA,
+                'Dra. Valeria Mendoza',
+                'endocrinologo',
+                ['endocrinologia.datos@nutrigo.test'],
+            );
+            $nutricionista = $this->profesional(
+                self::EMAIL_NUTRICION,
+                'Lic. Daniela Rojas',
+                'nutricionista',
+                ['nutricion.datos@nutrigo.test'],
+            );
 
             foreach ($this->pacientes() as $indice => $datos) {
                 $this->crearExpediente($indice + 1, $datos, $endocrinologo, $nutricionista);
             }
         });
 
-        $this->command?->info('Datos realistas: 70 expedientes clínicos y nutricionales ficticios creados o actualizados.');
+        $this->command?->info('Cohorte clínica: 70 expedientes completos con datos consistentes creados o actualizados.');
+    }
+
+    /** @return array<int, string> */
+    public static function identificacionesPacientes(): array
+    {
+        return array_map(
+            fn (int $numero): string => self::identificacionPaciente($numero),
+            range(1, self::TOTAL_PACIENTES),
+        );
+    }
+
+    public static function identificacionPaciente(int $numero): string
+    {
+        return (string) (self::CI_BASE + (($numero - 1) * 137));
     }
 
     private function crearExpediente(int $numero, array $d, User $endocrinologo, User $nutricionista): void
     {
         $email = sprintf(
-            '%s.%02d@gmail.test',
+            '%s.%02d@nutrigo.bo',
             Str::of("{$d['nombres']}.{$d['paterno']}")->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '.')->trim('.'),
             $numero,
         );
         $correoAnterior = sprintf('paciente.demo.%03d@nutrigo.test', $numero);
-        if (! User::withTrashed()->where('email', $email)->exists()) {
-            User::withTrashed()->where('email', $correoAnterior)->update(['email' => $email]);
-        }
-        $usuario = $this->profesional($email, "{$d['nombres']} {$d['paterno']}", 'paciente');
-        $paciente = Paciente::withTrashed()->updateOrCreate(['ci' => sprintf('DEMO-%06d', $numero)], [
-            'user_id' => $usuario->id, 'nombres' => $d['nombres'], 'apellido_paterno' => $d['paterno'],
+        $correoTemporal = sprintf(
+            '%s.%02d@gmail.test',
+            Str::of("{$d['nombres']}.{$d['paterno']}")->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '.')->trim('.'),
+            $numero,
+        );
+        $usuario = $this->profesional(
+            $email,
+            "{$d['nombres']} {$d['paterno']}",
+            'paciente',
+            [$correoAnterior, $correoTemporal],
+        );
+
+        $ci = self::identificacionPaciente($numero);
+        $paciente = Paciente::withTrashed()
+            ->where('ci', $ci)
+            ->orWhere('ci', sprintf('DEMO-%06d', $numero))
+            ->orWhere('user_id', $usuario->id)
+            ->firstOrNew();
+        $paciente->forceFill([
+            'ci' => $ci, 'user_id' => $usuario->id, 'nombres' => $d['nombres'], 'apellido_paterno' => $d['paterno'],
             'apellido_materno' => $d['materno'], 'fecha_nacimiento' => $d['nacimiento'], 'sexo' => 'femenino',
             'telefono' => '7'.str_pad((string) (1000000 + $numero * 7919), 7, '0', STR_PAD_LEFT),
-            'direccion' => $d['ciudad'], 'ocupacion' => $d['ocupacion'], 'estado_civil' => $d['estado_civil'],
-            'fecha_registro' => self::FECHA, 'estado' => 'activo',
-            'observaciones' => 'Expediente ficticio para demostración académica; no corresponde a una persona real.',
+            'direccion' => $d['direccion'], 'ocupacion' => $d['ocupacion'], 'estado_civil' => $d['estado_civil'],
+            'fecha_registro' => Carbon::today('America/La_Paz')->subDays(90 + ($numero % 180))->toDateString(), 'estado' => 'activo',
+            'observaciones' => 'Paciente derivada para valoración endocrinológica y acompañamiento nutricional integral.',
             'deleted_at' => null,
-        ]);
+        ])->save();
         if ($paciente->trashed()) $paciente->restore();
 
-        $fecha = Carbon::parse(self::FECHA)->subDays($numero % 45)->toDateString();
+        $fecha = Carbon::today('America/La_Paz')->subDays(12 + ($numero % 45))->toDateString();
         $consultaEndo = ConsultaEndocrinologica::withTrashed()->updateOrCreate(
             ['id_paciente' => $paciente->getKey(), 'fecha_consulta' => $fecha],
             ['id_endocrinologo' => $endocrinologo->id, 'motivo_consulta' => $d['motivo'],
                 'sospecha_pmos' => $d['pmos'], 'sospecha_resistencia_insulina' => $d['ri'],
-                'observaciones_generales' => 'Valoración endocrinológica integral de demostración.',
+                'observaciones_generales' => 'Valoración endocrinológica integral con revisión de antecedentes, síntomas y perfil metabólico.',
                 'estado' => 'cerrada', 'deleted_at' => null]
         );
         if ($consultaEndo->trashed()) $consultaEndo->restore();
@@ -130,7 +172,7 @@ class DatosClinicosNutricionalesRealistasSeeder extends Seeder
                 'circunferencia_cintura' => $cintura, 'circunferencia_cadera' => $cintura + 14,
                 'indice_cintura_cadera' => round($cintura / ($cintura + 14), 2),
                 'porcentaje_grasa' => round(24 + max(0, $imc - 21) * .8, 1), 'masa_muscular' => round($peso * .34, 1),
-                'nivel_actividad' => $d['actividad'], 'observaciones' => 'Mediciones antropométricas de demostración.',
+                'nivel_actividad' => $d['actividad'], 'observaciones' => 'Mediciones antropométricas tomadas durante la consulta nutricional inicial.',
                 'estado' => true, 'deleted_at' => null]
         );
         HabitoAlimentario::withTrashed()->updateOrCreate(
@@ -180,15 +222,27 @@ class DatosClinicosNutricionalesRealistasSeeder extends Seeder
                 'carbohidratos_diarios' => round($calorias * .35 / 4, 2), 'grasas_diarias' => round($calorias * .35 / 9, 2),
                 'fibra_diaria' => 30, 'porcentaje_proteinas' => 30, 'porcentaje_carbohidratos' => 35,
                 'porcentaje_grasas' => 35, 'metodo_calculo' => 'mifflin_st_jeor',
-                'observaciones' => 'Cálculo individualizado para escenario académico.', 'estado' => true, 'deleted_at' => null]
+                'observaciones' => 'Cálculo individualizado según antropometría, nivel de actividad y objetivo terapéutico.', 'estado' => true, 'deleted_at' => null]
         );
     }
 
-    private function profesional(string $email, string $nombre, string $rol): User
+    /** @param array<int, string> $correosAnteriores */
+    private function profesional(string $email, string $nombre, string $rol, array $correosAnteriores = []): User
     {
         $modeloRol = Role::withTrashed()->updateOrCreate(['nombre' => $rol], ['descripcion' => ucfirst($rol), 'estado' => 'activo', 'deleted_at' => null]);
         if ($modeloRol->trashed()) $modeloRol->restore();
-        $usuario = User::withTrashed()->updateOrCreate(['email' => $email], ['name' => $nombre, 'password' => Hash::make('password'), 'estado' => 'activo', 'deleted_at' => null]);
+        $usuario = User::withTrashed()->where('email', $email)->first();
+        if (! $usuario && $correosAnteriores !== []) {
+            $usuario = User::withTrashed()->whereIn('email', $correosAnteriores)->first();
+        }
+        $usuario ??= new User();
+        $usuario->forceFill([
+            'email' => $email,
+            'name' => $nombre,
+            'password' => $usuario->exists ? $usuario->password : Hash::make('password'),
+            'estado' => 'activo',
+            'deleted_at' => null,
+        ])->save();
         if ($usuario->trashed()) $usuario->restore();
         $usuario->forceFill(['email_verified_at' => now()])->save();
         $asignacion = UserRole::withTrashed()->firstOrNew(['user_id' => $usuario->id, 'id_rol' => $modeloRol->id_rol]);
@@ -211,7 +265,8 @@ class DatosClinicosNutricionalesRealistasSeeder extends Seeder
             ['carne magra, papa, ensalada, papaya','coliflor','carne con verduras, ensalada completa','horno, salteado'],
         ];
         $salida = [];
-        for ($i = 0; $i < 70; $i++) {
+        $zonas = ['Sopocachi','Miraflores','Calacoto','Achumani','Queru Queru','Sarco','Equipetrol','Los Lotes','San Roque','Zona Central','Norte','Sud'];
+        for ($i = 0; $i < self::TOTAL_PACIENTES; $i++) {
             $edad = 21 + ($i % 15);
             $pref = $preferencias[$i % count($preferencias)];
             $pmos = $i % 5 !== 0;
@@ -226,8 +281,8 @@ class DatosClinicosNutricionalesRealistasSeeder extends Seeder
             $salida[] = [
                 'nombres'=>$nombres[$i % count($nombres)], 'paterno'=>$paternos[$i % count($paternos)],
                 'materno'=>$maternos[$i % count($maternos)], 'edad'=>$edad,
-                'nacimiento'=>Carbon::parse(self::FECHA)->subYears($edad)->subDays(($i * 13) % 330)->toDateString(),
-                'ciudad'=>$ciudades[$i % count($ciudades)], 'ocupacion'=>$ocupaciones[$i % count($ocupaciones)],
+                'nacimiento'=>Carbon::today('America/La_Paz')->subYears($edad)->subDays(($i * 13) % 330)->toDateString(),
+                'direccion'=>$zonas[$i % count($zonas)].', '.$ciudades[$i % count($ciudades)], 'ocupacion'=>$ocupaciones[$i % count($ocupaciones)],
                 'estado_civil'=>['soltera','casada','conviviente'][$i % 3], 'pmos'=>$pmos, 'ri'=>$ri,
                 'fenotipo'=>['A_clasico_completo','B_clasico_sin_morfologia','C_ovulatorio','D_no_hiperandrogenico'][$i % 4],
                 'severidad'=>['leve','moderada','severa'][$i % 3], 'grado_ri'=>['leve','moderada','severa'][$i % 3],

@@ -22,6 +22,7 @@ th{background:#f2f7f5;color:#365d54}
 .filtro{display:inline-block;padding:3px 8px;background:#fff;border:1px solid #80bcae;border-radius:10px;font-size:8px;margin-right:5px}
 .footer{position:fixed;bottom:-15px;left:0;right:0;text-align:center;color:#78908a;font-size:8px}
 .note{padding:8px;background:#fff8df;border:1px solid #e3cb75;border-radius:6px;margin-top:12px}
+.current{width:100%;border-collapse:separate;border-spacing:5px}.current td{width:25%;background:#f7fbfa;text-align:left;padding:8px}.current .num{display:block;margin-top:3px;font-size:14px;font-weight:bold;color:#176b5b}.delta{font-size:7px;color:#657a75}.chart{page-break-inside:avoid;margin:7px 0;padding:8px;border:1px solid #d6e2df}.chart-head{font-weight:bold;color:#176b5b}.line{height:7px;margin:11px 0 4px;background:#edf1ef;border-radius:4px;position:relative}.line-fill{height:7px;background:#3a9860;border-radius:4px}.line-fill.orange{background:#dd8b24}.line-fill.purple{background:#8e55b7}.point{display:inline-block;width:32%;font-size:7px;color:#657a75}.point:last-child{text-align:right}.clinical{background:#fff8ef;color:#a65e0b}.clear{clear:both}
 </style></head><body>
 
 <div class="header">
@@ -55,6 +56,32 @@ th{background:#f2f7f5;color:#365d54}
         <td><div class="num">{{ $stats['promedio_cintura'] ? round($stats['promedio_cintura'], 1) : '—' }}</div><div class="label">Cintura prom. (cm)</div></td>
     </tr>
 </table>
+
+@if($actual)
+<h2>Lectura del último control</h2>
+@php
+    $deltaPeso = $anterior && $actual->peso !== null && $anterior->peso !== null ? round($actual->peso - $anterior->peso, 2) : null;
+    $deltaCintura = $anterior && $actual->circunferencia_cintura !== null && $anterior->circunferencia_cintura !== null ? round($actual->circunferencia_cintura - $anterior->circunferencia_cintura, 2) : null;
+@endphp
+<table class="current"><tr>
+<td><span class="label">Peso</span><span class="num">{{ $actual->peso !== null ? $actual->peso.' kg' : '—' }}</span><span class="delta">{{ $deltaPeso !== null ? ($deltaPeso > 0 ? '+' : '').$deltaPeso.' kg vs. previo' : 'Sin comparación previa' }}</span></td>
+<td><span class="label">IMC</span><span class="num {{ $actual->imc >= 25 ? 'alto' : '' }}">{{ $actual->imc ?? '—' }}</span><span class="delta">{{ $actual->imc !== null ? ($actual->imc >= 30 ? 'Obesidad' : ($actual->imc >= 25 ? 'Sobrepeso' : 'Rango esperado')) : 'Sin registro' }}</span></td>
+<td><span class="label">Cintura</span><span class="num {{ $actual->circunferencia_cintura >= 80 ? 'alto' : '' }}">{{ $actual->circunferencia_cintura !== null ? $actual->circunferencia_cintura.' cm' : '—' }}</span><span class="delta">{{ $deltaCintura !== null ? ($deltaCintura > 0 ? '+' : '').$deltaCintura.' cm vs. previo' : 'Sin comparación previa' }}</span></td>
+<td><span class="label">Presión arterial</span><span class="num {{ $actual->presion_sistolica >= 130 ? 'alto' : '' }}">{{ $actual->presion_sistolica && $actual->presion_diastolica ? $actual->presion_sistolica.'/'.$actual->presion_diastolica : '—' }}</span><span class="delta">{{ $actual->presion_sistolica >= 130 ? 'Sistólica elevada' : 'Última medición registrada' }}</span></td>
+</tr></table>
+@endif
+
+@if($series->isNotEmpty())
+<h2>Evolución entre controles</h2>
+@foreach($series as $serie)
+@php
+    $primero = $serie['puntos'][0];
+    $ultimo = $serie['puntos'][count($serie['puntos']) - 1];
+    $cambio = round($ultimo['valor'] - $primero['valor'], 2);
+@endphp
+<div class="chart"><div class="chart-head">{{ $serie['nombre'] }} <span style="float:right">{{ $primero['valor'] }} → {{ $ultimo['valor'] }} {{ $serie['unidad'] }} · {{ $cambio > 0 ? '+' : '' }}{{ $cambio }}</span><div class="clear"></div></div><div class="line"><div class="line-fill {{ $serie['color'] === 'orange' ? 'orange' : ($serie['color'] === 'purple' ? 'purple' : '') }}" style="width:100%"></div></div><div><span class="point">{{ $primero['fecha'] }} · {{ $primero['valor'] }}</span><span class="point" style="text-align:center">{{ count($serie['puntos']) }} controles</span><span class="point">{{ $ultimo['fecha'] }} · {{ $ultimo['valor'] }}</span></div></div>
+@endforeach
+@endif
 
 <h2>Registros cronológicos ({{ $registros->count() }})</h2>
 @if($registros->isEmpty())

@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\PlanAlimentario;
 use App\Models\SeguimientoComida;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class SeguimientoComidaPacienteService
@@ -39,11 +40,21 @@ class SeguimientoComidaPacienteService
         if (! in_array($plan->estado_plan, ['aprobado', 'activo'], true)) {
             throw new AuthorizationException('Solo se puede registrar seguimiento en un plan aprobado o activo.');
         }
+
+        $hoy = Carbon::today('America/La_Paz');
+        if ($comida->dia?->fecha?->gt($hoy)) {
+            throw new AuthorizationException('Esta comida todavía no corresponde al día actual del plan.');
+        }
+        if ($plan->fecha_inicio?->gt($hoy)) {
+            throw new AuthorizationException('El seguimiento estará disponible cuando comience la semana del plan.');
+        }
     }
 
     public function calcularResumenAdherencia(PlanAlimentario $plan, Paciente $paciente): array
     {
-        $total = $plan->dias->sum(fn ($dia) => $dia->comidas->count());
+        $hoy = Carbon::today('America/La_Paz');
+        $total = $plan->dias->filter(fn ($dia) => ! $dia->fecha || $dia->fecha->lte($hoy))
+            ->sum(fn ($dia) => $dia->comidas->count());
         $seguimientos = $this->seguimientos($plan, $paciente);
         $conteos = collect(['completada', 'parcial', 'no_realizada', 'reemplazada'])
             ->mapWithKeys(fn ($estado) => [$estado => $seguimientos->where('estado_cumplimiento', $estado)->count()]);
@@ -93,7 +104,13 @@ class SeguimientoComidaPacienteService
 
     private function seguimientos(PlanAlimentario $plan, Paciente $paciente)
     {
-        return SeguimientoComida::query()->where('id_plan_alimentario', $plan->getKey())
-            ->where('id_paciente', $paciente->getKey())->get();
+        $consulta = SeguimientoComida::query()
+            ->where('id_plan_alimentario', $plan->getKey())
+            ->where('id_paciente', $paciente->getKey())
+            ->whereDate('fecha_seguimiento', '<=', Carbon::today('America/La_Paz'));
+        if ($plan->fecha_inicio) $consulta->whereDate('fecha_seguimiento', '>=', $plan->fecha_inicio);
+        if ($plan->fecha_fin) $consulta->whereDate('fecha_seguimiento', '<=', $plan->fecha_fin);
+
+        return $consulta->get();
     }
 }

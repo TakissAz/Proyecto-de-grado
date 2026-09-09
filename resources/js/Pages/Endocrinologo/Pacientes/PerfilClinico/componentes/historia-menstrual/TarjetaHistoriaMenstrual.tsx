@@ -4,8 +4,6 @@ import { Heart, Edit, Plus, History, Calendar } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 import { Boton } from '@/Components/ui/boton';
 import GraficoCicloMenstrual from './GraficoCicloMenstrual';
-import DatosCicloMenstrual from './DatosCicloMenstrual';
-import HallazgosMenstruales from './HallazgosMenstruales';
 import type { HistoriaMenstrualData } from '../../tipos';
 
 interface Props {
@@ -38,12 +36,30 @@ export default function TarjetaHistoriaMenstrual({ historia, idPaciente, onRegis
         );
     }
 
+    const sangradoFueraDeRango = historia.duracion_ciclo_dias != null && (historia.duracion_ciclo_dias < 3 || historia.duracion_ciclo_dias > 7);
+    const intervaloFueraDeRango = historia.intervalo_entre_ciclos_dias != null && (historia.intervalo_entre_ciclos_dias < 21 || historia.intervalo_entre_ciclos_dias > 35);
+    const progesteronaBaja = historia.progesterona_lutea != null && historia.progesterona_lutea < 10;
     const tieneAlteracion = historia.amenorrea
         || historia.oligomenorrea
         || historia.sospecha_anovulacion
         || historia.confirma_anovulacion_por_progesterona
+        || historia.sangrado_abundante
+        || sangradoFueraDeRango
+        || intervaloFueraDeRango
+        || progesteronaBaja
         || historia.regularidad_ciclo === 'irregular'
         || historia.regularidad_ciclo === 'ausente';
+    const senales = [
+        historia.amenorrea && 'amenorrea',
+        historia.oligomenorrea && 'oligomenorrea',
+        historia.sangrado_abundante && 'sangrado abundante',
+        historia.dolor_menstrual && 'dolor menstrual',
+        historia.sospecha_anovulacion && 'sospecha de anovulación',
+        historia.confirma_anovulacion_por_progesterona && 'anovulación confirmada por progesterona',
+        sangradoFueraDeRango && `duracion del sangrado de ${historia.duracion_ciclo_dias} dias`,
+        intervaloFueraDeRango && `intervalo entre ciclos de ${historia.intervalo_entre_ciclos_dias} dias`,
+        progesteronaBaja && `progesterona lutea baja (${historia.progesterona_lutea} ng/mL)`,
+    ].filter(Boolean) as string[];
 
     return (
         <div className="p-5 space-y-4">
@@ -90,16 +106,30 @@ export default function TarjetaHistoriaMenstrual({ historia, idPaciente, onRegis
             {/* Grafico visual del ciclo */}
             <GraficoCicloMenstrual historia={historia} />
 
-            {/* Datos del ciclo */}
-            <DatosCicloMenstrual historia={historia} />
+            {/* Contexto que no está representado en las barras */}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <DatoContexto label="Regularidad" valor={formatRegularidad(historia.regularidad_ciclo)} alerta={historia.regularidad_ciclo !== 'regular'} />
+                <DatoContexto label="Edad de menarquía" valor={historia.edad_menarquia != null ? `${historia.edad_menarquia} años` : 'No registrada'} />
+                <DatoContexto label="Última menstruación" valor={historia.fecha_ultima_menstruacion || 'No registrada'} />
+            </div>
 
-            {/* Hallazgos clinicos */}
-            <HallazgosMenstruales historia={historia} />
-
-            {/* Interpretacion */}
-            <p className={clsx('text-[12px] font-medium', tieneAlteracion ? 'text-brand-orange' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                {tieneAlteracion ? 'Datos compatibles con alteracion ovulatoria.' : 'Sin alteracion ovulatoria evidente registrada.'}
-            </p>
+            {/* Interpretación consolidada, sin repetir tarjetas ni badges */}
+            <div className={clsx('rounded-xl border px-4 py-3', tieneAlteracion ? 'border-brand-orange/25 bg-brand-orange/[0.06]' : 'border-brand-green/20 bg-brand-green/[0.05]')}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">Interpretación del registro</p>
+                    <span className={clsx('rounded-full px-2 py-1 text-[9.5px] font-bold', tieneAlteracion ? 'bg-brand-orange/15 text-brand-orange' : 'bg-brand-green/15 text-brand-green-dark dark:text-brand-green')}>
+                        {senales.length} señal(es) clínica(s)
+                    </span>
+                </div>
+                <p className={clsx('mt-1 text-[12.5px] font-bold', tieneAlteracion ? 'text-brand-orange' : 'text-brand-green-dark dark:text-brand-green')}>
+                    {tieneAlteracion ? 'Patrón compatible con alteración ovulatoria' : 'Sin alteración ovulatoria evidente'}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                    {senales.length > 0
+                        ? `La conclusión se sustenta en ${senales.join(', ')}.`
+                        : 'No se registraron amenorrea, oligomenorrea ni evidencia clínica o bioquímica de anovulación.'}
+                </p>
+            </div>
 
             {/* Observaciones */}
             {historia.observaciones && (
@@ -110,4 +140,12 @@ export default function TarjetaHistoriaMenstrual({ historia, idPaciente, onRegis
             )}
         </div>
     );
+}
+
+function DatoContexto({ label, valor, alerta = false }: { label: string; valor: string; alerta?: boolean }) {
+    return <div className="rounded-xl border border-surface-border px-3 py-2.5 dark:border-surface-border-dark"><p className="text-[9px] font-bold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{label}</p><p className={clsx('mt-0.5 text-[12px] font-bold', alerta ? 'text-brand-orange' : 'text-ink dark:text-ink-dark')}>{valor}</p></div>;
+}
+
+function formatRegularidad(valor?: string | null): string {
+    return ({ regular: 'Regular', irregular: 'Irregular', ausente: 'Ausente' } as Record<string, string>)[valor ?? ''] ?? 'No registrada';
 }

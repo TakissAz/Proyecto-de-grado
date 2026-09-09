@@ -21,6 +21,7 @@ export interface RecetaDetalle {
     id_receta: number;
     nombre: string;
     descripcion: string | null;
+    imagen_url: string | null;
     tipo_comida: string;
     porciones: number;
     tiempo_preparacion_minutos: number | null;
@@ -86,10 +87,13 @@ export default function ModalVerReceta({ abierto, receta, cargando, onCerrar }: 
 
                     {!cargando && receta && (
                         <>
-                            {/* Nombre */}
-                            <div>
-                                <p className="text-[11.5px] font-semibold text-ink-muted dark:text-ink-muted-dark mb-1">Nombre</p>
-                                <p className="text-[15px] font-bold text-ink dark:text-ink-dark">{receta.nombre}</p>
+                            <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+                                <img src={receta.imagen_url || '/images/recetas/receta-saludable-portada.png'} alt={receta.nombre} className="h-36 w-full rounded-2xl object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10" />
+                                <div className="self-center">
+                                    <p className="text-[11.5px] font-semibold text-ink-muted dark:text-ink-muted-dark mb-1">Nombre</p>
+                                    <p className="text-[17px] font-bold text-ink dark:text-ink-dark">{receta.nombre}</p>
+                                    {receta.descripcion && <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{receta.descripcion}</p>}
+                                </div>
                             </div>
 
                             {/* Tipo + Porciones + Tiempo */}

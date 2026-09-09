@@ -120,6 +120,7 @@ class EcografiaController extends Controller
      */
     public function historial(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $registros = EvaluacionEcografica::where('id_paciente', $paciente->id_paciente)
             ->latest('fecha_ecografia')
             ->get()
@@ -145,6 +146,7 @@ class EcografiaController extends Controller
                 'id_paciente'     => $paciente->id_paciente,
                 'nombre_completo' => trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' ')),
                 'ci'              => $paciente->ci,
+                'avatar_url'      => $paciente->user?->avatar_url,
             ],
             'registros' => $registros,
         ]);

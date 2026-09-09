@@ -10,10 +10,23 @@ use App\Services\Paciente\PortalPacienteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+use Illuminate\Support\Carbon;
 
 class FlujoOperativoNutricionalRealistaSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Carbon::setTestNow(self::today().' 12:00:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
 
     public function test_crea_flujo_operativo_completo_e_idempotente(): void
     {

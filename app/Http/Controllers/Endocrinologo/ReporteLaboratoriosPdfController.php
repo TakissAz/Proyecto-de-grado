@@ -60,6 +60,15 @@ class ReporteLaboratoriosPdfController extends Controller
                 ->when($soloAlterados, fn ($c) => $c->filter(fn ($r) => ! ($r->alteracion_tiroidea_descartada && $r->hiperprolactinemia_descartada && $r->hiperplasia_suprarrenal_descartada && $r->cushing_descartado))->values())
             : collect();
 
+        $diferencial->each(function ($resultado) {
+            $resultado->descartados_count = collect([
+                $resultado->alteracion_tiroidea_descartada,
+                $resultado->hiperprolactinemia_descartada,
+                $resultado->hiperplasia_suprarrenal_descartada,
+                $resultado->cushing_descartado,
+            ])->filter()->count();
+        });
+
         $glucosa = $incluir('glucosa_insulina')
             ? $rangoFecha(ResultadoGlucosaInsulina::where('id_paciente', $pid))->get()
                 ->when($soloAlterados, fn ($c) => $c->filter(fn ($r) => $r->resistencia_insulina_sugerida || $r->hiperinsulinemia)->values())
@@ -81,6 +90,14 @@ class ReporteLaboratoriosPdfController extends Controller
             'ultimo_homa' => $glucosa->sortByDesc('fecha_resultado')->first()?->homa_ir,
         ];
 
+        $panelesResumen = [
+            ['nombre' => 'Andrógenos', 'resultados' => $androgenico->count(), 'hallazgos' => $androgenico->where('hiperandrogenismo_bioquimico', true)->count(), 'ultimo' => $androgenico->first()?->fecha_resultado],
+            ['nombre' => 'Gonadotropo', 'resultados' => $gonadotropo->count(), 'hallazgos' => $gonadotropo->filter(fn ($r) => $r->relacion_lh_fsh !== null && $r->relacion_lh_fsh > 2)->count(), 'ultimo' => $gonadotropo->first()?->fecha_resultado],
+            ['nombre' => 'Diferenciales', 'resultados' => $diferencial->count(), 'hallazgos' => $diferencial->filter(fn ($r) => ! ($r->alteracion_tiroidea_descartada && $r->hiperprolactinemia_descartada && $r->hiperplasia_suprarrenal_descartada && $r->cushing_descartado))->count(), 'ultimo' => $diferencial->first()?->fecha_resultado],
+            ['nombre' => 'Glucosa / insulina', 'resultados' => $glucosa->count(), 'hallazgos' => $glucosa->filter(fn ($r) => $r->resistencia_insulina_sugerida || $r->hiperinsulinemia)->count(), 'ultimo' => $glucosa->first()?->fecha_resultado],
+            ['nombre' => 'Lípidos', 'resultados' => $lipidico->count(), 'hallazgos' => $lipidico->where('dislipidemia_sugerida', true)->count(), 'ultimo' => $lipidico->first()?->fecha_resultado],
+        ];
+
         return Pdf::loadView('pdf.laboratorios', [
             'paciente' => $paciente,
             'nombrePaciente' => $nombre,
@@ -91,6 +108,9 @@ class ReporteLaboratoriosPdfController extends Controller
             'lipidico' => $lipidico,
             'filtros' => $filtros,
             'resumen' => $resumen,
+            'panelesResumen' => $panelesResumen,
+            'maxResultadosPanel' => max(1, collect($panelesResumen)->max('resultados')),
+            'esReporteGeneral' => $panel === null,
             'profesional' => $request->user(),
             'fechaGeneracion' => now(),
         ])->setPaper('a4', 'landscape')->stream("laboratorios-{$paciente->getKey()}.pdf");

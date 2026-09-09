@@ -1,9 +1,11 @@
 ﻿import { CalendarDays, Clock3, Plus, Search, Stethoscope, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { BotonLink } from '@/Components/ui/boton';
 import AccionesCita from './AccionesCita';
 import type { CitaData } from './tipos';
 import { ESTADOS_BADGE } from './tipos';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 
 interface Props {
     citas: CitaData[];
@@ -13,6 +15,8 @@ interface Props {
     onPacienteChange: (valor: string) => void;
     onBuscar: () => void;
     onEstadoChange: (estado: string) => void;
+    paginacion: { paginaActual: number; ultimaPagina: number; total: number; desde: number | null; hasta: number | null };
+    onPaginaChange: (pagina: number) => void;
     onNuevaCita?: () => void;
 }
 
@@ -37,6 +41,8 @@ export default function ListadoCitasMejorado({
     onPacienteChange,
     onBuscar,
     onEstadoChange,
+    paginacion,
+    onPaginaChange,
     onNuevaCita,
 }: Props) {
     return (
@@ -46,7 +52,7 @@ export default function ListadoCitasMejorado({
                     <div className="flex items-center gap-2">
                         <h2 className="text-[12px] font-bold text-ink dark:text-ink-dark">Listado de citas</h2>
                         <span className="rounded-md bg-brand-green/10 px-1.5 py-0.5 text-[8px] font-bold text-brand-green-dark dark:text-brand-green">
-                            {citas.length}
+                            {paginacion.total}
                         </span>
                     </div>
                     <p className="mt-0.5 text-[9px] text-ink-muted dark:text-ink-muted-dark">Consulta y administra las citas registradas</p>
@@ -120,7 +126,7 @@ export default function ListadoCitasMejorado({
                                 return (
                                     <div key={cita.id_cita} className="group grid min-w-[780px] grid-cols-[minmax(170px,1.4fr)_78px_76px_minmax(100px,1fr)_82px_94px_120px] items-center px-3 py-2.5 transition-colors hover:bg-brand-green/[0.025]">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 text-[8px] font-bold text-brand-green-dark dark:text-brand-green">{nombre.slice(0, 2).toUpperCase()}</span>
+                                            <AvatarPaciente nombre={nombre} avatarUrl={cita.paciente?.avatar_url} size="sm" />
                                             <div className="min-w-0"><p className="truncate text-[10.5px] font-semibold text-ink dark:text-ink-dark">{nombre}</p><p className="truncate text-[8px] text-ink-muted dark:text-ink-muted-dark">CI {cita.paciente?.ci ?? 'â€”'}</p></div>
                                         </div>
                                         <span className="text-[9.5px] font-medium capitalize text-ink-muted dark:text-ink-muted-dark">{fechaLegible(cita.fecha_cita)}</span>
@@ -143,7 +149,7 @@ export default function ListadoCitasMejorado({
                                 <article key={cita.id_cita} className="rounded-xl border border-surface-border bg-black/[0.008] p-3 dark:border-surface-border-dark dark:bg-white/[0.01]">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 text-[9px] font-bold text-brand-green-dark dark:text-brand-green">{nombre.slice(0, 2).toUpperCase()}</span>
+                                            <AvatarPaciente nombre={nombre} avatarUrl={cita.paciente?.avatar_url} size="sm" />
                                             <div className="min-w-0"><p className="truncate text-[11px] font-semibold text-ink dark:text-ink-dark">{nombre}</p><p className="text-[8.5px] text-ink-muted dark:text-ink-muted-dark">{cita.tipo_cita}</p></div>
                                         </div>
                                         <span className={clsx('pill shrink-0 text-[7.5px]', badge.class)}>{badge.label}</span>
@@ -161,12 +167,32 @@ export default function ListadoCitasMejorado({
                             );
                         })}
                     </div>
+                    {paginacion.ultimaPagina > 1 && <PaginacionCitas {...paginacion} onPaginaChange={onPaginaChange} />}
                 </>
             )}
         </section>
     );
 }
 
+function PaginacionCitas({ paginaActual, ultimaPagina, total, desde, hasta, onPaginaChange }: { paginaActual: number; ultimaPagina: number; total: number; desde: number | null; hasta: number | null; onPaginaChange: (pagina: number) => void }) {
+    const paginas = Array.from(new Set([1, paginaActual - 1, paginaActual, paginaActual + 1, ultimaPagina]))
+        .filter((pagina) => pagina >= 1 && pagina <= ultimaPagina)
+        .sort((a, b) => a - b);
 
-
+    return (
+        <div className="mt-3 flex flex-col gap-2 border-t border-surface-border/70 pt-3 dark:border-surface-border-dark/70 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[9px] text-ink-muted dark:text-ink-muted-dark">Mostrando <b className="text-ink dark:text-ink-dark">{desde ?? 0}–{hasta ?? 0}</b> de <b className="text-ink dark:text-ink-dark">{total}</b> citas</p>
+            <div className="flex items-center gap-1">
+                <button type="button" onClick={() => onPaginaChange(paginaActual - 1)} disabled={paginaActual === 1} className="flex h-7 items-center gap-1 rounded-lg border border-surface-border px-2 text-[8.5px] font-semibold text-ink transition hover:bg-black/[.03] disabled:cursor-not-allowed disabled:opacity-35 dark:border-surface-border-dark dark:text-ink-dark dark:hover:bg-white/[.04]"><ChevronLeft size={11}/> Anterior</button>
+                {paginas.map((pagina, indice) => (
+                    <span key={pagina} className="contents">
+                        {indice > 0 && pagina - paginas[indice - 1] > 1 && <span className="px-1 text-[9px] text-ink-muted">…</span>}
+                        <button type="button" onClick={() => onPaginaChange(pagina)} aria-current={pagina === paginaActual ? 'page' : undefined} className={clsx('h-7 min-w-7 rounded-lg px-2 text-[9px] font-bold transition', pagina === paginaActual ? 'bg-brand-green text-white' : 'border border-surface-border text-ink hover:bg-black/[.03] dark:border-surface-border-dark dark:text-ink-dark dark:hover:bg-white/[.04]')}>{pagina}</button>
+                    </span>
+                ))}
+                <button type="button" onClick={() => onPaginaChange(paginaActual + 1)} disabled={paginaActual === ultimaPagina} className="flex h-7 items-center gap-1 rounded-lg border border-surface-border px-2 text-[8.5px] font-semibold text-ink transition hover:bg-black/[.03] disabled:cursor-not-allowed disabled:opacity-35 dark:border-surface-border-dark dark:text-ink-dark dark:hover:bg-white/[.04]">Siguiente <ChevronRight size={11}/></button>
+            </div>
+        </div>
+    );
+}
 

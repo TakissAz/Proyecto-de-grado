@@ -331,13 +331,15 @@ class GeneradorPlanSemanalServiceTest extends TestCase
             ->firstWhere('tipo_comida', 'desayuno')->componentes->first();
 
         $this->assertSame($receta->getKey(), $componente->id_receta);
-        $this->assertSame('410.00', $componente->calorias);
-        $this->assertSame('28.00', $componente->proteinas);
-        $this->assertSame('32.00', $componente->carbohidratos);
-        $this->assertSame('14.00', $componente->grasas);
-        $this->assertSame('7.00', $componente->fibra);
+        $this->assertSame('0.98', $componente->cantidad);
+        $this->assertSame('401.80', $componente->calorias);
+        $this->assertSame('27.44', $componente->proteinas);
+        $this->assertSame('31.36', $componente->carbohidratos);
+        $this->assertSame('13.72', $componente->grasas);
+        $this->assertSame('6.86', $componente->fibra);
         $this->assertStringContainsString('Puntaje experto:', $componente->observaciones);
         $this->assertStringContainsString('Coincide con el tipo', $componente->observaciones);
+        $this->assertStringContainsString('Porción ajustada', $componente->observaciones);
     }
 
     public function test_recetas_insertadas_recalculan_totales_de_comida_dia_y_plan(): void

@@ -6,12 +6,13 @@ use App\Models\Paciente;
 use App\Models\SeguimientoSintomaPaciente;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 
 class SeguimientoSintomasPacienteService
 {
     public function guardar(Paciente $paciente, array $datos, User $usuario): SeguimientoSintomaPaciente
     {
-        $fecha = $datos['fecha_registro'] ?? today()->toDateString();
+        $fecha = $datos['fecha_registro'] ?? Carbon::today('America/La_Paz')->toDateString();
         unset($datos['id_paciente'], $datos['registrado_por']);
         return SeguimientoSintomaPaciente::query()->updateOrCreate(
             ['id_paciente' => $paciente->getKey(), 'fecha_registro' => $fecha],
@@ -24,22 +25,63 @@ class SeguimientoSintomasPacienteService
         return $paciente->seguimientosSintomas()->latest('fecha_registro')->latest('id_seguimiento_sintoma_paciente')->limit($limite)->get();
     }
 
+    public function obtenerHistorialPaginado(Paciente $paciente, int $porPagina = 10): array
+    {
+        $paginado = $paciente->seguimientosSintomas()
+            ->latest('fecha_registro')->latest('id_seguimiento_sintoma_paciente')
+            ->paginate($porPagina)->withQueryString();
+
+        return [
+            'data' => collect($paginado->items())->map(fn ($registro) => $this->transformar($registro))->values()->all(),
+            'current_page' => $paginado->currentPage(),
+            'last_page' => $paginado->lastPage(),
+            'per_page' => $paginado->perPage(),
+            'total' => $paginado->total(),
+            'from' => $paginado->firstItem(),
+            'to' => $paginado->lastItem(),
+        ];
+    }
+
+    public function obtenerHistorialCompleto(Paciente $paciente): array
+    {
+        return $paciente->seguimientosSintomas()->latest('fecha_registro')->latest('id_seguimiento_sintoma_paciente')
+            ->get()->map(fn ($registro) => $this->transformar($registro))->values()->all();
+    }
+
     public function obtenerResumen(Paciente $paciente): array
     {
         $ultimos = $this->obtenerUltimos($paciente);
         return [
-            'registro_hoy' => $this->transformar($ultimos->first(fn ($r) => $r->fecha_registro->isToday())),
+            'registro_hoy' => $this->transformar($ultimos->first(fn ($r) => $r->fecha_registro->isSameDay(Carbon::today('America/La_Paz')))),
             'ultimos_registros' => $ultimos->map(fn ($r) => $this->transformar($r))->values()->all(),
             'indicadores' => $this->calcularIndicadores($paciente),
         ];
     }
 
+    public function obtenerResumenEnPeriodo(Paciente $paciente, ?Carbon $desde, ?Carbon $hasta, Carbon $hoy): array
+    {
+        $consulta = $paciente->seguimientosSintomas()->whereDate('fecha_registro', '<=', $hoy);
+        if ($desde) $consulta->whereDate('fecha_registro', '>=', $desde);
+        if ($hasta) $consulta->whereDate('fecha_registro', '<=', $hasta);
+        $registros = $consulta->latest('fecha_registro')->latest('id_seguimiento_sintoma_paciente')->get();
+
+        return [
+            'registro_hoy' => $this->transformar($registros->first(fn ($r) => $r->fecha_registro->isSameDay($hoy))),
+            'ultimos_registros' => $registros->map(fn ($r) => $this->transformar($r))->values()->all(),
+            'indicadores' => $this->calcularIndicadoresDesdeRegistros($registros),
+        ];
+    }
+
     public function calcularIndicadores(Paciente $paciente): array
     {
-        $registros = $this->obtenerUltimos($paciente);
+        return $this->calcularIndicadoresDesdeRegistros($this->obtenerUltimos($paciente));
+    }
+
+    private function calcularIndicadoresDesdeRegistros(Collection $registros): array
+    {
         $frecuente = fn (callable $regla) => $registros->filter($regla)->count() >= 3;
         $indicadores = [
-            'total_registros' => $paciente->seguimientosSintomas()->count(),
+            'total_registros' => $registros->count(),
             'registros_ultimos_7_dias' => $registros->count(),
             'hambre_nocturna_frecuente' => $frecuente(fn ($r) => $r->hambre_nocturna),
             'ansiedad_comida_frecuente' => $frecuente(fn ($r) => in_array($r->ansiedad_por_comida, ['moderada', 'alta'], true)),

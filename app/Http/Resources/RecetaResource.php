@@ -15,6 +15,7 @@ class RecetaResource extends JsonResource
             'id_receta' => $this->id_receta,
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
+            'imagen_url' => $this->imagen_url,
             'tipo_comida' => $this->tipo_comida,
             'porciones' => $this->porciones,
             'tiempo_preparacion_minutos' => $this->tiempo_preparacion_minutos,

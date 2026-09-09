@@ -1,8 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><title>Historial de planes alimentarios</title><style>
 @page{margin:28px 32px 42px}body{font-family:DejaVu Sans,sans-serif;color:#263238;font-size:9px;line-height:1.4}h1{font-size:21px;color:#174d3b;margin:4px 0}h2{font-size:12px;color:#174d3b;border-bottom:1px solid #a9c7bc;padding-bottom:4px;margin:16px 0 7px}h3{font-size:10.5px;color:#174d3b;margin:10px 0 4px}.head{border-bottom:3px solid #2f8066;padding-bottom:11px}.brand{color:#2f8066;font-size:9px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase}.right{float:right;text-align:right}.clear{clear:both}.muted{color:#607d75}.box{background:#f2f7f5;border:1px solid #d7e5df;padding:8px;margin:7px 0}.grid{width:100%;border-collapse:collapse;margin:6px 0 10px}.grid th,.grid td{border:1px solid #d9e1de;padding:5px;vertical-align:top}.grid th{background:#e8f1ed;color:#174d3b;text-align:left}.badge{display:inline-block;background:#e8f1ed;color:#174d3b;border-radius:8px;padding:2px 6px;margin:1px}.plan{margin-top:12px}.metricas td{width:20%;text-align:center}.metricas b{display:block;color:#174d3b;font-size:11px}.dia{page-break-inside:avoid;margin:8px 0}.motivo{color:#3f6559;font-size:8px}.warn{color:#a76713}.empty{padding:20px;text-align:center;border:1px dashed #a9c7bc;color:#607d75}.footer{position:fixed;bottom:-28px;left:0;right:0;border-top:1px solid #aaa;padding-top:6px;color:#78908a;font-size:7px}.footer b{color:#2f8066}
 </style></head><body>
-<header class="head"><div class="right"><b>{{ $fechaGeneracion->format('d/m/Y H:i') }}</b><br><span class="muted">Reporte profesional filtrado</span></div><div class="brand">● Nutrigo · Salud integral</div><h1>Historial de planes alimentarios</h1><div class="muted">Seguimiento longitudinal de planificación nutricional</div><div class="clear"></div></header>
+<header class="head"><div class="right"><b>{{ $fechaGeneracion->format('d/m/Y H:i') }}</b><br><span class="muted">Reporte profesional filtrado</span></div><div class="brand">● Almendra Nutrición</div><h1>Historial de planes alimentarios</h1><div class="muted">Seguimiento longitudinal de planificación nutricional</div><div class="clear"></div></header>
 
 <h2>Paciente y responsable</h2>
 <table class="grid"><tr><th>Paciente</th><th>CI</th><th>Nutricionista</th><th>Planes incluidos</th></tr><tr><td>{{ $nombrePaciente ?: 'Sin registro' }}</td><td>{{ $paciente->ci ?: 'Sin registro' }}</td><td>{{ $nutricionista?->name ?? 'Sin registro' }}</td><td><b>{{ $planes->count() }}</b></td></tr></table>
@@ -46,5 +46,5 @@
 <div class="empty">No existen planes que coincidan con los filtros seleccionados.</div>
 @endforelse
 
-<footer class="footer"><b>Nutrigo</b> · Historial nutricional generado según los filtros indicados. Documento para interpretación profesional.</footer>
+<footer class="footer"><b>Almendra Nutrición</b> · Historial nutricional generado según los filtros indicados. Documento para interpretación profesional.</footer>
 </body></html>

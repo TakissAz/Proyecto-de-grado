@@ -25,6 +25,7 @@ th{background:#f2f7f5;color:#365d54}
 .footer{position:fixed;bottom:-15px;left:0;right:0;text-align:center;color:#78908a;font-size:8px}
 .note{padding:9px;background:#fff8df;border:1px solid #e3cb75;border-radius:6px;margin-top:14px}
 .sub{color:#657a75;font-size:8px}
+.charts{width:100%;border-collapse:separate;border-spacing:6px}.charts td{width:33.33%;border:1px solid #d6e2df;background:#fbfcfc;padding:8px}.bar-row{margin:7px 0}.bar-head{font-size:8px}.bar-value{float:right;font-weight:bold}.track{height:7px;margin-top:3px;background:#e8eeec;border-radius:4px}.fill{height:7px;border-radius:4px;background:#d87535}.fill.red{background:#ca4b42}.fill.purple{background:#8d55b5}.fill.blue{background:#3e7ebd}.current{margin:4px 0;padding:6px;border-left:3px solid #1f8a70;background:#f6faf8}.yes{color:#a84338}.no{color:#2c7b59}.clear{clear:both}
 </style></head><body>
 
 <div class="header">
@@ -57,6 +58,39 @@ th{background:#f2f7f5;color:#365d54}
         <td><div class="num">{{ $stats['con_medicacion'] }}</div><div class="label">Con medicación</div></td>
     </tr>
 </table>
+
+@if($registroActual)
+<h2>Perfil clínico actual</h2>
+<table class="charts"><tr>
+@foreach($perfilActual as $grupo => $activos)
+<td>
+    <span class="label">{{ $grupo }}</span>
+    @forelse($activos as $nombre)
+        <div class="current"><b class="yes">Sí</b> · {{ $nombre }}</div>
+    @empty
+        <div class="current"><b class="no">No</b> · Sin elementos activos</div>
+    @endforelse
+</td>
+@endforeach
+</tr></table>
+
+<h2>Presencia a través de los controles</h2>
+<table class="charts"><tr>
+@foreach($frecuencias->groupBy('grupo') as $grupo=>$items)
+<td>
+    <span class="label">{{ $grupo }}</span>
+    @foreach($items as $dato)
+        <div class="bar-row">
+            <div class="bar-head">{{ $dato['nombre'] }}<span class="bar-value">{{ $stats['total'] === 1 ? ($dato['cantidad'] ? 'Sí' : 'No') : $dato['cantidad'].' de '.$stats['total'] }}</span></div>
+            <div class="clear"></div>
+            <div class="track"><div class="fill {{ $dato['color'] }}" style="width:{{ $dato['porcentaje'] }}%"></div></div>
+        </div>
+    @endforeach
+</td>
+@endforeach
+</tr></table>
+<div class="sub">Las barras representan presencia entre controles, no intensidad ni gravedad clínica.</div>
+@endif
 
 <h2>Registros cronológicos ({{ $registros->count() }})</h2>
 @if($registros->isEmpty())

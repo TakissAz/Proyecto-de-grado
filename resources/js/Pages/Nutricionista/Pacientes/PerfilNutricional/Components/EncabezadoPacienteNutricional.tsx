@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, CalendarDays, IdCard } from 'lucide-react';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 import type { PacienteNutricional } from '../tipos';
 
@@ -25,7 +25,7 @@ export default function EncabezadoPacienteNutricional({ paciente }: { paciente: 
             <div className="px-5 pb-5 -mt-7">
                 <div className="flex items-end gap-4">
                     <div className="rounded-full border-[3px] border-surface-card shadow-md dark:border-surface-card-dark">
-                        <AvatarIniciales nombre={nombre} size={56} />
+                        <AvatarPaciente nombre={nombre} avatarUrl={paciente.user?.avatar_url} size="lg" />
                     </div>
                     <div className="flex-1 pb-1">
                         <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-brand-green-dark dark:text-brand-green mb-0.5">Perfil nutricional</p>
@@ -33,6 +33,7 @@ export default function EncabezadoPacienteNutricional({ paciente }: { paciente: 
                         <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-ink-muted dark:text-ink-muted-dark">
                             <span className="flex items-center gap-1"><IdCard size={12} strokeWidth={1.8} /> CI {paciente.ci}</span>
                             <span className="flex items-center gap-1"><CalendarDays size={12} strokeWidth={1.8} /> {paciente.fecha_nacimiento}</span>
+                            {paciente.user?.email && <span>{paciente.user.email}</span>}
                         </div>
                     </div>
                     <div className="pb-1">

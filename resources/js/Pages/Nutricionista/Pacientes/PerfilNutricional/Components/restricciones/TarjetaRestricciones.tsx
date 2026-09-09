@@ -1,4 +1,4 @@
-import { ShieldAlert, Plus, Edit, History, AlertTriangle, Ban, XOctagon, Skull, HeartCrack } from 'lucide-react';
+import { ShieldAlert, Plus, Edit, History, AlertTriangle, Ban, XOctagon, Skull, HeartCrack, Info } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { Boton } from '@/Components/ui/boton';
 import { Badge } from '@/Components/ui/badge';
@@ -48,7 +48,7 @@ export default function TarjetaRestricciones({ registro, onRegistrar, onEditar, 
         <div className="space-y-4">
 
             {/* Mini header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 rounded-xl border border-category-fruits/20 bg-category-fruits/[0.03] p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
                     <ShieldAlert size={14} strokeWidth={1.8} className="text-category-fruits" />
                     <span className="text-[12px] font-bold text-ink dark:text-ink-dark">Restricciones</span>
@@ -68,12 +68,16 @@ export default function TarjetaRestricciones({ registro, onRegistrar, onEditar, 
                 </div>
             </div>
 
+            <div className="flex items-start gap-2 rounded-xl border border-info/15 bg-info/[0.04] px-3 py-2 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
+                <Info size={13} className="mt-0.5 shrink-0 text-info" />
+                <span><strong className="text-ink dark:text-ink-dark">Nuevo</strong> crea una valoración y conserva la vigente en el historial. <strong className="text-ink dark:text-ink-dark">Editar</strong> corrige el registro actual.</span>
+            </div>
+
             {/* Grid de secciones — 2 columnas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {SECCIONES.map(({ key, label, icono: Icon, color, bgColor, borderColor, badgeColor, descripcion }) => {
                     const valor = registro[key];
-                    if (!valor) return null;
-                    const items = String(valor).split(',').map(s => s.trim()).filter(Boolean);
+                    const items = valor ? String(valor).split(',').map(s => s.trim()).filter(Boolean) : [];
 
                     return (
                         <div key={key} className={clsx('rounded-xl border px-3.5 py-3', borderColor, bgColor)}>
@@ -83,9 +87,9 @@ export default function TarjetaRestricciones({ registro, onRegistrar, onEditar, 
                                 <span className="text-[8px] text-ink-muted/50 dark:text-ink-muted-dark/50">— {descripcion}</span>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                                {items.map((item, i) => (
+                                {items.length ? items.map((item, i) => (
                                     <Badge key={`${key}-${i}`} color={badgeColor}>{item}</Badge>
-                                ))}
+                                )) : <span className="text-[10.5px] italic text-ink-muted/70 dark:text-ink-muted-dark/70">Sin información registrada</span>}
                             </div>
                         </div>
                     );

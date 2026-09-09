@@ -5,6 +5,7 @@ import { Boton } from '@/Components/ui/boton';
 import clsx from 'clsx';
 import type { BloqueHorario, PacienteOption, ProfesionalOption } from './tipos';
 import { TIPOS_CITA, MODALIDADES } from './tipos';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 
 interface Props {
     abierto: boolean;
@@ -76,8 +77,24 @@ export default function ModalCrearCita({ abierto, onCerrar, pacientes, profesion
     }, [data.fecha_cita, data.id_profesional]);
 
     const handleSubmit = () => {
-        if (metodo === 'put') { put(rutaStore, { onSuccess: onCerrar }); }
-        else { post(rutaStore, { onSuccess: onCerrar }); }
+        const opciones = {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                setPaso(1);
+                setHoraFin('');
+                setBuscarPaciente('');
+                onCerrar();
+            },
+            onError: (errores: Record<string, string>) => {
+                if (errores.id_paciente) setPaso(1);
+                else if (errores.fecha_cita || errores.hora_inicio || errores.id_profesional) setPaso(2);
+                else setPaso(3);
+            },
+        };
+
+        if (metodo === 'put') put(rutaStore, opciones);
+        else post(rutaStore, opciones);
     };
 
     const pacientesFiltrados = buscarPaciente
@@ -171,9 +188,7 @@ export default function ModalCrearCita({ abierto, onCerrar, pacientes, profesion
                                                     : 'hover:bg-black/[0.02] dark:hover:bg-white/[0.02]'
                                             )}
                                         >
-                                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green/10 text-[9px] font-bold text-brand-green-dark dark:text-brand-green shrink-0">
-                                                {p.nombre_completo.slice(0, 2).toUpperCase()}
-                                            </span>
+                                            <AvatarPaciente nombre={p.nombre_completo} avatarUrl={p.avatar_url} size="sm" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[12px] font-semibold text-ink dark:text-ink-dark truncate">{p.nombre_completo}</p>
                                                 <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">CI: {p.ci}</p>
@@ -197,9 +212,7 @@ export default function ModalCrearCita({ abierto, onCerrar, pacientes, profesion
                             {/* Paciente seleccionado (resumen) */}
                             {pacienteSeleccionado && (
                                 <div className="flex items-center gap-2 rounded-lg bg-brand-green/[0.04] px-3 py-2 border border-brand-green/20 dark:bg-brand-green/[0.03]">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded bg-brand-green/15 text-[8px] font-bold text-brand-green-dark dark:text-brand-green">
-                                        {pacienteSeleccionado.nombre_completo.slice(0, 2).toUpperCase()}
-                                    </span>
+                                    <AvatarPaciente nombre={pacienteSeleccionado.nombre_completo} avatarUrl={pacienteSeleccionado.avatar_url} size="sm" />
                                     <span className="text-[11px] font-semibold text-ink dark:text-ink-dark">{pacienteSeleccionado.nombre_completo}</span>
                                 </div>
                             )}
@@ -357,6 +370,11 @@ export default function ModalCrearCita({ abierto, onCerrar, pacientes, profesion
                 </div>
 
                 {/* Footer: navegación */}
+                {Object.keys(errors).length > 0 && (
+                    <div className="mx-5 mb-2 rounded-xl border border-red-500/25 bg-red-500/[0.06] px-3 py-2 text-[10px] text-red-500" role="alert">
+                        No se pudo guardar la cita. Revisa el dato señalado y vuelve a intentarlo.
+                    </div>
+                )}
                 <div className="flex items-center justify-between px-5 py-3 border-t border-surface-border dark:border-surface-border-dark bg-black/[0.01] dark:bg-white/[0.01]">
                     <div>
                         {paso > 1 && (

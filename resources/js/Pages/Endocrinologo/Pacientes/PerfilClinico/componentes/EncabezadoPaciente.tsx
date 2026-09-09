@@ -10,7 +10,7 @@ import {
     ShieldCheck,
 } from 'lucide-react';
 
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 import IndicadorEstadoFlujo from './IndicadorEstadoFlujo';
 import type { DatosPaciente, EstadoFlujo } from '../tipos';
@@ -35,7 +35,7 @@ export default function EncabezadoPaciente({ paciente, estadoFlujo }: Props) {
                 <div className="-mt-8 mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex items-end gap-3">
                         <div className="rounded-full border-4 border-base-100 bg-base-100 shadow-md dark:border-base-100">
-                            <AvatarIniciales nombre={paciente.nombre_completo} size={58} />
+                            <AvatarPaciente nombre={paciente.nombre_completo} avatarUrl={paciente.user?.avatar_url} size="lg" />
                         </div>
 
                         <div className="pb-1">

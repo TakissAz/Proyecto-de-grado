@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, FlaskConical, TrendingUp, ChevronDown, FileDown } from 'lucide-react';
+import { ArrowLeft, FlaskConical, TrendingUp, FileDown, CheckCircle2, AlertTriangle, Layers3 } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import clsx from 'clsx';
 import type { PageProps } from '@/types';
 
@@ -55,7 +55,7 @@ interface HistorialData {
 }
 
 interface Props extends PageProps {
-    paciente: { id_paciente: number; nombre_completo: string; ci: string };
+    paciente: { id_paciente: number; nombre_completo: string; ci: string; avatar_url?: string | null };
     historial: HistorialData;
 }
 
@@ -70,11 +70,27 @@ const PANELES = [
 export default function HistorialLaboratorios({ paciente, historial }: Props) {
     const id = paciente.id_paciente;
     const [tabActivo, setTabActivo] = useState(0);
-    const [alcance, setAlcance] = useState<'panel' | 'todos'>('panel');
+    const [alcance, setAlcance] = useState<'panel' | 'todos'>('todos');
     const [soloAlterados, setSoloAlterados] = useState(false);
     const [desde, setDesde] = useState('');
     const [hasta, setHasta] = useState('');
     const totalRegistros = Object.values(historial).reduce((acc, arr) => acc + arr.length, 0);
+    const resumenPaneles = useMemo(() => PANELES.map((panel) => {
+        const registros = historial[panel.key];
+        const ultimo = registros[0];
+        const conHallazgo = Boolean(ultimo && (
+            ('hiperandrogenismo_bioquimico' in ultimo && ultimo.hiperandrogenismo_bioquimico)
+            || ('resistencia_insulina_sugerida' in ultimo && ultimo.resistencia_insulina_sugerida)
+            || ('dislipidemia_sugerida' in ultimo && ultimo.dislipidemia_sugerida)
+            || ('relacion_lh_fsh' in ultimo && ultimo.relacion_lh_fsh != null && ultimo.relacion_lh_fsh > 2)
+            || ('alteracion_tiroidea_descartada' in ultimo && !(
+                ultimo.alteracion_tiroidea_descartada && ultimo.hiperprolactinemia_descartada
+                && ultimo.hiperplasia_suprarrenal_descartada && ultimo.cushing_descartado
+            ))
+        ));
+        return { ...panel, count: registros.length, conHallazgo };
+    }), [historial]);
+    const panelesConHallazgo = resumenPaneles.filter((panel) => panel.conHallazgo).length;
 
     // URL del PDF con filtros aplicados
     const urlPdf = useMemo(() => {
@@ -107,7 +123,7 @@ export default function HistorialLaboratorios({ paciente, historial }: Props) {
                     <div className="px-5 pb-5 -mt-7">
                         <div className="flex items-end gap-4">
                             <div className="rounded-full border-[3px] border-surface-card shadow-md dark:border-surface-card-dark">
-                                <AvatarIniciales nombre={paciente.nombre_completo} size={56} />
+                                <AvatarPaciente nombre={paciente.nombre_completo} avatarUrl={paciente.avatar_url} size="lg" />
                             </div>
                             <div className="flex-1 pb-1">
                                 <h1 className="text-[18px] font-bold text-ink dark:text-ink-dark leading-tight">{paciente.nombre_completo}</h1>
@@ -129,6 +145,33 @@ export default function HistorialLaboratorios({ paciente, historial }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {/* Lectura rápida del expediente */}
+                <section className="card-elevated overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border px-5 py-3.5 dark:border-surface-border-dark">
+                        <div>
+                            <p className="flex items-center gap-2 text-[13px] font-bold text-ink dark:text-ink-dark"><Layers3 size={15} className="text-brand-green" /> Panorama de los cinco paneles</p>
+                            <p className="mt-0.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">El estado se basa en el resultado más reciente de cada panel.</p>
+                        </div>
+                        <span className={clsx('rounded-full px-2.5 py-1 text-[10px] font-semibold', panelesConHallazgo ? 'bg-brand-orange/10 text-brand-orange' : 'bg-brand-green/10 text-brand-green-dark dark:text-brand-green')}>
+                            {panelesConHallazgo ? `${panelesConHallazgo} panel${panelesConHallazgo === 1 ? '' : 'es'} para revisar` : 'Sin alertas recientes'}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 divide-y divide-surface-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-5 dark:divide-surface-border-dark">
+                        {resumenPaneles.map((panel, index) => (
+                            <button key={panel.key} type="button" onClick={() => setTabActivo(index)} className="group min-h-[96px] p-4 text-left transition-colors hover:bg-brand-green/[0.035]">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-[10px] font-semibold text-ink-muted dark:text-ink-muted-dark">{panel.label}</span>
+                                    {panel.count === 0 ? <span className="text-[9px] text-ink-muted">Sin datos</span> : panel.conHallazgo ? <AlertTriangle size={13} className="text-brand-orange" /> : <CheckCircle2 size={13} className="text-brand-green" />}
+                                </div>
+                                <p className={clsx('mt-2 text-[18px] font-bold', panel.count ? (panel.conHallazgo ? 'text-brand-orange' : 'text-brand-green-dark dark:text-brand-green') : 'text-ink-muted')}>
+                                    {panel.count || '—'}
+                                </p>
+                                <p className="mt-0.5 text-[9.5px] text-ink-muted dark:text-ink-muted-dark">{panel.count ? `${panel.count} resultado${panel.count === 1 ? '' : 's'} · ${panel.conHallazgo ? 'requiere lectura' : 'sin alerta marcada'}` : 'Aún no registrado'}</p>
+                            </button>
+                        ))}
+                    </div>
+                </section>
 
                 {/* Tabs de paneles */}
                 <div className="card-elevated p-2">
@@ -168,8 +211,8 @@ export default function HistorialLaboratorios({ paciente, historial }: Props) {
                                 <label className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark mb-1 block">Alcance del reporte</label>
                                 <select value={alcance} onChange={(e) => setAlcance(e.target.value as 'panel' | 'todos')}
                                     className="w-full rounded-lg border border-surface-border bg-[#FAF9F6] px-3 py-2 text-[12px] text-ink outline-none focus:border-brand-green/50 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark">
-                                    <option value="panel">Solo panel «{PANELES[tabActivo].label}»</option>
-                                    <option value="todos">Todos los paneles</option>
+                                    <option value="todos">Reporte general · los 5 paneles</option>
+                                    <option value="panel">Detalle: panel «{PANELES[tabActivo].label}»</option>
                                 </select>
                             </div>
                             <div className="min-w-[130px]">
@@ -194,8 +237,8 @@ export default function HistorialLaboratorios({ paciente, historial }: Props) {
                         </div>
                         <p className="mt-2.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
                             {alcance === 'panel'
-                                ? `El reporte incluirá únicamente el panel «${PANELES[tabActivo].label}».`
-                                : 'El reporte incluirá los cinco paneles de laboratorio.'}
+                                ? `El reporte incluirá únicamente el panel «${PANELES[tabActivo].label}» y su evolución.`
+                                : 'El reporte general consolida los cinco paneles, sus hallazgos y la evolución disponible.'}
                             {soloAlterados && ' Solo resultados con hallazgo relevante.'}
                         </p>
                     </div>

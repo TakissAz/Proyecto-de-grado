@@ -1,4 +1,4 @@
-import { Scale, Plus, Edit, History, Calendar, Activity } from 'lucide-react';
+import { Scale, Plus, Edit, History, Calendar, Activity, Info, TrendingUp } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { Boton } from '@/Components/ui/boton';
 import { Badge } from '@/Components/ui/badge';
@@ -41,6 +41,12 @@ export default function TarjetaEvaluacion({ registro, onRegistrar, onEditar, blo
     const imcColor = imc < 18.5 ? 'text-category-others' : imc < 25 ? 'text-brand-green-dark dark:text-brand-green' : imc < 30 ? 'text-brand-orange' : 'text-category-fruits';
     const imcBgColor = imc < 18.5 ? 'bg-category-others' : imc < 25 ? 'bg-brand-green' : imc < 30 ? 'bg-brand-orange' : 'bg-category-fruits';
     const imcPct = Math.min(Math.max(((imc - 15) / 25) * 100, 0), 100);
+    const grasa = registro.porcentaje_grasa != null ? Number(registro.porcentaje_grasa) : null;
+    const masaMuscular = registro.masa_muscular != null ? Number(registro.masa_muscular) : null;
+    const peso = registro.peso != null ? Number(registro.peso) : null;
+    const porcentajeMuscular = masaMuscular != null && peso && peso > 0 ? (masaMuscular / peso) * 100 : null;
+    const grasaEstado = grasa == null ? null : grasa < 21 ? 'Bajo el rango orientativo' : grasa < 33 ? 'Dentro del rango orientativo' : grasa < 39 ? 'Elevado' : 'Muy elevado';
+    const grasaColor = grasa == null ? 'bg-brand-green' : grasa < 21 ? 'bg-category-others' : grasa < 33 ? 'bg-brand-green' : 'bg-brand-orange';
 
     return (
         <div className="p-5 space-y-4">
@@ -58,7 +64,7 @@ export default function TarjetaEvaluacion({ registro, onRegistrar, onEditar, blo
                         </div>
                         {registro.fecha_evaluacion && (
                             <p className="flex items-center gap-1 text-[10.5px] text-ink-muted dark:text-ink-muted-dark mt-0.5">
-                                <Calendar size={10} strokeWidth={1.8} /> {String(registro.fecha_evaluacion)}
+                                <Calendar size={10} strokeWidth={1.8} /> {formatearFecha(registro.fecha_evaluacion)}
                             </p>
                         )}
                     </div>
@@ -127,17 +133,35 @@ export default function TarjetaEvaluacion({ registro, onRegistrar, onEditar, blo
                 </div>
             </div>
 
-            {/* ── Composición visual (barras) ── */}
+            {/* Indicadores interpretables de composición corporal */}
             {(registro.porcentaje_grasa || registro.masa_muscular) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {registro.porcentaje_grasa != null && (
-                        <BarraMetrica label="Grasa corporal" valor={Number(registro.porcentaje_grasa)} max={50} unidad="%" color={Number(registro.porcentaje_grasa) > 30 ? 'bg-brand-orange' : 'bg-brand-green'} />
+                    {grasa != null && (
+                        <IndicadorComposicion titulo="Grasa corporal estimada" valor={`${grasa.toFixed(1)}%`}
+                            estado={grasaEstado ?? ''}
+                            descripcion="Referencia orientativa para mujeres adultas: 21–32,9%. Se interpreta junto con edad, cintura, método de medición y evolución individual."
+                            porcentaje={Math.min(Math.max((grasa / 45) * 100, 0), 100)} color={grasaColor} />
                     )}
-                    {registro.masa_muscular != null && (
-                        <BarraMetrica label="Masa muscular" valor={Number(registro.masa_muscular)} max={80} unidad="kg" color="bg-category-dairy" />
+                    {masaMuscular != null && (
+                        <IndicadorComposicion titulo="Masa muscular estimada" valor={`${masaMuscular.toFixed(1)} kg`}
+                            estado={porcentajeMuscular != null ? `${porcentajeMuscular.toFixed(1)}% del peso registrado` : 'Valor basal para seguimiento'}
+                            descripcion="No se compara con un límite universal: depende de talla, peso y método utilizado. Su utilidad principal es observar si se conserva o mejora entre controles."
+                            porcentaje={porcentajeMuscular != null ? Math.min(porcentajeMuscular * 2, 100) : 0} color="bg-category-dairy" />
                     )}
                 </div>
             )}
+
+            <div className="rounded-xl border border-brand-green/20 bg-brand-green/[0.05] px-4 py-3 dark:bg-brand-green/[0.07]">
+                <div className="flex items-start gap-2.5">
+                    <Info size={15} className="mt-0.5 shrink-0 text-brand-green-dark dark:text-brand-green" />
+                    <div>
+                        <p className="text-[11px] font-bold text-ink dark:text-ink-dark">¿Por qué se consideran estos indicadores?</p>
+                        <p className="mt-1 text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                            El IMC describe la relación peso–talla; la cintura y el ICC ayudan a valorar la distribución abdominal; la grasa y la masa muscular permiten vigilar la composición corporal. Juntos fundamentan el objetivo, el ajuste energético y el seguimiento del plan, pero no sustituyen la valoración profesional.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* ── Observaciones ── */}
             {registro.observaciones && (
@@ -159,17 +183,25 @@ function DatoItem({ label, valor, destacar }: { label: string; valor?: string | 
     );
 }
 
-function BarraMetrica({ label, valor, max, unidad, color }: { label: string; valor: number; max: number; unidad: string; color: string }) {
-    const pct = Math.min((valor / max) * 100, 100);
+function IndicadorComposicion({ titulo, valor, estado, descripcion, porcentaje, color }: { titulo: string; valor: string; estado: string; descripcion: string; porcentaje: number; color: string }) {
     return (
-        <div className="rounded-xl border border-surface-border bg-black/[0.02] px-3 py-2.5 dark:border-surface-border-dark dark:bg-white/[0.03]">
-            <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[9.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">{label}</span>
-                <span className="text-[11px] font-bold text-ink dark:text-ink-dark">{valor}{unidad}</span>
+        <div className="rounded-xl border border-surface-border bg-black/[0.02] px-4 py-3 dark:border-surface-border-dark dark:bg-white/[0.03]">
+            <div className="flex items-start justify-between gap-3">
+                <div><span className="text-[9.5px] font-semibold uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark">{titulo}</span>
+                    <p className="mt-1 flex items-center gap-1 text-[9.5px] font-semibold text-brand-green-dark dark:text-brand-green"><TrendingUp size={11}/>{estado}</p></div>
+                <span className="text-[16px] font-bold text-ink dark:text-ink-dark">{valor}</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-black/[0.06] dark:bg-white/[0.06] overflow-hidden">
-                <div className={clsx('h-full rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
+            <div className="mt-2.5 h-2 w-full rounded-full bg-black/[0.06] dark:bg-white/[0.06] overflow-hidden">
+                <div className={clsx('h-full rounded-full transition-all', color)} style={{ width: `${porcentaje}%` }} />
             </div>
+            <p className="mt-2 text-[9.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{descripcion}</p>
         </div>
     );
+}
+
+function formatearFecha(fecha: unknown): string {
+    if (!fecha) return '—';
+    const texto = String(fecha);
+    const [anio, mes, dia] = texto.slice(0, 10).split('-');
+    return anio && mes && dia ? `${dia}/${mes}/${anio}` : texto;
 }

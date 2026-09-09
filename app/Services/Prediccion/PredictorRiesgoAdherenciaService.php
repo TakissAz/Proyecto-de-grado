@@ -20,6 +20,12 @@ class PredictorRiesgoAdherenciaService
         if ($datos['tiene_datos']) {
             $sumar($datos['adherencia_promedio'] < 60, 30, 'Adherencia promedio menor al 60%');
             $sumar($datos['adherencia_promedio'] >= 60 && $datos['adherencia_promedio'] < 75, 15, 'Adherencia promedio entre 60% y 75%');
+            $sumar(($datos['comidas_sin_registro_vencidas'] ?? 0) >= 1, 20, 'Comidas cuyo horario finalizó sin registro de la paciente');
+            $sumar(($datos['comidas_sin_registro_vencidas'] ?? 0) >= 3, 15, 'Tres o más comidas vencidas sin registrar');
+            $sumar(($datos['comidas_no_realizadas'] ?? 0) >= 1, 8, 'Al menos una comida fue confirmada como no realizada');
+            $sumar(($datos['comidas_parciales'] ?? 0) >= 3, 8, 'Varias comidas fueron consumidas parcialmente');
+            $sumar(($datos['comidas_parciales'] ?? 0) >= 6, 7, 'Seis o más comidas presentan cumplimiento parcial');
+            $sumar(($datos['comidas_reemplazadas'] ?? 0) >= 2, 5, 'Se reemplazaron varias comidas planificadas');
             foreach (['desayuno' => 10, 'almuerzo' => 8, 'merienda' => 8, 'cena' => 8] as $tipo => $peso) {
                 $sumar($datos['adherencia_'.$tipo] < 50 && ($datos['seguimientos_por_tipo'][$tipo] ?? 0) > 0, $peso, 'Baja adherencia en '.($tipo === 'almuerzo' ? 'almuerzos' : $tipo.'s'));
             }
@@ -45,6 +51,7 @@ class PredictorRiesgoAdherenciaService
         if ($datos['hambre_posterior_alta'] >= 2) $recomendacion .= ' Aumentar proteína y fibra en comidas críticas.';
         if ($datos['molestias_moderadas_severas'] >= 2) $recomendacion .= ' Evitar recetas mal toleradas.';
         if (in_array('Baja adherencia en desayunos', $factores, true)) $recomendacion .= ' Usar desayunos rápidos.';
+        if (($datos['comidas_sin_registro_vencidas'] ?? 0) > 0) $recomendacion .= ' Verificar si la paciente omitió la comida o solo olvidó registrarla.';
 
         return [
             'riesgo_baja_adherencia' => $riesgo,
@@ -57,6 +64,7 @@ class PredictorRiesgoAdherenciaService
             'version_modelo' => '1.0.0',
             'fecha_prediccion' => now()->toISOString(),
             'sin_datos' => ! $datos['tiene_datos'],
+            'estado_periodo' => $datos['estado_periodo'] ?? 'sin_plan',
         ];
     }
 

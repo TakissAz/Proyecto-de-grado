@@ -4,8 +4,9 @@ import HistorialGenerico from './Components/HistorialGenerico';
 export default function HistorialPreferencias({ paciente, registros }: any) {
     return (
         <HistorialGenerico
-            titulo="Historial de preferencias"
-            descripcion="Todos los registros de preferencias alimentarias del paciente."
+            tipoHistorial="preferencias"
+            titulo="Evolución de preferencias alimentarias"
+            descripcion="Consulta qué gustos se incorporaron o retiraron en cada valoración y cómo cambió el perfil alimentario de la paciente."
             icono={Heart}
             colorIcono="text-category-dairy"
             bgIcono="bg-category-dairy/10"

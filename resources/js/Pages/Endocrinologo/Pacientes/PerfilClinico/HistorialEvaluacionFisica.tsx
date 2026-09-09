@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Activity, Calendar, TrendingUp, FileDown } from 'lucide-react';
+import { ArrowLeft, Activity, Calendar, TrendingUp, FileDown, Scale, Ruler, HeartPulse } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import clsx from 'clsx';
 import type { PageProps } from '@/types';
 import type { EvaluacionFisicaData } from './tipos';
@@ -15,7 +15,7 @@ interface RegistroHistorial extends EvaluacionFisicaData {
 }
 
 interface Props extends PageProps {
-    paciente: { id_paciente: number; nombre_completo: string; ci: string };
+    paciente: { id_paciente: number; nombre_completo: string; ci: string; avatar_url?: string | null };
     registros: RegistroHistorial[];
 }
 
@@ -60,6 +60,10 @@ export default function HistorialEvaluacionFisica({ paciente, registros }: Props
 
     const hayFiltros = signo || imc || desde || hasta;
     const limpiar = () => { setSigno(''); setImc(''); setDesde(''); setHasta(''); setPagina(1); };
+    const actual = registros[0];
+    const anterior = registros[1];
+    const cambio = (campo: 'peso' | 'imc' | 'circunferencia_cintura') => actual?.[campo] != null && anterior?.[campo] != null
+        ? Number((actual[campo]! - anterior[campo]!).toFixed(2)) : null;
 
     return (
         <AuthenticatedLayout title="Historial evaluación física">
@@ -77,7 +81,7 @@ export default function HistorialEvaluacionFisica({ paciente, registros }: Props
                     <div className="px-5 pb-5 -mt-7">
                         <div className="flex items-end gap-4">
                             <div className="rounded-full border-[3px] border-surface-card shadow-md dark:border-surface-card-dark">
-                                <AvatarIniciales nombre={paciente.nombre_completo} size={56} />
+                                <AvatarPaciente nombre={paciente.nombre_completo} avatarUrl={paciente.avatar_url} size="lg" />
                             </div>
                             <div className="flex-1 pb-1">
                                 <h1 className="text-[18px] font-bold text-ink dark:text-ink-dark leading-tight">{paciente.nombre_completo}</h1>
@@ -95,6 +99,21 @@ export default function HistorialEvaluacionFisica({ paciente, registros }: Props
                         </div>
                     </div>
                 </div>
+
+                {actual && (
+                    <section className="card-elevated overflow-hidden">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border px-5 py-4 dark:border-surface-border-dark">
+                            <div><p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-green-dark dark:text-brand-green"><TrendingUp size={12} /> Último control</p><h2 className="mt-1 text-[15px] font-bold text-ink dark:text-ink-dark">Panorama antropométrico actual</h2><p className="mt-0.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Los cambios se comparan con el control anterior cuando existe.</p></div>
+                            <span className="rounded-lg bg-brand-green/10 px-3 py-2 text-[10.5px] font-semibold text-brand-green-dark dark:text-brand-green">{actual.created_at ?? 'Sin fecha'}</span>
+                        </div>
+                        <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <MetricaActual icono={<Scale size={15} />} etiqueta="Peso" valor={actual.peso != null ? `${actual.peso} kg` : '—'} cambio={cambio('peso')} unidad="kg" tono="green" />
+                            <MetricaActual icono={<Activity size={15} />} etiqueta="IMC" valor={actual.imc != null ? String(actual.imc) : '—'} cambio={cambio('imc')} tono={actual.imc != null && actual.imc >= 30 ? 'red' : actual.imc != null && actual.imc >= 25 ? 'orange' : 'green'} />
+                            <MetricaActual icono={<Ruler size={15} />} etiqueta="Cintura" valor={actual.circunferencia_cintura != null ? `${actual.circunferencia_cintura} cm` : '—'} cambio={cambio('circunferencia_cintura')} unidad="cm" tono={actual.circunferencia_cintura != null && actual.circunferencia_cintura >= 80 ? 'orange' : 'green'} />
+                            <MetricaActual icono={<HeartPulse size={15} />} etiqueta="Presión arterial" valor={actual.presion_sistolica && actual.presion_diastolica ? `${actual.presion_sistolica}/${actual.presion_diastolica}` : '—'} detalle={actual.presion_sistolica != null && actual.presion_sistolica >= 130 ? 'Sistólica elevada' : 'Última medición registrada'} tono={actual.presion_sistolica != null && actual.presion_sistolica >= 130 ? 'red' : 'green'} />
+                        </div>
+                    </section>
+                )}
 
                 {/* Barra de filtros + PDF */}
                 {registros.length > 0 && (
@@ -158,7 +177,7 @@ export default function HistorialEvaluacionFisica({ paciente, registros }: Props
                         <p className="text-[11px] text-ink-muted/60 dark:text-ink-muted-dark/60">Aún no se ha registrado evaluación física para esta paciente</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
+                    <div className={clsx('grid grid-cols-1 gap-4', registros.length >= 2 && 'lg:grid-cols-[1fr_420px]')}>
                         {/* Listado principal */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between mb-1">
@@ -228,21 +247,20 @@ function RegistroCard({ registro: r, numero }: { registro: RegistroHistorial; nu
                 )}
             </div>
 
-            <div className="px-4 py-3 flex flex-col lg:flex-row lg:items-start gap-3">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+            <div className="grid gap-3 px-4 py-3 lg:grid-cols-[1fr_250px]">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <DatoCompacto label="Peso" valor={r.peso != null ? `${r.peso} kg` : '—'} />
                     <DatoCompacto label="Talla" valor={r.talla != null ? `${r.talla} m` : '—'} />
-                    <DatoCompacto label="IMC" valor={r.imc != null ? `${r.imc}` : '—'} color={r.imc != null && r.imc >= 25 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark'} />
+                    <DatoCompacto label="IMC" valor={r.imc != null ? `${r.imc}` : '—'} detalle={r.imc != null ? (r.imc >= 30 ? 'Obesidad' : r.imc >= 25 ? 'Sobrepeso' : 'Rango esperado') : undefined} color={r.imc != null && r.imc >= 30 ? 'text-red-400' : r.imc != null && r.imc >= 25 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark'} />
                     <DatoCompacto label="Cintura" valor={r.circunferencia_cintura != null ? `${r.circunferencia_cintura} cm` : '—'} color={r.circunferencia_cintura != null && r.circunferencia_cintura >= 80 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark'} />
                     <DatoCompacto label="PA" valor={r.presion_sistolica && r.presion_diastolica ? `${r.presion_sistolica}/${r.presion_diastolica}` : '—'} color={r.presion_sistolica != null && r.presion_sistolica >= 130 ? 'text-category-fruits' : 'text-ink dark:text-ink-dark'} />
                     <DatoCompacto label="ICC" valor={r.indice_cintura_cadera != null ? `${r.indice_cintura_cadera}` : '—'} color={r.indice_cintura_cadera != null && r.indice_cintura_cadera >= 0.85 ? 'text-brand-orange' : 'text-ink dark:text-ink-dark'} />
                 </div>
 
-                {hallazgos.length > 0 && (
-                    <div className="flex flex-wrap gap-1 lg:max-w-[160px]">
-                        {hallazgos.map((h) => <Badge key={h} color="orange">{h}</Badge>)}
-                    </div>
-                )}
+                <div className="rounded-xl border border-orange-500/15 bg-orange-500/[0.035] p-3">
+                    <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">Signos clínicos</p>
+                    <div className="flex min-h-6 flex-wrap gap-1">{hallazgos.length ? hallazgos.map((h) => <Badge key={h} color="orange">{h}</Badge>) : <span className="text-[10.5px] italic text-ink-muted dark:text-ink-muted-dark">Sin signos registrados</span>}</div>
+                </div>
             </div>
 
             {r.observaciones && (
@@ -338,11 +356,17 @@ function GraficoLinea({ label, unidad, valores, fechas, rangoMin, rangoMax, colo
     );
 }
 
-function DatoCompacto({ label, valor, color }: { label: string; valor: string; color?: string }) {
+function MetricaActual({ icono, etiqueta, valor, cambio, unidad = '', detalle, tono }: { icono: React.ReactNode; etiqueta: string; valor: string; cambio?: number | null; unidad?: string; detalle?: string; tono: 'green' | 'orange' | 'red' }) {
+    const tonos = { green: 'border-green-500/20 bg-green-500/[0.055] text-green-500', orange: 'border-orange-500/20 bg-orange-500/[0.055] text-orange-400', red: 'border-red-500/20 bg-red-500/[0.055] text-red-400' }[tono];
+    return <div className={clsx('rounded-xl border p-3', tonos)}><div className="flex items-center justify-between"><span className="rounded-lg bg-black/5 p-1.5 dark:bg-white/5">{icono}</span>{cambio != null && <span className="text-[9px] font-bold">{cambio > 0 ? '+' : ''}{cambio} {unidad}</span>}</div><p className="mt-2 text-[9px] font-bold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{etiqueta}</p><p className="mt-0.5 text-[17px] font-black text-ink dark:text-ink-dark">{valor}</p><p className="mt-1 text-[9px] text-ink-muted dark:text-ink-muted-dark">{detalle ?? (cambio == null ? 'Sin comparación previa' : 'vs. control anterior')}</p></div>;
+}
+
+function DatoCompacto({ label, valor, color, detalle }: { label: string; valor: string; color?: string; detalle?: string }) {
     return (
         <div className="rounded-lg bg-black/[0.02] px-3 py-2 dark:bg-white/[0.03]">
             <p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-0.5">{label}</p>
             <p className={clsx('text-[12.5px] font-bold', color ?? 'text-ink dark:text-ink-dark')}>{valor}</p>
+            {detalle && <p className="mt-0.5 text-[9px] text-ink-muted dark:text-ink-muted-dark">{detalle}</p>}
         </div>
     );
 }

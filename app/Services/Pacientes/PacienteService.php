@@ -28,7 +28,16 @@ class PacienteService
 
     public function listar(array $filtros = [], ?string $contexto = null): LengthAwarePaginator
     {
-        return $this->baseQuery()
+        $query = $this->baseQuery();
+
+        if ($contexto === self::ORIGEN_NUTRICIONISTA) {
+            $query->with(['derivacionesNutricionales' => fn ($derivaciones) => $derivaciones
+                ->whereIn('estado', ['pendiente', 'vista', 'en_proceso'])
+                ->latest('fecha_derivacion')
+            ]);
+        }
+
+        return $query
             ->when(! empty($filtros['buscar']), function ($query) use ($filtros) {
                 $buscar = trim((string) $filtros['buscar']);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Paciente;
 
 use App\Http\Controllers\Controller;
 use App\Services\Paciente\PortalPacienteService;
+use App\Services\Paciente\SeguimientoSintomasPacienteService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,12 +38,14 @@ class DashboardController extends Controller
             'paciente' => $data['paciente'],
             'planAlimentario' => $data['planAlimentario'],
             'resumenAdherencia' => $data['resumenAdherencia'],
+            'seguimientoSintomas' => $data['seguimientoSintomas'],
         ]);
     }
 
     public function seguimiento(Request $request): Response
     {
         $data = $this->portal->obtenerDashboard($request->user());
+        $paciente = $request->user()->paciente()->first();
 
         return Inertia::render('Paciente/Seguimiento', [
             'paciente' => $data['paciente'],
@@ -50,19 +53,30 @@ class DashboardController extends Controller
             'resumenAdherencia' => $data['resumenAdherencia'],
             'progresoPaciente' => $data['progresoPaciente'],
             'seguimientoSintomas' => $data['seguimientoSintomas'],
+            'historialProgreso' => $paciente ? $this->portal->progresoHistorial($paciente) : [],
         ]);
     }
 
     public function progreso(Request $request): Response
     {
         $data = $this->portal->obtenerDashboard($request->user());
-        return Inertia::render('Paciente/Progreso', ['paciente' => $data['paciente'], 'progresoPaciente' => $data['progresoPaciente']]);
+        $paciente = $request->user()->paciente()->first();
+        return Inertia::render('Paciente/Progreso', [
+            'paciente' => $data['paciente'],
+            'progresoPaciente' => $data['progresoPaciente'],
+            'historialProgreso' => $paciente ? $this->portal->progresoHistorial($paciente) : [],
+        ]);
     }
 
-    public function sintomas(Request $request): Response
+    public function sintomas(Request $request, SeguimientoSintomasPacienteService $sintomas): Response
     {
         $data = $this->portal->obtenerDashboard($request->user());
-        return Inertia::render('Paciente/Sintomas', ['paciente' => $data['paciente'], 'seguimientoSintomas' => $data['seguimientoSintomas']]);
+        $paciente = $request->user()->paciente()->first();
+        return Inertia::render('Paciente/Sintomas', [
+            'paciente' => $data['paciente'],
+            'seguimientoSintomas' => $data['seguimientoSintomas'],
+            'historialSintomas' => $paciente ? $sintomas->obtenerHistorialPaginado($paciente) : null,
+        ]);
     }
 
     public function listaCompras(Request $request): Response

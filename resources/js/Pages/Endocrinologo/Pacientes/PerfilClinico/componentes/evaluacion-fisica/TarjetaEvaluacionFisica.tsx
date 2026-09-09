@@ -80,7 +80,7 @@ export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegi
         evaluacion.skin_tags && 'Acrocordones',
         evaluacion.hirsutismo_visible && (
             evaluacion.puntaje_ferriman_gallwey != null
-                ? `Hirsutismo (F-G: ${evaluacion.puntaje_ferriman_gallwey})`
+                ? 'Hirsutismo visible'
                 : 'Hirsutismo visible'
         ),
         evaluacion.acne_visible && 'Acné visible',
@@ -134,7 +134,7 @@ export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegi
             </div>
 
             {/* ── Gráfico IMC + Datos clínicos ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-4">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[220px_1fr]">
 
                 {/* Gráfico IMC (solo si hay) */}
                 {evaluacion.imc != null && (
@@ -142,17 +142,14 @@ export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegi
                 )}
 
                 {/* Datos clínicos */}
-                <div className={clsx(!evaluacion.imc && 'sm:col-span-2')}>
+                <div className={clsx(!evaluacion.imc && 'lg:col-span-2')}>
                     <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-2">
                         <Scale size={10} strokeWidth={2} className="text-brand-green-dark dark:text-brand-green" />
                         Evaluación clínica
                     </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                         <DatoItem label="Peso" valor={evaluacion.peso != null ? `${evaluacion.peso} kg` : null} />
                         <DatoItem label="Talla" valor={evaluacion.talla != null ? `${evaluacion.talla} m` : null} />
-                        <DatoItem label="IMC" valor={evaluacion.imc != null ? `${evaluacion.imc}` : null}
-                            destacar={evaluacion.imc != null && evaluacion.imc >= 25}
-                            subtexto={evaluacion.imc != null ? (evaluacion.imc < 18.5 ? 'Bajo peso' : evaluacion.imc < 25 ? 'Normal' : evaluacion.imc < 30 ? 'Sobrepeso' : 'Obesidad') : undefined} />
                         <DatoItem label="Cintura" valor={evaluacion.circunferencia_cintura != null ? `${evaluacion.circunferencia_cintura} cm` : null}
                             destacar={evaluacion.circunferencia_cintura != null && evaluacion.circunferencia_cintura >= 80}
                             subtexto={evaluacion.circunferencia_cintura != null && evaluacion.circunferencia_cintura >= 80 ? 'Riesgo ≥ 80 cm' : undefined} />
@@ -193,20 +190,26 @@ export default function TarjetaEvaluacionFisica({ evaluacion, idPaciente, onRegi
                 </div>
             )}
 
-            {/* ── Alertas metabólicas ── */}
-            {alertas.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                    {alertas.map(a => <Badge key={a} color="red">{a}</Badge>)}
+            {/* Interpretación consolidada: las mediciones no se repiten como badges */}
+            <div className={clsx('grid gap-3 rounded-xl border px-4 py-3 sm:grid-cols-[1fr_auto]', tieneHallazgos ? 'border-orange-500/25 bg-orange-500/[0.055]' : 'border-green-500/20 bg-green-500/[0.045]')}>
+                <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-ink-muted dark:text-ink-muted-dark">Interpretación clínica</p>
+                    <p className={clsx('mt-1 text-[12.5px] font-bold', tieneHallazgos ? 'text-orange-400' : 'text-green-500')}>
+                        {tieneHallazgos ? 'Requiere correlación con el contexto metabólico y endocrino' : 'Sin hallazgos físicos relevantes registrados'}
+                    </p>
+                    <p className="mt-1 text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                        {alertas.length > 0
+                            ? `${alertas.length} indicador(es) metabólico(s) se encuentran fuera del rango esperado. Los valores y referencias están identificados en las mediciones superiores.`
+                            : todosHallazgos.length > 0
+                                ? 'Se identificaron signos al examen físico sin duplicarlos como alertas metabólicas.'
+                                : 'Las mediciones y el examen físico no generan alertas con los criterios configurados.'}
+                    </p>
                 </div>
-            )}
-
-            {/* ── Interpretación ── */}
-            <p className={clsx('text-[12px] font-medium',
-                tieneHallazgos ? 'text-brand-orange' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                {tieneHallazgos
-                    ? 'Existen hallazgos físicos relevantes para el riesgo metabólico.'
-                    : 'Sin hallazgos físicos relevantes registrados.'}
-            </p>
+                <div className="flex items-center gap-2 self-center">
+                    <div className="rounded-lg bg-black/[0.035] px-3 py-2 text-center dark:bg-white/[0.045]"><b className="block text-[16px] text-orange-400">{alertas.length}</b><span className="text-[8.5px] uppercase text-ink-muted dark:text-ink-muted-dark">Indicadores</span></div>
+                    <div className="rounded-lg bg-black/[0.035] px-3 py-2 text-center dark:bg-white/[0.045]"><b className="block text-[16px] text-purple-400">{todosHallazgos.length}</b><span className="text-[8.5px] uppercase text-ink-muted dark:text-ink-muted-dark">Signos</span></div>
+                </div>
+            </div>
 
             {/* ── Observaciones ── */}
             {textoLibre && (

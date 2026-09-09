@@ -29,6 +29,7 @@ use App\Http\Controllers\Paciente\SeguimientoComidaController;
 use App\Http\Controllers\Paciente\SeguimientoSintomasController;
 use App\Http\Controllers\Paciente\RetroalimentacionPacienteController as PacienteRetroalimentacionController;
 use App\Http\Controllers\Paciente\PlanPacientePdfController;
+use App\Http\Controllers\Paciente\MiPerfilController;
 use App\Http\Controllers\Nutricionista\AlimentoBusquedaController;
 use App\Http\Controllers\Nutricionista\AlimentoController as NutricionistaAlimentoController;
 use App\Http\Controllers\Nutricionista\PacienteController as NutricionistaPacienteController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\Nutricionista\PlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\RecomendacionNutricionalExpertaController;
 use App\Http\Controllers\Nutricionista\ReportePlanAlimentarioPdfController;
 use App\Http\Controllers\Nutricionista\ReporteSeguimientoEvolucionPdfController;
+use App\Http\Controllers\Nutricionista\ReporteAjusteSiguientePlanPdfController;
 use App\Http\Controllers\Nutricionista\ReporteCambiosPlanPdfController;
 use App\Http\Controllers\Nutricionista\CicloPlanAlimentarioController;
 use App\Http\Controllers\Nutricionista\CopilotoNutricionalController;
@@ -166,6 +168,7 @@ Route::middleware(['auth', 'role:nutricionista'])
         });
         Route::get('/dashboard', NutricionistaDashboardController::class)->name('dashboard');
         Route::get('/progreso', \App\Http\Controllers\Nutricionista\ProgresoPacientesController::class)->name('progreso');
+        Route::get('/vigencia-planes', \App\Http\Controllers\Nutricionista\VigenciaPlanesController::class)->name('vigencia-planes');
         Route::get('/reportes', \App\Http\Controllers\Nutricionista\ReportesPacientesController::class)->name('reportes.index');
         Route::get('/reportes/adherencia-pdf', \App\Http\Controllers\Nutricionista\ReporteAdherenciaPacientesPdfController::class)->name('reportes.adherencia.pdf');
 
@@ -188,6 +191,8 @@ Route::middleware(['auth', 'role:nutricionista'])
 
         // Perfil nutricional
         Route::get('pacientes/{paciente}/perfil-nutricional', [PerfilNutricionalController::class, 'index'])->name('pacientes.perfil-nutricional');
+        Route::get('pacientes/{paciente}/adherencia', [PerfilNutricionalController::class, 'adherencia'])->name('pacientes.adherencia');
+        Route::get('pacientes/{paciente}/analitica-evolucion', [PerfilNutricionalController::class, 'analiticaEvolucion'])->name('pacientes.analitica-evolucion');
         Route::get('pacientes/{paciente}/planes-alimentarios/historial', [PerfilNutricionalController::class, 'historialPlanes'])->name('pacientes.planes-alimentarios.historial');
         Route::post('pacientes/{paciente}/perfil-nutricional/consulta', [PerfilNutricionalController::class, 'storeConsulta'])->name('pacientes.perfil-nutricional.consulta.store');
         Route::put('pacientes/{paciente}/perfil-nutricional/consulta/{consulta}', [PerfilNutricionalController::class, 'updateConsulta'])->name('pacientes.perfil-nutricional.consulta.update');
@@ -211,13 +216,17 @@ Route::middleware(['auth', 'role:nutricionista'])
         Route::middleware('verified')->group(function () {
             Route::get('pacientes/{paciente}/reporte-seguimiento-evolucion-pdf', ReporteSeguimientoEvolucionPdfController::class)
                 ->name('pacientes.reporte-seguimiento-evolucion-pdf');
+            Route::get('pacientes/{paciente}/reporte-ajuste-siguiente-plan-pdf', ReporteAjusteSiguientePlanPdfController::class)
+                ->name('pacientes.reporte-ajuste-siguiente-plan-pdf');
             Route::post('pacientes/{paciente}/retroalimentaciones', [NutricionistaRetroalimentacionController::class, 'store'])
                 ->name('pacientes.retroalimentaciones.store');
             Route::get('pacientes/{paciente}/planes-alimentarios', [PlanAlimentarioController::class, 'index'])->name('planes.index');
             Route::get('pacientes/{paciente}/planes-alimentarios/historial/reporte-pdf', \App\Http\Controllers\Nutricionista\ReporteHistorialPlanesPdfController::class)
                 ->name('pacientes.planes-alimentarios.historial.reporte-pdf');
+            Route::post('pacientes/{paciente}/planes-alimentarios/manual', [PlanAlimentarioController::class, 'crearManual'])->name('planes.crear-manual');
             Route::post('recomendaciones-expertas/{recomendacion}/generar-plan', [PlanAlimentarioController::class, 'generarDesdeRecomendacion'])->name('planes.generar-desde-recomendacion');
             Route::get('planes-alimentarios/{plan}', [PlanAlimentarioController::class, 'show'])->name('planes.show');
+            Route::get('planes-alimentarios/{plan}/detalle', [PlanAlimentarioController::class, 'detalleVista'])->name('planes.detalle');
             Route::post('planes-alimentarios/{plan}/copiloto', CopilotoNutricionalController::class)
                 ->name('planes.copiloto');
             Route::get('planes-alimentarios/{plan}/reporte-pdf', ReportePlanAlimentarioPdfController::class)
@@ -238,7 +247,10 @@ Route::middleware(['auth', 'role:nutricionista'])
         Route::get('pacientes/{paciente}/perfil-nutricional/habitos/historial', [PerfilNutricionalController::class, 'historialHabitos'])->name('pacientes.perfil-nutricional.habitos.historial');
         Route::get('pacientes/{paciente}/perfil-nutricional/preferencias/historial', [PerfilNutricionalController::class, 'historialPreferencias'])->name('pacientes.perfil-nutricional.preferencias.historial');
         Route::get('pacientes/{paciente}/perfil-nutricional/restricciones/historial', [PerfilNutricionalController::class, 'historialRestricciones'])->name('pacientes.perfil-nutricional.restricciones.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/requerimientos/historial', [PerfilNutricionalController::class, 'historialRequerimientos'])->name('pacientes.perfil-nutricional.requerimientos.historial');
         Route::get('pacientes/{paciente}/perfil-nutricional/objetivos/historial', [PerfilNutricionalController::class, 'historialObjetivos'])->name('pacientes.perfil-nutricional.objetivos.historial');
+        Route::get('pacientes/{paciente}/perfil-nutricional/historial/{tipo}/reporte-pdf', \App\Http\Controllers\Nutricionista\ReporteHistorialNutricionalPdfController::class)
+            ->middleware('verified')->name('pacientes.perfil-nutricional.historial.reporte-pdf');
 
         // Alimentos
         Route::get('alimentos', [NutricionistaAlimentoController::class, 'index'])
@@ -475,10 +487,16 @@ Route::middleware(['auth', 'role:paciente'])
     ->name('paciente.')
     ->group(function () {
         Route::get('/dashboard', [PacienteDashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/mi-perfil', [MiPerfilController::class, 'show'])->middleware('verified')->name('mi-perfil');
+        Route::put('/mi-perfil', [MiPerfilController::class, 'update'])->middleware('verified')->name('mi-perfil.actualizar');
         Route::get('/mi-plan', [PacienteDashboardController::class, 'miPlan'])->name('mi-plan');
         Route::get('/seguimiento', [PacienteDashboardController::class, 'seguimiento'])->name('seguimiento');
         Route::get('/progreso', [PacienteDashboardController::class, 'progreso'])->name('progreso');
+        Route::get('/progreso/reporte-pdf', \App\Http\Controllers\Paciente\ReporteProgresoPacientePdfController::class)
+            ->middleware('verified')->name('progreso.reporte-pdf');
         Route::get('/sintomas', [PacienteDashboardController::class, 'sintomas'])->name('sintomas');
+        Route::get('/sintomas/reporte-pdf', \App\Http\Controllers\Paciente\ReporteSintomasPacientePdfController::class)
+            ->middleware('verified')->name('sintomas.reporte-pdf');
         Route::get('/lista-compras', [PacienteDashboardController::class, 'listaCompras'])->name('lista-compras');
         Route::get('/orientacion', [PacienteDashboardController::class, 'orientacion'])->name('orientacion');
         Route::get('/historial', [PacienteDashboardController::class, 'historial'])->name('historial');
@@ -492,6 +510,8 @@ Route::middleware(['auth', 'role:paciente'])
             ->middleware('verified')->name('seguimiento-sintomas.guardar');
         Route::post('/retroalimentaciones/{retroalimentacion}/marcar-leida', [PacienteRetroalimentacionController::class, 'marcarLeida'])
             ->middleware('verified')->name('retroalimentaciones.marcar-leida');
+        Route::post('/mensajes-nutricionista', [\App\Http\Controllers\Paciente\MensajeNutricionistaController::class, 'store'])
+            ->middleware('verified')->name('mensajes-nutricionista.store');
     });
 
 require __DIR__.'/auth.php';

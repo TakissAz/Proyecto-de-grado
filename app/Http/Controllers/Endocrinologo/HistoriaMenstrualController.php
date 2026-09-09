@@ -68,6 +68,11 @@ class HistoriaMenstrualController extends Controller
      */
     public function update(Request $request, Paciente $paciente, HistoriaMenstrual $historia): RedirectResponse
     {
+        abort_unless(
+            (int) $historia->id_paciente === (int) $paciente->id_paciente,
+            404
+        );
+
         $validated = $request->validate($this->reglas());
 
         $historia->update([
@@ -94,6 +99,7 @@ class HistoriaMenstrualController extends Controller
      */
     public function historial(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $registros = HistoriaMenstrual::where('id_paciente', $paciente->id_paciente)
             ->latest('created_at')
             ->get()
@@ -125,6 +131,7 @@ class HistoriaMenstrualController extends Controller
                     $paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno,
                 ])->filter()->join(' ')),
                 'ci' => $paciente->ci,
+                'avatar_url' => $paciente->user?->avatar_url,
             ],
             'registros' => $registros,
         ]);

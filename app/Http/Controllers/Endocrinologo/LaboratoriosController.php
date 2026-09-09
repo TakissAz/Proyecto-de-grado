@@ -416,6 +416,7 @@ class LaboratoriosController extends Controller
      */
     public function historial(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $mapAndrogenico = fn ($r) => [
             'id' => $r->id_perfil_androgenico, 'fecha_resultado' => $r->fecha_resultado?->format('Y-m-d'),
             'testosterona_total' => $r->testosterona_total, 'testosterona_libre' => $r->testosterona_libre,
@@ -471,6 +472,7 @@ class LaboratoriosController extends Controller
                 'id_paciente'     => $paciente->id_paciente,
                 'nombre_completo' => trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' ')),
                 'ci'              => $paciente->ci,
+                'avatar_url'      => $paciente->user?->avatar_url,
             ],
             'historial' => [
                 'perfil_androgenico'    => ResultadoPerfilAndrogenico::where('id_paciente', $paciente->id_paciente)->latest('created_at')->get()->map($mapAndrogenico),

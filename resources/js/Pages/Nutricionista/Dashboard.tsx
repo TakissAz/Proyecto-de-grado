@@ -3,6 +3,7 @@ import type { PageProps } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, ClipboardCheck, Clock3, FileClock, HeartPulse, Salad, TrendingUp, UserPlus, Users } from 'lucide-react';
 import clsx from 'clsx';
+import RoleWelcomePreloader from '@/Components/ui/RoleWelcomePreloader';
 
 interface Resumen { total_pacientes: number; planes_activos: number; consultas_mes: number; adherencia_promedio: number; planes_por_aprobar: number; seguimientos_por_revisar: number; citas_hoy: number }
 interface Cita { id_cita: number; id_paciente: number; paciente: string; fecha: string; hora: string; tipo_cita: string | null; modalidad: string | null; estado: string }
@@ -17,6 +18,7 @@ export default function Dashboard({ auth, resumen, proximasCitas, derivaciones }
 
     return <AuthenticatedLayout title="Panel nutricional">
         <Head title="Panel nutricional" />
+        <RoleWelcomePreloader role="nutricionista" userName={auth?.user?.name} userId={auth?.user?.id}/>
         <main className="mx-auto max-w-7xl space-y-5">
             <Link href="/nutricionista/derivaciones" className="card-elevated flex items-center gap-4 border-brand-green/20 p-4"><Icono icon={UserPlus} color="green"/><div className="flex-1"><p className="text-xs font-bold">Derivaciones desde endocrinología</p><p className="text-[10px] text-ink-muted">{derivaciones.pendientes} pendientes · {derivaciones.en_proceso} en proceso</p></div><span className="text-[10px] font-bold text-brand-green">Ver derivaciones →</span></Link>
             <header className="relative overflow-hidden rounded-2xl border border-surface-border bg-white p-6 shadow-[0_8px_30px_rgba(16,24,20,.04)] dark:border-surface-border-dark dark:bg-[#1c2027] dark:shadow-none">

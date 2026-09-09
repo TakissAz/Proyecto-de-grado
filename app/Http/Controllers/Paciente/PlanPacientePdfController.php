@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 
 class PlanPacientePdfController extends Controller
 {
@@ -16,7 +17,10 @@ class PlanPacientePdfController extends Controller
         $paciente = $request->user()->paciente()->first();
         if (! $paciente) return redirect()->route('paciente.dashboard')->with('error', 'No se encontró un perfil de paciente asociado a tu cuenta.');
 
+        $hoy = Carbon::today('America/La_Paz');
         $plan = $paciente->planesAlimentarios()->whereIn('estado_plan', ['activo', 'aprobado'])
+            ->whereDate('fecha_inicio', '<=', $hoy)
+            ->whereDate('fecha_fin', '>=', $hoy)
             ->orderByRaw("CASE WHEN estado_plan = 'activo' THEN 0 ELSE 1 END")
             ->latest('id_plan_alimentario')->with([
                 'paciente.user', 'nutricionista', 'recomendacionNutricionalExperta', 'requerimientoNutricional',
@@ -24,7 +28,7 @@ class PlanPacientePdfController extends Controller
                 'dias.comidas.componentes.receta.recetaAlimentos.alimento',
             ])->first();
 
-        if (! $plan) return redirect()->route('paciente.dashboard')->with('error', 'Aún no tienes un plan alimentario aprobado para descargar.');
+        if (! $plan) return redirect()->route('paciente.dashboard')->with('error', 'No tienes un plan vigente hoy para descargar.');
 
         return Pdf::loadView('pdf.paciente.plan-alimentario-practico', [
             'paciente' => $paciente, 'plan' => $plan, 'listaCompras' => $listaCompras->generarParaPlan($plan),

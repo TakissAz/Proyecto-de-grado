@@ -11,6 +11,7 @@ export interface User {
     email: string;
     email_verified_at?: string;
     avatar?: string | null;
+    avatar_url?: string | null;
     roles?: Role[];
 }
 
@@ -28,5 +29,6 @@ export type PageProps<
     };
     flash: FlashProps;
     notificaciones?: { total_no_leidas: number; ultimas: { id_notificacion_interna:number; titulo:string; mensaje:string; prioridad:string; leida:boolean; url_destino:string|null; created_at:string|null }[] };
+    alertas_vigencia?: { total:number; items:{ id_plan_alimentario:number; nombre_plan:string; fecha_fin:string; dias_restantes:number; estado_vigencia:string; paciente:{id_paciente:number;nombre:string;avatar_url:string|null} }[] };
     [key: string]: unknown;
 };

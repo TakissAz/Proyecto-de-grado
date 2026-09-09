@@ -5,6 +5,7 @@ namespace App\Services\Paciente;
 use App\Models\PlanAlimentario;
 use App\Models\User;
 use App\Services\Nutricion\HistorialPlanesAlimentariosService;
+use Illuminate\Support\Carbon;
 
 class PortalPacienteService
 {
@@ -24,7 +25,7 @@ class PortalPacienteService
             return ['paciente' => null, 'planAlimentario' => null, 'resumenAdherencia' => null, 'indicadoresSiguientePlan' => null, 'listaCompras' => null, 'progresoPaciente' => null, 'seguimientoSintomas' => null, 'citasPaciente' => null, 'historialPlanes'=>['planes'=>[],'comparacion'=>['tiene_plan_anterior'=>false,'cambios'=>[],'mensaje'=>'Todavía no existe un plan anterior para comparar.'],'total_planes'=>0], 'retroalimentaciones' => ['items' => [], 'total_no_leidas' => 0]];
         }
 
-        $plan = $paciente->planesAlimentarios()
+        $planes = $paciente->planesAlimentarios()
             ->whereIn('estado_plan', ['activo', 'aprobado'])
             ->orderByRaw("CASE WHEN estado_plan = 'activo' THEN 0 ELSE 1 END")
             ->latest('id_plan_alimentario')
@@ -34,7 +35,15 @@ class PortalPacienteService
                 'dias.comidas.componentes.receta',
                 'dias.comidas.componentes.alimento',
                 'dias.comidas.seguimientosComidas' => fn ($query) => $query->where('id_paciente', $paciente->getKey()),
-            ])->first();
+            ])->get();
+
+        $hoy = Carbon::today('America/La_Paz');
+        $plan = $planes->first(fn (PlanAlimentario $item) => $this->estadoPeriodo($item, $hoy) === 'vigente')
+            ?? $planes->first(fn (PlanAlimentario $item) => $this->estadoPeriodo($item, $hoy) === 'programado')
+            ?? $planes->first();
+        // La compra corresponde exclusivamente a un plan que se está aplicando hoy.
+        // Nunca reutilizamos ingredientes de un plan futuro o ya vencido.
+        $planVigente = $plan && $this->estadoPeriodo($plan, $hoy) === 'vigente' ? $plan : null;
 
         return [
             'paciente' => [
@@ -45,10 +54,10 @@ class PortalPacienteService
                 'telefono' => $paciente->telefono,
                 'estado' => $paciente->estado,
             ],
-            'planAlimentario' => $plan ? $this->transformarPlan($plan) : null,
+            'planAlimentario' => $plan ? $this->transformarPlan($plan, $hoy) : null,
             'resumenAdherencia' => $plan ? $this->seguimientos->calcularResumenAdherencia($plan, $paciente) : null,
             'indicadoresSiguientePlan' => $plan ? $this->seguimientos->calcularIndicadoresParaSiguientePlan($plan, $paciente) : null,
-            'listaCompras' => $plan ? $this->listaCompras->generarParaPlan($plan) : null,
+            'listaCompras' => $planVigente ? $this->listaCompras->generarParaPlan($planVigente) : null,
             'progresoPaciente' => $this->progreso->obtenerResumen($paciente, $plan),
             'seguimientoSintomas' => $this->sintomas->obtenerResumen($paciente),
             'citasPaciente' => $this->citas->obtenerResumen($paciente),
@@ -57,10 +66,16 @@ class PortalPacienteService
         ];
     }
 
+    public function progresoHistorial($paciente): array
+    {
+        return $this->progreso->obtenerHistorial($paciente);
+    }
+
     private function retroalimentaciones($paciente): array
     {
         $items = $paciente->retroalimentacionesPaciente()
-            ->where('estado', 'activo')->where('visible_para_paciente', true)
+            ->where('estado', 'activo')
+            ->where(fn ($query) => $query->where('visible_para_paciente', true)->orWhere('rol_emisor', 'paciente'))
             ->with(['usuarioEmisor:id,name', 'planAlimentario:id_plan_alimentario,nombre',
                 'seguimientoComida.comidaPlanAlimentario', 'seguimientoSintomaPaciente'])
             ->latest('created_at')->limit(10)->get();
@@ -69,6 +84,7 @@ class PortalPacienteService
             'items' => $items->map(fn ($item) => [
                 'id_retroalimentacion_paciente' => $item->getKey(),
                 'tipo_retroalimentacion' => $item->tipo_retroalimentacion,
+                'rol_emisor' => $item->rol_emisor,
                 'prioridad' => $item->prioridad,
                 'mensaje' => $item->mensaje,
                 'leido_por_paciente' => $item->leido_por_paciente,
@@ -87,9 +103,13 @@ class PortalPacienteService
         ];
     }
 
-    private function transformarPlan(PlanAlimentario $plan): array
+    private function transformarPlan(PlanAlimentario $plan, Carbon $hoy): array
     {
         $recomendacion = $plan->recomendacionNutricionalExperta;
+        $estadoPeriodo = $this->estadoPeriodo($plan, $hoy);
+        $diaActual = $estadoPeriodo === 'vigente'
+            ? $plan->dias->first(fn ($dia) => $dia->fecha?->isSameDay($hoy))
+            : null;
 
         return [
             'id_plan_alimentario' => $plan->getKey(),
@@ -97,6 +117,9 @@ class PortalPacienteService
             'estado_plan' => $plan->estado_plan,
             'fecha_inicio' => $plan->fecha_inicio?->toDateString(),
             'fecha_fin' => $plan->fecha_fin?->toDateString(),
+            'fecha_actual_bolivia' => $hoy->toDateString(),
+            'estado_periodo' => $estadoPeriodo,
+            'numero_dia_actual' => $diaActual?->numero_dia,
             'objetivos' => $this->nutrientes($plan, '_objetivo'),
             'planificados' => [
                 'calorias' => (float) $plan->calorias_totales,
@@ -123,6 +146,7 @@ class PortalPacienteService
                         'unidad' => $componente->unidad,
                         'nutrientes' => $this->nutrientes($componente),
                         'receta' => $componente->receta ? [
+                            'imagen_url' => $componente->receta->imagen_url,
                             'descripcion' => $componente->receta->descripcion,
                             'preparacion' => $componente->receta->preparacion,
                         ] : null,
@@ -139,6 +163,13 @@ class PortalPacienteService
                 'conclusion' => $recomendacion->conclusion,
             ] : null,
         ];
+    }
+
+    private function estadoPeriodo(PlanAlimentario $plan, Carbon $hoy): string
+    {
+        if ($plan->fecha_inicio && $plan->fecha_inicio->gt($hoy)) return 'programado';
+        if ($plan->fecha_fin && $plan->fecha_fin->lt($hoy)) return 'vencido';
+        return 'vigente';
     }
 
     private function transformarSeguimiento($seguimiento): array

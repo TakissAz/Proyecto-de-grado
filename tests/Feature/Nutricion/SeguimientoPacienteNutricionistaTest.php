@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserRole;
 use App\Services\Nutricion\SeguimientoPacienteNutricionistaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -68,13 +69,57 @@ class SeguimientoPacienteNutricionistaTest extends TestCase
 
     public function test_incluye_sintomas_e_indicadores_frecuentes(): void
     {
-        [$paciente] = $this->escenario();
+        [$paciente, $plan] = $this->escenario();
+        $plan->update(['fecha_inicio' => today()->subDays(3), 'fecha_fin' => today()]);
         $usuario = User::factory()->create();
         foreach (range(1, 3) as $dia) SeguimientoSintomaPaciente::query()->create(['id_paciente' => $paciente->getKey(), 'fecha_registro' => now()->subDays($dia), 'hambre_nocturna' => true, 'ansiedad_por_comida' => 'alta', 'registrado_por' => $usuario->getKey()]);
         $sintomas = $this->servicio()->obtenerResumen($paciente)['seguimiento_sintomas'];
         $this->assertCount(3, $sintomas['ultimos_registros']);
         $this->assertTrue($sintomas['indicadores']['hambre_nocturna_frecuente']);
         $this->assertTrue($sintomas['indicadores']['alerta_general']);
+    }
+
+    public function test_plan_futuro_no_contabiliza_datos_precargados_como_seguimiento_real(): void
+    {
+        [$paciente, $plan, $comidas] = $this->escenario();
+        $inicio = today()->addDay();
+        $plan->update(['fecha_inicio' => $inicio, 'fecha_fin' => $inicio]);
+        $plan->dias()->update(['fecha' => $inicio]);
+        $this->seguimiento($paciente, $plan, $comidas['desayuno'], 'completada', ['fecha_seguimiento' => $inicio]);
+
+        $resumen = $this->servicio()->obtenerResumen($paciente);
+
+        $this->assertSame('no_iniciado', $resumen['estado_periodo']);
+        $this->assertSame(0, $resumen['resumen_adherencia']['registradas']);
+        $this->assertSame(0, $resumen['resumen_adherencia']['comidas_totales']);
+        $this->assertSame('pendiente', $resumen['seguimiento_comidas'][0]['comidas'][0]['estado_cumplimiento']);
+    }
+
+    public function test_no_mezcla_registros_de_otra_semana_del_mismo_paciente(): void
+    {
+        [$paciente, $plan, $comidas] = $this->escenario();
+        $this->seguimiento($paciente, $plan, $comidas['desayuno'], 'completada', ['fecha_seguimiento' => today()->subWeek()]);
+
+        $resumen = $this->servicio()->obtenerResumen($paciente);
+
+        $this->assertSame('sin_registros', $resumen['estado_periodo']);
+        $this->assertSame(0, $resumen['resumen_adherencia']['registradas']);
+    }
+
+    public function test_distingue_comida_vencida_sin_registro_de_comida_no_realizada(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-07 10:00:00', 'America/La_Paz'));
+        [$paciente, , $comidas] = $this->escenario();
+        $comidas['desayuno']->update(['hora_sugerida' => '08:00']);
+        $comidas['almuerzo']->update(['hora_sugerida' => '13:00']);
+
+        $resumen = $this->servicio()->obtenerResumen($paciente);
+
+        $this->assertSame('en_curso', $resumen['estado_periodo']);
+        $this->assertSame(1, $resumen['resumen_adherencia']['sin_registro_vencidas']);
+        $this->assertSame(0, $resumen['resumen_adherencia']['no_realizadas']);
+        $this->assertSame('sin_registro', $resumen['seguimiento_comidas'][0]['comidas'][0]['estado_cumplimiento']);
+        $this->assertSame('pendiente', $resumen['seguimiento_comidas'][0]['comidas'][1]['estado_cumplimiento']);
     }
 
     public function test_sin_plan_devuelve_estructura_vacia_controlada(): void

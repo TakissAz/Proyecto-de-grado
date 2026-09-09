@@ -26,6 +26,7 @@ class Receta extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'imagen_url',
         'tipo_comida',
         'porciones',
         'tiempo_preparacion_minutos',

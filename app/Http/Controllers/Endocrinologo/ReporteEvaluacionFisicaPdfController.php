@@ -49,6 +49,18 @@ class ReporteEvaluacionFisicaPdfController extends Controller
             'promedio_imc' => $registros->whereNotNull('imc')->avg('imc'),
             'promedio_cintura' => $registros->whereNotNull('circunferencia_cintura')->avg('circunferencia_cintura'),
         ];
+        $actual = $registros->first();
+        $anterior = $registros->get(1);
+        $series = collect([
+            ['campo' => 'peso', 'nombre' => 'Peso', 'unidad' => 'kg', 'umbral' => null, 'color' => 'green'],
+            ['campo' => 'imc', 'nombre' => 'IMC', 'unidad' => '', 'umbral' => 25, 'color' => 'orange'],
+            ['campo' => 'circunferencia_cintura', 'nombre' => 'Cintura', 'unidad' => 'cm', 'umbral' => 80, 'color' => 'purple'],
+        ])->map(function (array $serie) use ($registros) {
+            $puntos = $registros->reverse()->filter(fn ($r) => $r->{$serie['campo']} !== null)->values();
+            return $serie + [
+                'puntos' => $puntos->map(fn ($r) => ['valor' => (float) $r->{$serie['campo']}, 'fecha' => $r->created_at?->format('d/m/Y')])->all(),
+            ];
+        })->filter(fn (array $serie) => count($serie['puntos']) >= 2)->values();
 
         return Pdf::loadView('pdf.evaluacion-fisica', [
             'paciente' => $paciente,
@@ -56,6 +68,9 @@ class ReporteEvaluacionFisicaPdfController extends Controller
             'registros' => $registros,
             'filtros' => $filtros,
             'stats' => $stats,
+            'actual' => $actual,
+            'anterior' => $anterior,
+            'series' => $series,
             'profesional' => $request->user(),
             'fechaGeneracion' => now(),
         ])->setPaper('a4', 'landscape')->stream("evaluacion-fisica-{$paciente->getKey()}.pdf");

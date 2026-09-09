@@ -1,12 +1,13 @@
 import clsx from 'clsx';
 import { Users } from 'lucide-react';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 import PacienteFilaAcciones from './PacienteFilaAcciones';
 
 export interface UserOption {
   name: string;
   email: string;
+  avatar_url?: string | null;
 }
 
 export interface PacienteRow {
@@ -19,6 +20,7 @@ export interface PacienteRow {
   fecha_registro?: string | null;
   estado: 'activo' | 'inactivo';
   user?: UserOption | null;
+  derivacion_nutricional?: { id_derivacion_nutricional: number; estado: string; prioridad: string; motivo_derivacion?: string | null; fecha_derivacion?: string | null } | null;
 }
 
 interface PacientesTablaProps {
@@ -73,9 +75,9 @@ export default function PacientesTabla({
                 idx % 2 !== 0 && 'bg-[#FDFCFA] dark:bg-[#1A1D24]'
               )}
             >
-              <td className="px-5 py-3">
-                <div className="flex items-center gap-2.5">
-                  <AvatarIniciales nombre={p.nombre_completo ?? p.user?.name ?? 'P'} size={32} />
+              <td className="px-5 py-3.5">
+                <div className="flex items-center gap-3.5">
+                  <AvatarPaciente nombre={p.nombre_completo ?? p.user?.name ?? 'P'} avatarUrl={p.user?.avatar_url} size="lg" />
                   <div>
                     <p className="text-[12.5px] font-semibold leading-tight text-ink dark:text-ink-dark">
                       {p.nombre_completo ?? p.user?.name ?? 'Sin nombre'}
@@ -83,6 +85,18 @@ export default function PacientesTabla({
                     <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">
                       {p.user?.email ?? '—'}
                     </p>
+                    {p.derivacion_nutricional && (
+                      <span className={clsx(
+                        'mt-1 inline-flex rounded-md px-1.5 py-0.5 text-[9px] font-bold',
+                        p.derivacion_nutricional.estado === 'pendiente'
+                          ? 'bg-brand-orange/15 text-brand-orange'
+                          : 'bg-brand-green/10 text-brand-green-dark dark:text-brand-green'
+                      )}>
+                        {p.derivacion_nutricional.estado === 'pendiente'
+                          ? 'Nueva derivación · iniciar plan'
+                          : `Derivación ${p.derivacion_nutricional.estado.replaceAll('_', ' ')}`}
+                      </span>
+                    )}
                   </div>
                 </div>
               </td>

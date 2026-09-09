@@ -38,7 +38,19 @@ class DerivacionNutricionalService
         $d->fecha_vista ??= now(); $d->id_nutricionista ??= $n?->getKey(); $d->save(); return $d->refresh();
     }
     public function marcarEnProceso(DerivacionNutricional $d, User $n): DerivacionNutricional
-    { $d->update(['estado' => 'en_proceso', 'id_nutricionista' => $n->getKey(), 'fecha_vista' => $d->fecha_vista ?? now()]); return $d->refresh(); }
+    {
+        $yaIniciada = $d->estado === 'en_proceso';
+        $d->update(['estado' => 'en_proceso', 'id_nutricionista' => $n->getKey(), 'fecha_vista' => $d->fecha_vista ?? now()]);
+        $d = $d->refresh();
+        if (! $yaIniciada) $this->notificaciones->notificarEndocrinologiaEstadoDerivacion($d, 'inicio');
+        return $d;
+    }
     public function marcarAtendida(DerivacionNutricional $d, User $n): DerivacionNutricional
-    { $d->update(['estado' => 'atendida', 'id_nutricionista' => $n->getKey(), 'fecha_atencion' => now()]); return $d->refresh(); }
+    {
+        $yaAtendida = $d->estado === 'atendida';
+        $d->update(['estado' => 'atendida', 'id_nutricionista' => $n->getKey(), 'fecha_atencion' => now()]);
+        $d = $d->refresh();
+        if (! $yaAtendida) $this->notificaciones->notificarEndocrinologiaEstadoDerivacion($d, 'atendida');
+        return $d;
+    }
 }

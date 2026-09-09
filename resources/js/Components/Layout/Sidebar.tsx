@@ -1,47 +1,87 @@
-﻿import { Link, usePage } from '@inertiajs/react';
-import { Leaf, LogOut } from 'lucide-react';
+﻿import { Link } from '@inertiajs/react';
+import { Leaf, LogOut, Stethoscope } from 'lucide-react';
 import { getMenuPorRol } from '@/Config/menu';
 import SidebarItem from './sidebar-item';
-import type { PageProps } from '@/types';
+import type { RolActivo } from './app-layout';
 
-export default function Sidebar() {
-  const { auth } = usePage<PageProps>().props;
-  const roles = auth?.user?.roles ?? [];
+interface SidebarProps {
+  rol: RolActivo;
+}
 
-  // Detectar rol por URL actual (más fiable que depender del serializado de roles)
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const rol = pathname.startsWith('/nutricionista') ? 'nutricionista'
-    : pathname.startsWith('/endocrinologo') ? 'endocrinologo'
-    : pathname.startsWith('/paciente') ? 'paciente'
-    : pathname.startsWith('/admin') ? 'administrador'
-    : roles.find(r => ['administrador', 'superadministrador'].includes(r.nombre)) ? 'administrador'
-    : roles.find(r => r.nombre === 'nutricionista') ? 'nutricionista'
-    : roles.find(r => r.nombre === 'paciente') ? 'paciente'
-    : roles.find(r => r.nombre === 'endocrinologo') ? 'endocrinologo'
-    : 'endocrinologo';
+/* ── Tema por rol ────────────────────────────────────────────── */
+const TEMA = {
+  nutricionista: {
+    border:     'border-brand-green/10',
+    bg:         'bg-brand-green-soft/[0.18]',
+    logoBg:     'bg-brand-green',
+    cardBorder: 'border-brand-green/20',
+    cardBg:     'bg-brand-green/[0.05]',
+    cardIconBg: 'bg-brand-green/15',
+    cardIconTx: 'text-brand-green-dark dark:text-brand-green',
+    cardTitle:  'Tu paciente, tu plan',
+    cardDesc:   'Revisa perfiles, planes y derivaciones para acompañar a cada paciente.',
+  },
+  endocrinologo: {
+    border:     'border-brand-orange/15',
+    bg:         'bg-brand-orange/[0.06]',
+    logoBg:     'bg-brand-orange',
+    cardBorder: 'border-brand-orange/20',
+    cardBg:     'bg-brand-orange/[0.05]',
+    cardIconBg: 'bg-brand-orange/15',
+    cardIconTx: 'text-brand-orange',
+    cardTitle:  'Atención endocrinológica',
+    cardDesc:   'Gestiona consultas y abre el perfil de una paciente para completar su evaluación clínica.',
+  },
+  paciente: {
+    border:     'border-category-dairy/15',
+    bg:         'bg-category-dairy/[0.06]',
+    logoBg:     'bg-category-dairy',
+    cardBorder: 'border-category-dairy/20',
+    cardBg:     'bg-category-dairy/[0.05]',
+    cardIconBg: 'bg-category-dairy/15',
+    cardIconTx: 'text-category-dairy',
+    cardTitle:  'Tu bienestar, paso a paso',
+    cardDesc:   'Consulta tu plan y registra tu avance para que nutrición pueda acompañarte.',
+  },
+  administrador: {
+    border:     'border-category-dairy/15',
+    bg:         'bg-category-dairy/[0.04]',
+    logoBg:     'bg-category-dairy',
+    cardBorder: 'border-category-dairy/15',
+    cardBg:     'bg-category-dairy/[0.04]',
+    cardIconBg: 'bg-category-dairy/10',
+    cardIconTx: 'text-category-dairy',
+    cardTitle:  'Control del sistema',
+    cardDesc:   'Supervisa usuarios, pacientes, auditoría y actividad desde módulos separados.',
+  },
+} as const;
 
+export default function Sidebar({ rol }: SidebarProps) {
+  const t = TEMA[rol];
   const items = getMenuPorRol(rol);
+
   const dashboardHref = rol === 'nutricionista' ? '/nutricionista/dashboard'
     : rol === 'paciente' ? '/paciente/dashboard'
     : rol === 'administrador' ? '/admin/dashboard'
     : '/endocrinologo/dashboard';
 
+  const LogoIcon = rol === 'endocrinologo' ? Stethoscope : Leaf;
+
   return (
     <aside
-      className="sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r
-        border-brand-green/10 bg-brand-green-soft/[0.18] px-3.5 py-5 shadow-sidebar transition-colors
-        dark:border-surface-border-dark dark:bg-surface-card-dark dark:shadow-sidebar-dark"
+      className={`sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r px-3.5 py-5 shadow-sidebar transition-colors
+        ${t.border} ${t.bg}
+        dark:border-surface-border-dark dark:bg-surface-card-dark dark:shadow-sidebar-dark`}
     >
+      {/* Logo imagen */}
       <Link
         href={dashboardHref}
-        className="mb-6 flex items-center gap-2 px-1.5 text-lg font-bold text-ink dark:text-ink-dark"
+        className="mb-6 flex items-center gap-2 px-1.5"
       >
-        <span className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-brand-green">
-          <Leaf size={13} className="text-white" strokeWidth={2.5} />
-        </span>
-        Nutrigo
+        <img src="/images/logo.png" alt="Almendra Nutrición" className="h-8 w-auto" />
       </Link>
 
+      {/* Nav items */}
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
         {items.map((item) => (
           <div key={item.href}>
@@ -50,34 +90,25 @@ export default function Sidebar() {
               href={item.href}
               icon={item.icon}
               badge={item.badge}
+              rol={rol}
             />
             {item.children?.map((child) => (
-              <SidebarItem key={child.href} label={child.label} href={child.href} isSub />
+              <SidebarItem key={child.href} label={child.label} href={child.href} isSub rol={rol} />
             ))}
           </div>
         ))}
       </nav>
 
-      {rol === 'paciente' ? (
-        <div className="mt-auto rounded-2xl border border-brand-green/20 bg-brand-green/[0.05] p-3.5">
-          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green-dark dark:text-brand-green"><Leaf size={17} /></div>
-          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Tu bienestar, paso a paso</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Consulta tu plan y registra tu avance para que nutrición pueda acompañarte.</p>
+      {/* Card inferior */}
+      <div className={`mt-auto rounded-2xl border p-3.5 ${t.cardBorder} ${t.cardBg}`}>
+        <div className={`mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${t.cardIconBg} ${t.cardIconTx}`}>
+          <LogoIcon size={17} />
         </div>
-      ) : rol === 'nutricionista' ? null : rol === 'administrador' ? (
-        <div className="mt-auto rounded-2xl border border-category-dairy/15 bg-category-dairy/[0.04] p-3.5">
-          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-category-dairy/10 text-category-dairy"><Leaf size={17} /></div>
-          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Control del sistema</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Supervisa usuarios, pacientes, auditoría y actividad desde módulos separados.</p>
-        </div>
-      ) : (
-        <div className="mt-auto rounded-2xl border border-info/15 bg-info/[0.04] p-3.5">
-          <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-info/10 text-info"><Leaf size={17} /></div>
-          <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Atención endocrinológica</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">Gestiona consultas y abre el perfil de una paciente para completar su evaluación clínica.</p>
-        </div>
-      )}
+        <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">{t.cardTitle}</p>
+        <p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{t.cardDesc}</p>
+      </div>
 
+      {/* Logout */}
       <Link
         href="/logout"
         method="post"

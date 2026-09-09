@@ -7,7 +7,7 @@ import { Boton } from '@/Components/ui/boton';
 import { Badge } from '@/Components/ui/badge';
 import { etiqueta, type RecomendacionNutricionalExperta } from '../tipos';
 
-interface Props { pacienteId: number; recomendacion: RecomendacionNutricionalExperta | null; }
+interface Props { pacienteId: number; recomendacion: RecomendacionNutricionalExperta | null; requerimientoId?: number; }
 interface RespuestaApi { success: boolean; message: string; data?: RecomendacionNutricionalExperta; }
 
 const numero = (valor: number | string | null, decimales = 0) => {
@@ -25,12 +25,13 @@ const listaHecho = (hechos: Record<string, unknown> | null | undefined, campo: s
     return [];
 };
 
-export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion }: Props) {
+export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion, requerimientoId }: Props) {
     const [procesando, setProcesando] = useState<'generar' | 'aprobado' | 'rechazado' | null>(null);
     const [observacion, setObservacion] = useState(recomendacion?.observacion_validacion ?? '');
     const [mensaje, setMensaje] = useState<string | null>(null);
     const [error, setError] = useState(false);
     const estadoActual = recomendacion?.estado_validacion_experta ?? 'pendiente';
+    const requiereActualizar = Boolean(recomendacion && requerimientoId && Number(recomendacion.id_requerimiento_nutricional) !== Number(requerimientoId));
 
     const recargar = () => router.reload({
         only: [
@@ -102,10 +103,16 @@ export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion 
                 <>
                     {/* ── Datos principales ── */}
                     <div className="grid grid-cols-3 gap-2">
-                        <DatoItem label="Enfoque" valor={etiqueta(recomendacion.enfoque_nutricional_experto)} />
-                        <DatoItem label="Prioridad" valor={etiqueta(recomendacion.prioridad_nutricional)} />
-                        <DatoItem label="Confianza" valor={recomendacion.confianza_experta == null ? '—' : `${numero(Number(recomendacion.confianza_experta) * 100)}%`} destacar />
+                        <DatoItem label="Enfoque" valor={etiqueta(recomendacion.enfoque_nutricional_experto)} ayuda="Estrategia seleccionada por las reglas según diagnósticos, evaluación y restricciones." />
+                        <DatoItem label="Prioridad" valor={etiqueta(recomendacion.prioridad_nutricional)} ayuda="Aspecto que requiere mayor atención dentro de la intervención nutricional." />
+                        <DatoItem label="Confianza" valor={recomendacion.confianza_experta == null ? '—' : `${numero(Number(recomendacion.confianza_experta) * 100)}%`} ayuda="Coherencia de los hechos con las reglas activadas; no es una probabilidad diagnóstica." destacar />
                     </div>
+
+                    <div className="rounded-xl border border-info/15 bg-info/[0.035] px-4 py-3 text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                        <strong className="text-ink dark:text-ink-dark">¿Por qué se obtuvo este resultado?</strong> El motor cruza el requerimiento vigente con PMOS/RI, medidas corporales, hábitos, alergias, intolerancias y preferencias. Las reglas activadas y su explicación aparecen en la trazabilidad experta.
+                    </div>
+
+                    {requiereActualizar && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-orange/25 bg-brand-orange/[0.055] px-4 py-3"><p className="text-[10.5px] font-semibold text-brand-orange">Esta orientación corresponde a un requerimiento anterior y debe volver a ejecutarse.</p><Boton variante="primary" tamano="sm" onClick={generar} disabled={procesando !== null}>{procesando === 'generar' ? <LoaderCircle size={13} className="animate-spin"/> : <BrainCircuit size={13}/>} Actualizar orientación</Boton></div>}
 
                     {/* ── Macronutrientes ── */}
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -203,11 +210,12 @@ export default function TarjetaRecomendacionExperta({ pacienteId, recomendacion 
 
 /* ── Componentes internos ── */
 
-function DatoItem({ label, valor, destacar }: { label: string; valor: string; destacar?: boolean }) {
+function DatoItem({ label, valor, ayuda, destacar }: { label: string; valor: string; ayuda: string; destacar?: boolean }) {
     return (
         <div className="rounded-xl border border-surface-border bg-black/[0.02] px-3 py-2.5 dark:border-surface-border-dark dark:bg-white/[0.03]">
             <p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-0.5">{label}</p>
             <p className={clsx('text-[12.5px] font-bold capitalize', destacar ? 'text-brand-green-dark dark:text-brand-green' : 'text-ink dark:text-ink-dark')}>{valor}</p>
+            <p className="mt-1.5 text-[9px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{ayuda}</p>
         </div>
     );
 }

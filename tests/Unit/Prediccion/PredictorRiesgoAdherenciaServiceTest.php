@@ -31,6 +31,18 @@ class PredictorRiesgoAdherenciaServiceTest extends TestCase
         $this->assertSame('1.0.0', $resultado['version_modelo']);
     }
 
+    public function test_considera_comidas_vencidas_sin_registro_como_senal_semanal(): void
+    {
+        $resultado = $this->predecir($this->datos([
+            'adherencia_promedio' => 0,
+            'comidas_sin_registro_vencidas' => 1,
+        ]));
+
+        $this->assertFalse($resultado['sin_datos']);
+        $this->assertContains('Comidas cuyo horario finalizó sin registro de la paciente', $resultado['factores_influyentes']);
+        $this->assertStringContainsString('olvidó registrarla', $resultado['recomendacion_predictiva']);
+    }
+
     private function predecir(array $datos): array
     {
         $extractor = Mockery::mock(FeaturesAdherenciaPacienteService::class);

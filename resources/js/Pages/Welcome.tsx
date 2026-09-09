@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+﻿import { Head, Link } from '@inertiajs/react';
 import {
     Leaf, Menu, X, ArrowRight, Star, Phone, Clock, Mail, MapPin,
     Brain, Scale, Utensils, HeartPulse, ClipboardList,
@@ -35,17 +35,14 @@ export default function Welcome({ canLogin, canRegister }: Props) {
 
     return (
         <>
-            <Head title="Nutrigo — Nutrición clínica inteligente" />
+            <Head title="Almendra Nutrición — Nutrición clínica inteligente" />
             <div className="min-h-screen scroll-smooth bg-white font-sans antialiased">
 
                 {/* ═══════════ NAVBAR ═══════════ */}
                 <header className="sticky top-0 z-50 border-b border-surface-border/70 bg-brand-cream/95 backdrop-blur">
                     <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 lg:px-8">
                         <a href="#inicio" className="flex items-center gap-2">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-green text-white shadow-[0_6px_16px_rgba(47,174,30,0.35)]">
-                                <Leaf size={19} strokeWidth={2.2} />
-                            </span>
-                            <span className="text-[19px] font-extrabold tracking-tight text-brand-green-deep">Nutrigo</span>
+                            <img src="/images/logo.png" alt="Nutrigo" className="h-9 w-auto" />
                         </a>
 
                         <div className="hidden items-center gap-7 lg:flex">
@@ -100,7 +97,7 @@ export default function Welcome({ canLogin, canRegister }: Props) {
 
                     <div className="relative mx-auto flex min-h-[560px] max-w-7xl flex-col justify-center px-5 py-24 lg:px-8">
                         <p className="mb-3 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.2em] text-brand-green-soft">
-                            <span className="h-px w-8 bg-brand-green" /> Bienvenida a Nutrigo
+                            <span className="h-px w-8 bg-brand-green" /> BIENVENIDA A ALMENDRA NUTRICIÓN
                         </p>
                         <h1 className="max-w-3xl text-[44px] font-extrabold leading-[1.05] text-white sm:text-[58px] lg:text-[68px]">
                             Nutrición clínica <span className="text-brand-green">personalizada</span> para tu bienestar
@@ -154,7 +151,7 @@ export default function Welcome({ canLogin, canRegister }: Props) {
                                 Te acompañamos hacia una <span className="text-brand-green-dark">vida saludable</span>
                             </h2>
                             <p className="mt-5 text-[14px] leading-relaxed text-ink-muted">
-                                Nutrigo ofrece guía nutricional basada en ciencia, planificación de comidas personalizada y apoyo integral diseñado para mejorar tu salud de forma natural y sostenible.
+                                Almendra Nutrición ofrece guía nutricional basada en ciencia, planificación de comidas personalizada y apoyo integral diseñado para mejorar tu salud de forma natural y sostenible.
                             </p>
                             <p className="mt-3 text-[14px] leading-relaxed text-ink-muted">
                                 Desde el diagnóstico endocrinológico hasta el seguimiento diario, reunimos profesionales expertos y un sistema de reglas clínicas para ayudarte a construir hábitos duraderos.
@@ -269,8 +266,8 @@ export default function Welcome({ canLogin, canRegister }: Props) {
                             <div className="mt-7 space-y-5">
                                 <ContactInfo icon={<Phone size={17} />} titulo="Llámanos" lineas={['+591 700-00000', '+591 700-11111']} />
                                 <ContactInfo icon={<Clock size={17} />} titulo="Horario de atención" lineas={['Lun – Sáb: 09:00 – 19:00', 'Domingo: cerrado']} />
-                                <ContactInfo icon={<Mail size={17} />} titulo="Escríbenos" lineas={['soporte@nutrigo.test', 'info@nutrigo.test']} />
-                                <ContactInfo icon={<MapPin size={17} />} titulo="Ubicación" lineas={['Centro de Nutrición Nutrigo', 'Av. Bienestar, Bolivia']} />
+                                <ContactInfo icon={<Mail size={17} />} titulo="Escríbenos" lineas={['soporte@almendra.test', 'info@almendra.test']} />
+                                <ContactInfo icon={<MapPin size={17} />} titulo="Ubicación" lineas={['Centro Almendra Nutrición', 'Av. Bienestar, Bolivia']} />
                             </div>
                         </div>
                     </div>
@@ -280,10 +277,7 @@ export default function Welcome({ canLogin, canRegister }: Props) {
                 <footer className="bg-brand-green-deep px-5 py-14 lg:px-8">
                     <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <div className="flex items-center gap-2">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-green text-white"><Leaf size={18} strokeWidth={2.2} /></span>
-                                <span className="text-[19px] font-extrabold text-white">Nutrigo</span>
-                            </div>
+                            <img src="/images/logo.png" alt="Nutrigo" className="h-9 w-auto brightness-0 invert" />
                             <p className="mt-4 text-[12.5px] leading-relaxed text-white/60">
                                 Impulsamos a las personas a alcanzar una nutrición óptima con guía experta y planes alimentarios personalizados.
                             </p>
@@ -309,12 +303,12 @@ export default function Welcome({ canLogin, canRegister }: Props) {
                             <ul className="mt-4 space-y-2.5 text-[12.5px] text-white/70">
                                 <li className="flex items-center gap-2"><MapPin size={14} className="text-brand-green" /> Av. Bienestar, Bolivia</li>
                                 <li className="flex items-center gap-2"><Phone size={14} className="text-brand-green" /> +591 700-00000</li>
-                                <li className="flex items-center gap-2"><Mail size={14} className="text-brand-green" /> info@nutrigo.test</li>
+                                <li className="flex items-center gap-2"><Mail size={14} className="text-brand-green" /> info@almendra.test</li>
                             </ul>
                         </div>
                     </div>
                     <div className="mx-auto mt-12 max-w-7xl border-t border-white/10 pt-6 text-center">
-                        <p className="text-[11.5px] text-white/50">© {new Date().getFullYear()} Nutrigo · Sistema clínico de nutrición para el síndrome de ovario poliquístico</p>
+                        <p className="text-[11.5px] text-white/50">© {new Date().getFullYear()} Almendra Nutrición · Sistema clínico de nutrición para el síndrome de ovario poliquístico</p>
                     </div>
                 </footer>
             </div>

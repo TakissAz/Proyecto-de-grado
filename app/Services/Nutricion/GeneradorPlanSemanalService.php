@@ -118,10 +118,17 @@ class GeneradorPlanSemanalService
                         'estado' => 'activo',
                     ]);
                     $objetivoCalorico = $objetivos['calorias_objetivo'] * $configuracion['proporcion'];
+                    $objetivosComida = [
+                        'calorias' => $objetivoCalorico,
+                        'proteinas' => $objetivos['proteinas_objetivo'] * $configuracion['proporcion'],
+                        'carbohidratos' => $objetivos['carbohidratos_objetivo'] * $configuracion['proporcion'],
+                        'grasas' => $objetivos['grasas_objetivo'] * $configuracion['proporcion'],
+                        'fibra' => $objetivos['fibra_objetivo'] * $configuracion['proporcion'],
+                    ];
                     $seleccion = $this->elegirReceta(
                         $recetasPorTipo[$tipo],
                         $tipo,
-                        $objetivoCalorico,
+                        $objetivosComida,
                         $usadasPorTipo[$tipo],
                         $ultimaRecetaPorTipo[$tipo],
                         $recetasUsadasEnDia,
@@ -136,17 +143,23 @@ class GeneradorPlanSemanalService
                         $recetasUsadasEnDia[] = $idReceta;
                         $ultimaRecetaPorTipo[$tipo] = $idReceta;
                         $proteinaAnteriorPorTipo[$tipo] = $seleccion['proteina_principal'];
+                        $factorPorcion = $this->factorPorcionParaObjetivo(
+                            (float) $receta->calorias_totales,
+                            $objetivoCalorico
+                        );
                         $comida->componentes()->create([
                             'tipo_componente' => 'receta',
                             'id_receta' => $receta->getKey(),
-                            'cantidad' => 1,
+                            'cantidad' => $factorPorcion,
                             'unidad' => 'porcion',
-                            'calorias' => $receta->calorias_totales,
-                            'proteinas' => $receta->proteinas_totales,
-                            'carbohidratos' => $receta->carbohidratos_totales,
-                            'grasas' => $receta->grasas_totales,
-                            'fibra' => $receta->fibra_total,
-                            'observaciones' => $this->observacionClasificacion($seleccion, $contextoAjuste),
+                            'calorias' => round((float) $receta->calorias_totales * $factorPorcion, 2),
+                            'proteinas' => round((float) $receta->proteinas_totales * $factorPorcion, 2),
+                            'carbohidratos' => round((float) $receta->carbohidratos_totales * $factorPorcion, 2),
+                            'grasas' => round((float) $receta->grasas_totales * $factorPorcion, 2),
+                            'fibra' => round((float) $receta->fibra_total * $factorPorcion, 2),
+                            'observaciones' => $this->observacionClasificacion($seleccion, $contextoAjuste)
+                                .' Porción ajustada a '.number_format($factorPorcion, 2, ',', '.')
+                                .' para aproximarse al objetivo de '.number_format($objetivoCalorico, 2, ',', '.').' kcal de esta comida.',
                             'orden' => 1,
                             'estado' => 'activo',
                         ]);
@@ -222,10 +235,21 @@ class GeneradorPlanSemanalService
         return round((float) ($alternativa ?? 0), 2);
     }
 
+    private function factorPorcionParaObjetivo(float $caloriasReceta, float $objetivoCalorico): float
+    {
+        if ($caloriasReceta <= 0 || $objetivoCalorico <= 0) {
+            return 1.0;
+        }
+
+        // Mantiene cantidades utilizables y evita porciones extremas cuando el
+        // catálogo contiene una receta con un aporte energético atípico.
+        return round(min(max($objetivoCalorico / $caloriasReceta, 0.5), 3.0), 2);
+    }
+
     private function elegirReceta(
         array $candidatas,
         string $tipo,
-        float $objetivoCalorico,
+        array $objetivosComida,
         array $usadasPorTipo,
         ?int $ultimaRecetaPorTipo,
         array $recetasUsadasEnDia,
@@ -235,6 +259,34 @@ class GeneradorPlanSemanalService
 
         if ($candidatas->isEmpty()) {
             return null;
+        }
+
+        // La variedad solo se busca entre recetas con un perfil próximo al
+        // mejor balance disponible. Así no se sacrifica la meta nutricional
+        // únicamente para conseguir siete nombres diferentes.
+        $candidatas = $candidatas->map(function (array $resultado) use ($objetivosComida): array {
+            /** @var Receta $receta */
+            $receta = $resultado['receta'];
+            $factor = $this->factorPorcionParaObjetivo(
+                (float) $receta->calorias_totales,
+                (float) $objetivosComida['calorias']
+            );
+
+            return $resultado + [
+                'desviacion_nutricional_previa' => $this->desviacionNutricional(
+                    $receta,
+                    $factor,
+                    $objetivosComida
+                ),
+            ];
+        });
+        $mejorDesviacion = (float) $candidatas->min('desviacion_nutricional_previa');
+        $candidatasBalanceadas = $candidatas->filter(
+            fn (array $resultado): bool => (float) $resultado['desviacion_nutricional_previa']
+                <= $mejorDesviacion + 0.15
+        )->values();
+        if ($candidatasBalanceadas->isNotEmpty()) {
+            $candidatas = $candidatasBalanceadas;
         }
 
         $cantidadCompatibles = $candidatas->count();
@@ -261,7 +313,7 @@ class GeneradorPlanSemanalService
         // la menos utilizada conservando el orden experto y calórico.
         $evaluadas = $viables->map(function (array $resultado) use (
             $tipo, $usadasPorTipo, $ultimaRecetaPorTipo, $cantidadCompatibles,
-            $recetasUsadasEnDia, $proteinaAnteriorPorTipo
+            $recetasUsadasEnDia, $proteinaAnteriorPorTipo, $objetivosComida
         ): array {
             /** @var Receta $receta */
             $receta = $resultado['receta'];
@@ -280,20 +332,55 @@ class GeneradorPlanSemanalService
                 $ajustado -= 10;
             }
 
+            $factorPorcion = $this->factorPorcionParaObjetivo(
+                (float) $receta->calorias_totales,
+                (float) $objetivosComida['calorias']
+            );
+            $desviacionNutricional = $this->desviacionNutricional(
+                $receta,
+                $factorPorcion,
+                $objetivosComida
+            );
+
             return $resultado + [
                 'puntaje_ajustado' => $ajustado,
+                'puntaje_balanceado' => $ajustado - ($desviacionNutricional * 70),
+                'desviacion_nutricional' => $desviacionNutricional,
                 'proteina_principal' => $proteina,
                 'repeticion_forzada' => $usos > 0,
                 'cantidad_compatibles' => $cantidadCompatibles,
             ];
         });
 
-        return $evaluadas->sort(function (array $a, array $b) use ($objetivoCalorico): int {
-            $porPuntaje = $b['puntaje_ajustado'] <=> $a['puntaje_ajustado'];
+        return $evaluadas->sort(function (array $a, array $b) use ($objetivosComida): int {
+            $porPuntaje = $b['puntaje_balanceado'] <=> $a['puntaje_balanceado'];
             if ($porPuntaje !== 0) return $porPuntaje;
-            return abs((float) $a['receta']->calorias_totales - $objetivoCalorico)
-                <=> abs((float) $b['receta']->calorias_totales - $objetivoCalorico);
+            return abs((float) $a['receta']->calorias_totales - (float) $objetivosComida['calorias'])
+                <=> abs((float) $b['receta']->calorias_totales - (float) $objetivosComida['calorias']);
         })->first();
+    }
+
+    private function desviacionNutricional(Receta $receta, float $factor, array $objetivos): float
+    {
+        $campos = [
+            'proteinas' => 'proteinas_totales',
+            'carbohidratos' => 'carbohidratos_totales',
+            'grasas' => 'grasas_totales',
+            'fibra' => 'fibra_total',
+        ];
+        $desviaciones = [];
+
+        foreach ($campos as $objetivo => $campoReceta) {
+            $meta = (float) ($objetivos[$objetivo] ?? 0);
+            if ($meta <= 0) continue;
+
+            $proyectado = (float) $receta->{$campoReceta} * $factor;
+            // Se limita cada diferencia para que un dato atípico no anule por
+            // completo la pertinencia clínica previamente evaluada.
+            $desviaciones[] = min(abs($proyectado - $meta) / $meta, 2.0);
+        }
+
+        return $desviaciones === [] ? 0.0 : array_sum($desviaciones) / count($desviaciones);
     }
 
     private function observacionClasificacion(array $seleccion, array $contextoAjuste = []): string
@@ -311,9 +398,10 @@ class GeneradorPlanSemanalService
         $seguimiento = ($contextoAjuste['resumen_ajuste'] ?? []) !== [] ? ' Ajustado con seguimiento del paciente.' : '';
 
         return sprintf(
-            'Puntaje experto: %d. Puntaje ajustado por diversidad: %.2f. Motivos: %s%s%s%s',
+            'Puntaje experto: %d. Puntaje ajustado por diversidad: %.2f. Desviación nutricional estimada: %.2f%%. Motivos: %s%s%s%s',
             $seleccion['puntaje'],
             $seleccion['puntaje_ajustado'],
+            ((float) ($seleccion['desviacion_nutricional'] ?? 0)) * 100,
             $detalle,
             $repeticion,
             $seguimiento,

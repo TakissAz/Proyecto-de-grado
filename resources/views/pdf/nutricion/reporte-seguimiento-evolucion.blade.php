@@ -2,6 +2,8 @@
 <html lang="es"><head><meta charset="utf-8"><title>Reporte de seguimiento y evolución nutricional</title>
 <style>
 @page{margin:26px 30px}body{font-family:DejaVu Sans,sans-serif;color:#263238;font-size:9px;line-height:1.35}h1{font-size:19px;color:#174d3b;margin:0}h2{font-size:12px;color:#174d3b;border-bottom:1px solid #a9c7bc;padding-bottom:4px;margin:17px 0 7px}.sub{color:#607d75}.head{border-bottom:3px solid #2f8066;padding-bottom:10px}.right{float:right;text-align:right}.clear{clear:both}.box{background:#f2f7f5;border:1px solid #d7e5df;padding:8px;margin:6px 0}.grid{width:100%;border-collapse:collapse}.grid td,.grid th{border:1px solid #d9e1de;padding:4px;vertical-align:top}.grid th{background:#e8f1ed;color:#174d3b;text-align:left;font-size:8px}.mini td{border:0;padding:2px 8px 2px 0}.badge{display:inline-block;padding:2px 5px;border-radius:8px;background:#e8f1ed;color:#174d3b}.warn{background:#fff4dc;border-left:3px solid #d99b21;padding:6px;margin:4px 0}.high{border-left-color:#b83b3b;background:#fbeaea}.good{background:#e7f5ec}.muted{color:#78908a}.page-break{page-break-before:always}ul{margin:4px 0;padding-left:16px}.footer{margin-top:20px;border-top:1px solid #aaa;padding-top:8px}.avoid-break{page-break-inside:avoid}
+.summary{width:100%;border-collapse:separate;border-spacing:5px}.summary td{width:25%;padding:8px;border:1px solid #d7e5df;background:#f7faf9}.summary b{display:block;color:#174d3b;font-size:14px;margin-top:2px}.state{font-weight:bold}.state-completada{color:#20834f}.state-parcial,.state-sin_registro{color:#b56b00}.state-pendiente{color:#78908a}.state-no_realizada{color:#a33}.day{page-break-inside:avoid;margin:8px 0}.report-head{border-bottom:3px solid #2f8066;padding-bottom:10px}.head{display:none}
+.reason{margin:8px 0 11px;border:1px solid #c8ddd5;border-left:4px solid #2f8066;background:#f8fbfa;padding:10px}.reason h3{margin:0 0 4px;color:#174d3b;font-size:11px}.formula{margin:7px 0;padding:7px;background:#e8f1ed;color:#174d3b;text-align:center;font-weight:bold}.factor{width:100%;border-collapse:collapse;margin-top:6px}.factor td{width:25%;padding:6px;border-right:1px solid #d7e5df}.factor td:last-child{border-right:0}.factor b{display:block;font-size:12px;color:#174d3b}.factor span{font-size:8px;color:#607d75}.explain{margin-top:6px;color:#455b54}
 </style></head><body>
 @php
 $ant=$analitica['evolucion_antropometrica'];$adh=$analitica['evolucion_adherencia'];$sint=$analitica['analitica_sintomas'];$problemas=$analitica['problemas_practicos'];
@@ -9,7 +11,59 @@ $nombre=trim($paciente->nombres.' '.$paciente->apellido_paterno.' '.$paciente->a
 $fmt=fn($v,$s='')=>$v===null||$v===''?'Sin registro':number_format((float)$v,1,',','.').$s;
 $siNo=fn($v)=>$v?'Sí':'No';$alerta=$analitica['alertas'][0]??null;$recomendacion=$analitica['recomendaciones_siguiente_plan'][0]??null;
 $tipos=collect($analitica['cumplimiento_por_tipo_comida']);$mejor=$tipos->sortByDesc('porcentaje_adherencia')->first();$menor=$tipos->filter(fn($x)=>$x['total']>0)->sortBy('porcentaje_adherencia')->first();
+$seguimiento=$seguimiento??null;$resumenActual=data_get($seguimiento,'resumen_adherencia');$diasActuales=collect(data_get($seguimiento,'seguimiento_comidas',[]));
+$estadoTexto=fn($v)=>ucfirst(str_replace('_',' ',(string)$v));
 @endphp
+<div class="report-head"><div class="right"><b>{{ $fechaGeneracion->copy()->timezone('America/La_Paz')->format('d/m/Y H:i') }}</b><br><span class="sub">Hora de Bolivia &middot; Generado por {{ $profesional->name }}</span></div><h1>Reporte general de seguimiento nutricional</h1><div class="sub">Adherencia diaria y semanal del paciente</div><div class="clear"></div></div>
+<h2>Seguimiento del plan semanal vigente</h2>
+@if(!$seguimiento || !$resumenActual)
+<p class="muted">No existe un plan activo con seguimiento disponible.</p>
+@elseif(data_get($seguimiento,'estado_periodo')==='no_iniciado')
+<div class="box">El plan comienza el <b>{{ data_get($seguimiento,'plan.fecha_inicio') }}</b>. No se calculan resultados antes de su inicio.</div>
+@else
+<table class="summary"><tr><td>Adherencia evaluable<b>{{ $fmt($resumenActual['porcentaje_adherencia']??0,'%') }}</b></td><td>Completadas<b>{{ $resumenActual['completadas']??0 }}</b></td><td>Sin registrar tras horario<b>{{ $resumenActual['sin_registro_vencidas']??0 }}</b></td><td>Pendientes futuras<b>{{ $resumenActual['pendientes']??0 }}</b></td></tr></table>
+<div class="box"><b>Criterio de lectura:</b> se consideran solamente comidas respondidas o cuyo horario ya finaliz&oacute;, usando hora de Bolivia y una tolerancia de una hora. &ldquo;Sin registro&rdquo; no afirma que la paciente no comi&oacute;.</div>
+@php
+$comidasActuales=$diasActuales->flatMap(fn($dia)=>collect($dia['comidas']??[]));
+$evaluablesActuales=$comidasActuales->filter(fn($comida)=>($comida['estado_cumplimiento']??'pendiente')!=='pendiente');
+$completadasActuales=$evaluablesActuales->where('estado_cumplimiento','completada')->count();
+$parcialesActuales=$evaluablesActuales->where('estado_cumplimiento','parcial');
+$reemplazadasActuales=$evaluablesActuales->where('estado_cumplimiento','reemplazada')->count();
+$noRealizadasActuales=$evaluablesActuales->where('estado_cumplimiento','no_realizada')->count();
+$sinRegistroActuales=$evaluablesActuales->where('estado_cumplimiento','sin_registro')->count();
+$puntosParcialesActuales=$parcialesActuales->sum(fn($comida)=>isset($comida['porcentaje_consumido'])&&$comida['porcentaje_consumido']!==null?(float)$comida['porcentaje_consumido']/100:0.5);
+$puntajeActual=$completadasActuales+$puntosParcialesActuales+($reemplazadasActuales*0.5);
+$totalEvaluableActual=$evaluablesActuales->count();
+$nivelActual=(float)($resumenActual['porcentaje_adherencia']??0);
+$lecturaNivelActual=$nivelActual>=85?'favorable':($nivelActual>=70?'requiere acompañamiento':($nivelActual>=50?'necesita ajustes':'requiere atención prioritaria'));
+@endphp
+<div class="reason avoid-break">
+    <h3>&iquest;Por qu&eacute; la adherencia se encuentra en {{ $fmt($nivelActual,'%') }}?</h3>
+    @if($totalEvaluableActual===0)
+        <p class="explain">A&uacute;n no existen comidas evaluables. Las comidas futuras no disminuyen la adherencia.</p>
+    @else
+        <p class="explain">El nivel se clasifica como <b>{{ $lecturaNivelActual }}</b>. Se evaluaron {{ $totalEvaluableActual }} comidas: las completadas aportan el total, las parciales aportan seg&uacute;n el porcentaje consumido, las reemplazadas aportan la mitad y las no realizadas o vencidas sin registro no aportan.</p>
+        <div class="formula">({{ number_format($puntajeActual,2,',','.') }} puntos obtenidos &divide; {{ $totalEvaluableActual }} comidas evaluables) &times; 100 = {{ $fmt($nivelActual,'%') }}</div>
+        <table class="factor"><tr>
+            <td><b>{{ $completadasActuales }}</b><span>Completadas &middot; aporte completo</span></td>
+            <td><b>{{ $parcialesActuales->count() }}</b><span>Parciales &middot; aporte proporcional</span></td>
+            <td><b>{{ $reemplazadasActuales }}</b><span>Reemplazadas &middot; medio aporte</span></td>
+            <td><b>{{ $noRealizadasActuales+$sinRegistroActuales }}</b><span>No realizadas o sin registro &middot; sin aporte</span></td>
+        </tr></table>
+        <p class="explain"><b>Interpretaci&oacute;n:</b> @if($completadasActuales===$totalEvaluableActual) todas las comidas evaluables fueron completadas. @elseif(($noRealizadasActuales+$sinRegistroActuales)>0) el porcentaje disminuye principalmente por {{ $noRealizadasActuales+$sinRegistroActuales }} comida(s) no realizada(s) o vencida(s) sin registro. @elseif($parcialesActuales->isNotEmpty()||$reemplazadasActuales>0) el porcentaje se reduce porque existen cumplimientos parciales o reemplazos. @else el resultado depende de las respuestas registradas hasta el momento. @endif Las {{ $resumenActual['pendientes']??0 }} comida(s) futura(s) permanecen pendientes y no se penalizan.</p>
+    @endif
+</div>
+@forelse($diasActuales as $dia)
+@php
+$comidasDia=collect($dia['comidas']??[]);$evaluablesDia=$comidasDia->where('estado_cumplimiento','!=','pendiente');
+$puntosDia=$evaluablesDia->sum(fn($c)=>$c['estado_cumplimiento']==='completada' ? 1 : ($c['estado_cumplimiento']==='parcial' ? (($c['porcentaje_consumido']??null)!==null?(float)$c['porcentaje_consumido']/100:0.5) : ($c['estado_cumplimiento']==='reemplazada' ? 0.5 : 0)));
+$pctDia=$evaluablesDia->count()?round($puntosDia/$evaluablesDia->count()*100,1):null;
+@endphp
+<div class="day"><table class="grid"><tr><th colspan="7">D&iacute;a {{ $dia['numero_dia'] }} &middot; {{ ucfirst($dia['nombre_dia']??'') }} &middot; {{ !empty($dia['fecha'])?\Illuminate\Support\Carbon::parse($dia['fecha'])->format('d/m/Y'):'Sin fecha' }} &middot; Adherencia: {{ $pctDia===null?'Aun no evaluable':number_format($pctDia,1,',','.').'%' }}</th></tr><tr><th>Comida / hora</th><th>Estado</th><th>Consumo</th><th>Agrado</th><th>Saciedad</th><th>Hambre posterior</th><th>Observaci&oacute;n</th></tr>
+@foreach($comidasDia as $comida)<tr><td><b>{{ ucfirst($comida['tipo_comida']) }}</b><br><span class="muted">{{ $comida['hora_sugerida']?:'Sin hora' }} &middot; {{ $comida['nombre_comida'] }}</span></td><td class="state state-{{ $comida['estado_cumplimiento'] }}">{{ $estadoTexto($comida['estado_cumplimiento']) }}</td><td>{{ $comida['porcentaje_consumido']===null?'Sin registro':$comida['porcentaje_consumido'].'%' }}</td><td>{{ $comida['nivel_agrado']?$estadoTexto($comida['nivel_agrado']):'Sin registro' }}</td><td>{{ $comida['nivel_saciedad']?$estadoTexto($comida['nivel_saciedad']):'Sin registro' }}</td><td>{{ $comida['nivel_hambre_posterior']?$estadoTexto($comida['nivel_hambre_posterior']):'Sin registro' }}</td><td>{{ $comida['comentario_paciente']?:($comida['motivo_no_cumplimiento']?$estadoTexto($comida['motivo_no_cumplimiento']):'Sin observaciones') }}</td></tr>@endforeach
+</table></div>
+@empty<p class="muted">El plan no contiene dias configurados.</p>@endforelse
+@endif
 <div class="head"><div class="right"><b>{{ $fechaGeneracion->format('d/m/Y H:i') }}</b><br><span class="sub">Generado por {{ $profesional->name }}</span></div><h1>Reporte de seguimiento y evolución nutricional</h1><div class="sub">Sistema experto nutricional PMOS/RI</div><div class="clear"></div></div>
 
 <h2>Datos generales del paciente</h2><table class="grid"><tr><th>Paciente</th><th>CI / código</th><th>Edad</th><th>Sexo</th><th>Teléfono</th></tr><tr><td>{{ $nombre }}</td><td>{{ $paciente->ci ?: 'Sin registro' }}</td><td>{{ $paciente->fecha_nacimiento?->age ?? 'Sin registro' }}</td><td>{{ ucfirst($paciente->sexo ?: 'Sin registro') }}</td><td>{{ $paciente->telefono ?: 'Sin registro' }}</td></tr><tr><th>Estado</th><th colspan="2">Fecha de registro</th><th colspan="2">Plan actual</th></tr><tr><td>{{ ucfirst((string)$paciente->estado) }}</td><td colspan="2">{{ $paciente->fecha_registro?->format('d/m/Y') ?? $paciente->created_at?->format('d/m/Y') ?? 'Sin registro' }}</td><td colspan="2">{{ $planActual?->nombre ?? 'Sin plan activo o aprobado' }}</td></tr></table>

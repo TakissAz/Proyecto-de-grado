@@ -22,7 +22,7 @@ interface PacienteRow {
     fecha_registro?: string | null;
     observaciones?: string | null;
     estado: 'activo' | 'inactivo';
-    user?: { name?: string | null; email?: string | null } | null;
+    user?: { name?: string | null; email?: string | null; avatar_url?: string | null } | null;
 }
 
 interface Props extends PageProps {
@@ -67,6 +67,7 @@ export default function Show({ paciente, flash }: Props) {
                     nombre={nombre}
                     ci={paciente.ci}
                     email={paciente.user?.email}
+                    avatarUrl={paciente.user?.avatar_url}
                     edad={paciente.edad}
                     estado={paciente.estado}
                     onActivar={() => enviarEstado('activar')}

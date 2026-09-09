@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ClipboardList, SquarePen, FileText, CheckCircle2, X, ArrowLeft, Leaf } from 'lucide-react';
 import clsx from 'clsx';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import EstadoPill from '@/Components/ui/estado-pill';
 import { Boton, BotonLink } from '@/Components/ui/boton';
 
@@ -10,6 +10,7 @@ interface Props {
     nombre: string;
     ci: string;
     email?: string | null;
+    avatarUrl?: string | null;
     edad?: number | null;
     estado: 'activo' | 'inactivo';
     onActivar: () => void;
@@ -22,6 +23,7 @@ export default function PerfilCabecera({
     nombre,
     ci,
     email,
+    avatarUrl,
     edad,
     estado,
     onActivar,
@@ -52,7 +54,7 @@ export default function PerfilCabecera({
                 {/* Avatar superpuesto al cover */}
                 <div className="-mt-10 mb-3">
                     <div className="inline-flex rounded-full border-4 border-surface-card dark:border-surface-card-dark">
-                        <AvatarIniciales nombre={nombre} size={72} />
+                        <AvatarPaciente nombre={nombre} avatarUrl={avatarUrl} size="xl" />
                     </div>
                 </div>
 

@@ -1,5 +1,5 @@
-import { router } from '@inertiajs/react';
-import { Calculator, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { Calculator, CheckCircle2, RefreshCw, Info, Activity, BookOpen, AlertTriangle, History } from 'lucide-react';
 import { useState } from 'react';
 import { Boton } from '@/Components/ui/boton';
 import clsx from 'clsx';
@@ -25,6 +25,14 @@ export default function TarjetaRequerimientoNutricional({ pacienteId, requerimie
     const [procesando, setProcesando] = useState(false);
     const faltaEvaluacion = !evaluacion;
     const faltaPesoTalla = Boolean(evaluacion && (evaluacion.peso == null || evaluacion.talla == null));
+    const motivosRecalculo = requerimiento && evaluacion ? [
+        Number(evaluacion.id_evaluacion_nutricional) !== Number(requerimiento.id_evaluacion_nutricional) ? 'Existe una evaluación nutricional más reciente' : null,
+        Math.abs(Number(evaluacion.peso) - Number(requerimiento.peso_referencia)) > 0.001 ? `El peso cambió de ${num(requerimiento.peso_referencia)} a ${num(Number(evaluacion.peso))} kg` : null,
+        Math.abs(Number(evaluacion.talla) - Number(requerimiento.talla_referencia)) > 0.001 ? `La talla cambió de ${num(requerimiento.talla_referencia, 2)} a ${num(Number(evaluacion.talla), 2)} m` : null,
+        String(evaluacion.nivel_actividad ?? '') !== String(requerimiento.nivel_actividad ?? '') ? `El nivel de actividad cambió a ${etiqueta(evaluacion.nivel_actividad)}` : null,
+        objetivo?.id_objetivo_nutricional && Number(objetivo.id_objetivo_nutricional) !== Number(requerimiento.id_objetivo_nutricional) ? 'Cambió el criterio nutricional utilizado por las reglas' : null,
+    ].filter((motivo): motivo is string => Boolean(motivo)) : [];
+    const requiereRecalculo = motivosRecalculo.length > 0;
 
     const calcular = () => {
         if (faltaEvaluacion || faltaPesoTalla) return;
@@ -48,11 +56,14 @@ export default function TarjetaRequerimientoNutricional({ pacienteId, requerimie
                         <p className="text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Estimación energética y macronutrientes</p>
                     </div>
                 </div>
-                {requerimiento && (
-                    <span className="pill bg-brand-green/15 text-brand-green-dark dark:bg-brand-green/20 dark:text-brand-green text-[9px]">
-                        <CheckCircle2 size={10} className="mr-1" /> Calculado
-                    </span>
-                )}
+                <div className="flex items-center gap-2">
+                    {requerimiento && <Link href={`/nutricionista/pacientes/${pacienteId}/perfil-nutricional/requerimientos/historial`} className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-2.5 py-1.5 text-[9.5px] font-semibold text-ink-muted transition hover:border-brand-green/30 hover:text-brand-green-dark dark:border-surface-border-dark dark:text-ink-muted-dark dark:hover:text-brand-green"><History size={11}/> Historial</Link>}
+                    {requerimiento && (
+                        <span className="pill bg-brand-green/15 text-brand-green-dark dark:bg-brand-green/20 dark:text-brand-green text-[9px]">
+                            <CheckCircle2 size={10} className="mr-1" /> Calculado
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Alertas */}
@@ -73,10 +84,16 @@ export default function TarjetaRequerimientoNutricional({ pacienteId, requerimie
 
                     {/* TMB, GET, Ajuste */}
                     <div className="grid grid-cols-3 gap-2">
-                        <Dato label="TMB" valor={`${num(requerimiento.tmb)} kcal`} />
-                        <Dato label="GET" valor={`${num(requerimiento.get)} kcal`} />
-                        <Dato label="Ajuste" valor={`${requerimiento.ajuste_calorico > 0 ? '+' : ''}${num(requerimiento.ajuste_calorico, 0)} kcal`} />
+                        <Dato label="TMB" valor={`${num(requerimiento.tmb)} kcal`} ayuda="Energía que el organismo utiliza en reposo durante un día." />
+                        <Dato label="GET" valor={`${num(requerimiento.get)} kcal`} ayuda="Gasto diario total después de considerar la actividad física." />
+                        <Dato label="Ajuste" valor={`${requerimiento.ajuste_calorico > 0 ? '+' : ''}${num(requerimiento.ajuste_calorico, 0)} kcal`} ayuda="Calorías que las reglas suman o restan al GET." />
                     </div>
+
+                    <section className="grid gap-2 md:grid-cols-3">
+                        <Concepto icono={Activity} titulo="TMB · Metabolismo basal" texto="Consumo mínimo estimado para mantener respiración, circulación y demás funciones vitales en reposo." />
+                        <Concepto icono={Calculator} titulo="GET · Gasto diario total" texto={`TMB multiplicada por el factor de actividad ${num(requerimiento.factor_actividad, 3)}, correspondiente al nivel ${etiqueta(requerimiento.nivel_actividad)}.`} />
+                        <Concepto icono={BookOpen} titulo="Mifflin–St Jeor" texto="Ecuación que estima la TMB usando peso, talla, edad y sexo. Es una referencia profesional, no una medición directa." />
+                    </section>
 
                     {/* Macronutrientes */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -114,7 +131,7 @@ export default function TarjetaRequerimientoNutricional({ pacienteId, requerimie
                                 ))}
                             </div>
                         ) : (
-                            <p className="rounded-lg bg-base-200 px-3 py-2 text-xs text-base-content/60">
+                            <p className="rounded-lg border border-surface-border bg-black/[0.03] px-3 py-2 text-[11px] text-ink-muted dark:border-surface-border-dark dark:bg-white/[0.03] dark:text-ink-muted-dark">
                                 Este cálculo no contiene criterios profesionales registrados.
                             </p>
                         )}
@@ -126,23 +143,34 @@ export default function TarjetaRequerimientoNutricional({ pacienteId, requerimie
                 </div>
             )}
 
-            {/* Botón calcular */}
-            <div className="flex justify-end">
+            {requiereRecalculo && (
+                <div className="rounded-xl border border-brand-orange/25 bg-brand-orange/[0.055] px-3.5 py-3 dark:bg-brand-orange/[0.07]">
+                    <div className="flex items-start gap-2"><AlertTriangle size={15} className="mt-0.5 shrink-0 text-brand-orange"/><div><p className="text-[11px] font-bold text-ink dark:text-ink-dark">El cálculo necesita actualización</p><ul className="mt-1 space-y-0.5 text-[10px] text-ink-muted dark:text-ink-muted-dark">{motivosRecalculo.map(motivo => <li key={motivo}>• {motivo}</li>)}</ul></div></div>
+                </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="flex items-center gap-1.5 text-[9.5px] text-ink-muted dark:text-ink-muted-dark"><Info size={12}/> Recalcular crea una nueva estimación y conserva la trazabilidad anterior.</p>
                 <Boton variante="primary" tamano="sm" onClick={calcular} disabled={procesando || faltaEvaluacion || faltaPesoTalla}>
-                    {procesando ? 'Calculando...' : requerimiento ? <><RefreshCw size={12} /> Recalcular</> : <><Calculator size={12} /> Calcular</>}
+                    {procesando ? 'Calculando...' : requerimiento ? <><RefreshCw size={12} /> {requiereRecalculo ? 'Recalcular por cambios en los datos' : 'Recalcular estimación'}</> : <><Calculator size={12} /> Calcular</>}
                 </Boton>
             </div>
         </div>
     );
 }
 
-function Dato({ label, valor }: { label: string; valor: string }) {
+function Dato({ label, valor, ayuda }: { label: string; valor: string; ayuda: string }) {
     return (
         <div className="rounded-lg bg-black/[0.02] px-3 py-2 dark:bg-white/[0.03]">
             <p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-0.5">{label}</p>
             <p className="text-[12px] font-bold text-ink dark:text-ink-dark">{valor}</p>
+            <p className="mt-1 text-[9px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{ayuda}</p>
         </div>
     );
+}
+
+function Concepto({ icono: Icono, titulo, texto }: { icono: typeof Calculator; titulo: string; texto: string }) {
+    return <article className="rounded-xl border border-surface-border bg-black/[0.015] p-3 dark:border-surface-border-dark dark:bg-white/[0.02]"><div className="flex items-center gap-2"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 text-brand-green-dark dark:text-brand-green"><Icono size={13}/></span><p className="text-[10.5px] font-bold text-ink dark:text-ink-dark">{titulo}</p></div><p className="mt-2 text-[9.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{texto}</p></article>;
 }
 
 function Macro({ label, gramos, pct, color }: { label: string; gramos: number; pct?: number; color: string }) {

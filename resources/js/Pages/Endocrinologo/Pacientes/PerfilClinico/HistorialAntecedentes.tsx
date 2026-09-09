@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Stethoscope, Calendar, User, Users, Pill, FileDown } from 'lucide-react';
+import { ArrowLeft, Stethoscope, Calendar, User, Users, Pill, FileDown, Activity, Clock3 } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import clsx from 'clsx';
 import type { PageProps } from '@/types';
 import type { AntecedentesData } from './tipos';
@@ -15,7 +15,7 @@ interface RegistroHistorial extends AntecedentesData {
 }
 
 interface Props extends PageProps {
-    paciente: { id_paciente: number; nombre_completo: string; ci: string };
+    paciente: { id_paciente: number; nombre_completo: string; ci: string; avatar_url?: string | null };
     registros: RegistroHistorial[];
 }
 
@@ -51,6 +51,12 @@ export default function HistorialAntecedentes({ paciente, registros }: Props) {
 
     const hayFiltros = condicion || desde || hasta;
     const limpiar = () => { setCondicion(''); setDesde(''); setHasta(''); setPagina(1); };
+    const registroActual = registros[0];
+    const resumenActual = registroActual ? {
+        personales: [registroActual.diabetes_personal, registroActual.hipertension_personal, registroActual.dislipidemia_personal, registroActual.enfermedad_tiroidea, registroActual.hiperprolactinemia_previa].filter(Boolean).length,
+        familiares: [registroActual.diabetes_familiar, registroActual.hipertension_familiar, registroActual.dislipidemia_familiar].filter(Boolean).length,
+        medicamentos: [registroActual.uso_metformina, registroActual.uso_anticonceptivos, registroActual.uso_corticoides].filter(Boolean).length,
+    } : null;
 
     return (
         <AuthenticatedLayout title="Historial antecedentes">
@@ -71,7 +77,7 @@ export default function HistorialAntecedentes({ paciente, registros }: Props) {
                     <div className="px-5 pb-5 -mt-7">
                         <div className="flex items-end gap-4">
                             <div className="rounded-full border-[3px] border-surface-card shadow-md dark:border-surface-card-dark">
-                                <AvatarIniciales nombre={paciente.nombre_completo} size={56} />
+                                <AvatarPaciente nombre={paciente.nombre_completo} avatarUrl={paciente.avatar_url} size="lg" />
                             </div>
                             <div className="flex-1 pb-1">
                                 <h1 className="text-[18px] font-bold text-ink dark:text-ink-dark leading-tight">{paciente.nombre_completo}</h1>
@@ -91,6 +97,24 @@ export default function HistorialAntecedentes({ paciente, registros }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {registroActual && resumenActual && (
+                    <section className="card-elevated overflow-hidden">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border px-5 py-4 dark:border-surface-border-dark">
+                            <div>
+                                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-category-dairy"><Activity size={12} /> Perfil actual</p>
+                                <h2 className="mt-1 text-[15px] font-bold text-ink dark:text-ink-dark">Lectura del registro más reciente</h2>
+                                <p className="mt-0.5 text-[10.5px] text-ink-muted dark:text-ink-muted-dark">Diferencia los factores personales, familiares y el tratamiento registrado.</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 rounded-lg bg-black/[0.025] px-3 py-2 text-[10.5px] text-ink-muted dark:bg-white/[0.035] dark:text-ink-muted-dark"><Clock3 size={12} /> Actualizado {registroActual.updated_at ?? registroActual.created_at ?? 'sin fecha'}</div>
+                        </div>
+                        <div className="grid gap-3 p-4 sm:grid-cols-3">
+                            <ResumenActual icono={<User size={16} />} titulo="Antecedentes personales" cantidad={resumenActual.personales} detalle={resumenActual.personales ? 'Factores clínicos propios registrados' : 'Sin antecedentes personales activos'} tono="orange" />
+                            <ResumenActual icono={<Users size={16} />} titulo="Antecedentes familiares" cantidad={resumenActual.familiares} detalle={resumenActual.familiares ? 'Factores hereditarios para seguimiento' : 'Sin antecedentes familiares activos'} tono="purple" />
+                            <ResumenActual icono={<Pill size={16} />} titulo="Medicación relacionada" cantidad={resumenActual.medicamentos} detalle={resumenActual.medicamentos ? 'Tratamientos declarados actualmente' : 'Sin medicación marcada'} tono="blue" />
+                        </div>
+                    </section>
+                )}
 
                 {/* Barra de filtros + PDF */}
                 {registros.length > 0 && (
@@ -182,6 +206,16 @@ export default function HistorialAntecedentes({ paciente, registros }: Props) {
 
 /* ═══ Card de registro ═══ */
 
+function ResumenActual({ icono, titulo, cantidad, detalle, tono }: { icono: React.ReactNode; titulo: string; cantidad: number; detalle: string; tono: 'orange' | 'purple' | 'blue' }) {
+    const estilos = {
+        orange: 'border-orange-500/20 bg-orange-500/[0.06] text-orange-400',
+        purple: 'border-purple-500/20 bg-purple-500/[0.06] text-purple-400',
+        blue: 'border-sky-500/20 bg-sky-500/[0.06] text-sky-400',
+    }[tono];
+
+    return <div className={clsx('rounded-xl border p-4', estilos)}><div className="flex items-start justify-between gap-3"><div className="rounded-lg bg-black/5 p-2 dark:bg-white/5">{icono}</div><span className="text-[22px] font-black leading-none">{cantidad}</span></div><p className="mt-3 text-[12px] font-bold text-ink dark:text-ink-dark">{titulo}</p><p className="mt-1 text-[10px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{detalle}</p></div>;
+}
+
 function RegistroCard({ registro: r, numero }: { registro: RegistroHistorial; numero: number }) {
     const personales = [
         r.diabetes_personal && 'Diabetes',
@@ -224,9 +258,9 @@ function RegistroCard({ registro: r, numero }: { registro: RegistroHistorial; nu
             {/* Contenido */}
             <div className="px-4 py-3 space-y-3">
                 {/* Personales + Familiares en fila */}
-                <div className="flex flex-wrap gap-4">
+                <div className="grid gap-2 md:grid-cols-3">
                     {personales.length > 0 && (
-                        <div>
+                        <div className="rounded-xl border border-orange-500/15 bg-orange-500/[0.035] p-3">
                             <p className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-1.5">
                                 <User size={9} strokeWidth={2} className="text-category-fruits" /> Personales
                             </p>
@@ -236,7 +270,7 @@ function RegistroCard({ registro: r, numero }: { registro: RegistroHistorial; nu
                         </div>
                     )}
                     {familiares.length > 0 && (
-                        <div>
+                        <div className="rounded-xl border border-purple-500/15 bg-purple-500/[0.035] p-3">
                             <p className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-1.5">
                                 <Users size={9} strokeWidth={2} className="text-category-dairy" /> Familiares
                             </p>
@@ -246,7 +280,7 @@ function RegistroCard({ registro: r, numero }: { registro: RegistroHistorial; nu
                         </div>
                     )}
                     {medicamentos.length > 0 && (
-                        <div>
+                        <div className="rounded-xl border border-sky-500/15 bg-sky-500/[0.035] p-3">
                             <p className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-1.5">
                                 <Pill size={9} strokeWidth={2} className="text-category-others" /> Medicamentos
                             </p>

@@ -78,6 +78,7 @@ class AntecedentesEndocrinoMetabolicosController extends Controller
      */
     public function historial(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $registros = AntecedenteEndocrinoMetabolico::where('id_paciente', $paciente->id_paciente)
             ->latest('created_at')
             ->get()
@@ -110,6 +111,7 @@ class AntecedentesEndocrinoMetabolicosController extends Controller
                 'id_paciente'     => $paciente->id_paciente,
                 'nombre_completo' => trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' ')),
                 'ci'              => $paciente->ci,
+                'avatar_url'      => $paciente->user?->avatar_url,
             ],
             'registros' => $registros,
         ]);

@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ReporteEcografiaPdfController extends Controller
@@ -32,6 +33,25 @@ class ReporteEcografiaPdfController extends Controller
             ->latest('fecha_ecografia')
             ->get();
 
+        // DomPDF no puede leer de forma confiable las URLs protegidas de storage.
+        // Se incorpora cada imagen válida como data URI para que el informe sea autosuficiente.
+        $registros->each(function (EvaluacionEcografica $registro) {
+            $registro->imagen_pdf = null;
+
+            if (! $registro->archivo_informe || ! Storage::disk('public')->exists($registro->archivo_informe)) {
+                return;
+            }
+
+            $mime = Storage::disk('public')->mimeType($registro->archivo_informe) ?: 'image/jpeg';
+            if (! str_starts_with($mime, 'image/')) {
+                return;
+            }
+
+            $registro->imagen_pdf = 'data:'.$mime.';base64,'.base64_encode(
+                Storage::disk('public')->get($registro->archivo_informe)
+            );
+        });
+
         $nombre = trim(collect([$paciente->nombres, $paciente->apellido_paterno, $paciente->apellido_materno])->filter()->join(' '));
 
         $compatibles = $registros->where('morfologia_compatible_pmos', true)->count();
@@ -49,6 +69,8 @@ class ReporteEcografiaPdfController extends Controller
             'registros' => $registros,
             'filtros' => $filtros,
             'stats' => $stats,
+            'ultimoRegistro' => $registros->first(),
+            'registrosConImagen' => $registros->filter(fn (EvaluacionEcografica $registro) => filled($registro->imagen_pdf))->values(),
             'profesional' => $request->user(),
             'fechaGeneracion' => now(),
         ])->setPaper('a4')->stream("ecografia-{$paciente->getKey()}.pdf");

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -28,8 +28,14 @@
         .warn { color: #ad5c08; font-weight: bold; }
         .alert { background: #fff7e8; border-left: 4px solid #e49a20; padding: 8px 10px; margin: 6px 0; }
         .note { background: #f2f7f5; border-left: 3px solid #2f8066; padding: 8px 10px; margin: 7px 0; }
-        .day { page-break-inside: avoid; margin-top: 12px; }
+        .day { page-break-inside: auto; margin-top: 12px; }
+        .day h3 { page-break-after: avoid; }
         .meal { page-break-inside: avoid; }
+        .plan-section { page-break-before: always; }
+        .avatar { float: left; width: 48px; height: 48px; margin: 8px 12px 5px 0; border: 2px solid #a9c7bc; border-radius: 50%; object-fit: cover; }
+        .avatar-fallback { float: left; width: 48px; height: 48px; margin: 8px 12px 5px 0; border: 2px solid #a9c7bc; border-radius: 50%; background: #e8f1ed; color: #174d3b; text-align: center; font-size: 16px; font-weight: bold; line-height: 44px; }
+        .header-meta { margin-left: 62px; }
+        .clear { clear: both; }
         .small { font-size: 7.5px; color: #65736c; }
         .right { text-align: right; }
         .center { text-align: center; }
@@ -43,18 +49,23 @@
     $sin = fn ($v) => filled($v) ? str_replace('_', ' ', (string) $v) : 'Sin registros';
     $lista = fn ($v) => is_array($v) ? $v : (filled($v) ? [$v] : []);
     $nombrePaciente = trim(implode(' ', array_filter([$paciente?->nombres, $paciente?->apellido_paterno, $paciente?->apellido_materno])));
+    $inicialesPaciente = collect(preg_split('/\s+/u', $nombrePaciente) ?: [])->filter()->take(2)->map(fn ($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))->implode('') ?: 'P';
 @endphp
 
 <header class="header">
     <div class="report-type">Reporte profesional · {{ $fechaGeneracion->format('d/m/Y') }}</div>
-    <div class="brand"><span class="brand-mark">●</span>Nutrigo · Salud integral</div>
+    <div class="brand"><span class="brand-mark">●</span>Almendra Nutrición</div>
     <div class="subtitle">PLATAFORMA DE SALUD ENDOCRINOLÓGICA Y NUTRICIONAL</div>
     <h1>Reporte justificativo del plan alimentario semanal</h1>
     <div class="subtitle">Planificación personalizada con asistencia experta, trazabilidad clínica y validación profesional</div>
-    <table class="grid" style="color:white;margin-top:9px">
-        <tr><td><span class="label">Paciente</span><br><b>{{ $nombrePaciente ?: 'Sin registro' }}</b></td><td><span class="label">Nutricionista responsable</span><br><b>{{ $nutricionista?->name ?? 'Sin registro' }}</b></td></tr>
-        <tr><td><span class="label">Estado y periodo</span><br>{{ $sin($plan->estado_plan) }} · {{ $plan->fecha_inicio?->format('d/m/Y') ?? 'Sin fecha' }} a {{ $plan->fecha_fin?->format('d/m/Y') ?? 'Sin fecha' }}</td><td><span class="label">Fecha de emisión</span><br>{{ $fechaGeneracion->format('d/m/Y H:i') }}</td></tr>
-    </table>
+    @if($avatarPaciente)<img class="avatar" src="{{ $avatarPaciente }}" alt="Fotografía de la paciente">@else<div class="avatar-fallback">{{ $inicialesPaciente }}</div>@endif
+    <div class="header-meta">
+        <table class="grid" style="margin-top:9px">
+            <tr><td><span class="label">Paciente</span><br><b>{{ $nombrePaciente ?: 'Sin registro' }}</b></td><td><span class="label">Nutricionista responsable</span><br><b>{{ $nutricionista?->name ?? 'Sin registro' }}</b></td></tr>
+            <tr><td><span class="label">Estado y periodo</span><br>{{ $sin($plan->estado_plan) }} · {{ $plan->fecha_inicio?->format('d/m/Y') ?? 'Sin fecha' }} a {{ $plan->fecha_fin?->format('d/m/Y') ?? 'Sin fecha' }}</td><td><span class="label">Fecha de emisión</span><br>{{ $fechaGeneracion->format('d/m/Y H:i') }}</td></tr>
+        </table>
+    </div>
+    <div class="clear"></div>
 </header>
 
 <h2>A. Datos generales del paciente</h2>
@@ -102,23 +113,23 @@
 @endif
 
 <h2>F. Criterios expertos de selección de recetas</h2>
-<div class="note">El sistema seleccionó y ordenó recetas considerando compatibilidad con el tipo de comida, alergias y restricciones, preferencias del paciente, resistencia a la insulina, bajo índice glucémico, aporte de proteína y fibra, cercanía a las calorías objetivo y diversidad semanal. Cuando existían siete o más alternativas compatibles, evitó la repetición durante la semana.</div>
+<div class="note">El sistema seleccionó y ordenó recetas considerando compatibilidad con el tipo de comida, alergias y restricciones, preferencias del paciente, resistencia a la insulina, bajo índice glucémico y cercanía conjunta a los objetivos energéticos y de macronutrientes. La variedad se aplicó entre alternativas nutricionalmente equivalentes, sin sacrificar el balance para obtener recetas diferentes.</div>
 <ul>
     <li>Las restricciones clínicas se aplicaron como criterio de descarte.</li>
     <li>Las preferencias se utilizaron para aumentar la afinidad, sin reemplazar la seguridad alimentaria.</li>
-    <li>La cercanía calórica ordenó las opciones, pero no descartó recetas compatibles.</li>
-    <li>El puntaje ajustado incorpora diversidad y alternancia de fuentes proteicas.</li>
+    <li>La selección comparó calorías, proteínas, carbohidratos, grasas y fibra de forma conjunta.</li>
+    <li>El puntaje ajustado incorpora balance nutricional, diversidad y alternancia de fuentes proteicas.</li>
 </ul>
 
 <h2>G. Resumen nutricional semanal</h2>
 <table>
-    <thead><tr><th>Métrica</th><th class="right">Objetivo semanal</th><th class="right">Planificado</th><th class="right">Diferencia</th><th class="right">Diferencia %</th><th>Evaluación</th></tr></thead>
+    <thead><tr><th>Métrica</th><th class="right">Objetivo semanal</th><th class="right">Planificado</th><th class="right">Diferencia</th><th class="right">Cumplimiento</th><th>Evaluación</th></tr></thead>
     <tbody>@foreach($resumen as $fila)<tr>
-        <td><b>{{ $fila['nombre'] }}</b></td><td class="right">{{ number_format($fila['objetivo'],2) }} {{ $fila['unidad'] }}</td><td class="right">{{ number_format($fila['planificado'],2) }} {{ $fila['unidad'] }}</td><td class="right">{{ number_format($fila['diferencia'],2) }}</td><td class="right">{{ number_format($fila['porcentaje'],1) }}%</td><td class="{{ $fila['alerta']?'warn':'ok' }}">{{ $fila['alerta']?'Revisar (>15%)':'Dentro del margen' }}</td>
+        <td><b>{{ $fila['nombre'] }}</b></td><td class="right">{{ number_format($fila['objetivo'],2) }} {{ $fila['unidad'] }}</td><td class="right">{{ number_format($fila['planificado'],2) }} {{ $fila['unidad'] }}</td><td class="right">{{ number_format($fila['diferencia'],2) }}</td><td class="right">{{ number_format($fila['porcentaje'],1) }}%</td><td class="{{ $fila['alerta']?'warn':'ok' }}">{{ $fila['evaluacion'] }}</td>
     </tr>@endforeach</tbody>
 </table>
 
-<h2>H. Plan semanal detallado y justificación</h2>
+<h2 class="plan-section">H. Plan semanal detallado y justificación</h2>
 @foreach($plan->dias as $dia)
 <section class="day">
     <h3>{{ $dia->nombre_dia }} {{ $dia->fecha ? '· '.$dia->fecha->format('d/m/Y') : '' }}</h3>
@@ -147,24 +158,16 @@
 </section>
 @endforeach
 
-<h2>I. Advertencias y revisión profesional</h2>
-<ul>
-    <li>Comidas/componentes manuales pendientes: <b>{{ $componentesManuales }}</b>.</li>
-    <li>Recetas repetidas por disponibilidad limitada: <b>{{ $repeticiones }}</b>.</li>
-    <li>Desviaciones nutricionales superiores a ±15%: <b>{{ $desviaciones->count() }}</b>@if($desviaciones->isNotEmpty()) ({{ $desviaciones->pluck('nombre')->implode(', ') }})@endif.</li>
-    @forelse($lista($recomendacion?->alertas) as $alerta)<li class="warn">{{ $alerta }}</li>@empty<li>Alertas expertas adicionales: sin registros.</li>@endforelse
-</ul>
-
-<h2>J. Conclusión del sistema experto</h2>
+<h2>I. Conclusión del sistema experto</h2>
 <div class="note">El plan alimentario semanal fue generado a partir de la recomendación nutricional experta aprobada, considerando los diagnósticos clínicos, requerimientos nutricionales, restricciones alimentarias, preferencias y hábitos registrados. Las recetas fueron seleccionadas priorizando compatibilidad clínica, aporte nutricional y diversidad semanal.</div>
 
-<h2>K. Validación profesional</h2>
+<h2>J. Validación profesional</h2>
 <table class="grid">
     <tr><td><span class="label">Estado del plan</span><br><span class="value">{{ $sin($plan->estado_plan) }}</span></td><td><span class="label">Responsable de aprobación</span><br>{{ $plan->aprobador?->name ?? 'Sin registro' }}</td></tr>
     <tr><td><span class="label">Fecha de aprobación</span><br>{{ $plan->fecha_aprobacion?->format('d/m/Y H:i') ?? 'Sin registros' }}</td><td><span class="label">Observaciones</span><br>{{ $plan->observaciones ?: 'Sin registros' }}</td></tr>
 </table>
 <p class="center value">{{ in_array($plan->estado_plan, ['aprobado','finalizado']) ? 'Validado por nutricionista responsable' : 'Pendiente de validación profesional' }}</p>
 
-<footer class="footer"><span class="footer-brand">Nutrigo</span> · Documento clínico-nutricional generado con asistencia experta. Requiere interpretación y validación profesional.</footer>
+<footer class="footer"><span class="footer-brand">Almendra Nutrición</span> · Documento clínico-nutricional generado con asistencia experta. Requiere interpretación y validación profesional.</footer>
 </body>
 </html>

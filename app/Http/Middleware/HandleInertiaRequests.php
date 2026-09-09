@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 use App\Services\Notificaciones\NotificacionInternaService;
+use App\Services\Nutricion\VigenciaPlanesNutricionistaService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -54,6 +55,9 @@ class HandleInertiaRequests extends Middleware
             'notificaciones' => fn () => $user
                 ? app(NotificacionInternaService::class)->obtenerResumenParaUsuario($user)
                 : ['total_no_leidas' => 0, 'ultimas' => []],
+            'alertas_vigencia' => fn () => $user && $user->tieneRol('nutricionista')
+                ? app(VigenciaPlanesNutricionistaService::class)->navbar($user)
+                : ['total' => 0, 'items' => []],
         ];
     }
 }

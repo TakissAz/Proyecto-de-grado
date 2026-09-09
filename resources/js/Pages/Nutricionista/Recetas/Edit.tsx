@@ -41,6 +41,7 @@ interface Receta {
   id_receta: number;
   nombre: string;
   descripcion: string | null;
+  imagen_url: string | null;
   tipo_comida: string;
   porciones: number;
   tiempo_preparacion_minutos: number | null;

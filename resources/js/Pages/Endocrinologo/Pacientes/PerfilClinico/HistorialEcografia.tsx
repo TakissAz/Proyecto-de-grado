@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ScanSearch, TrendingUp, CheckCircle2, XCircle, Activity, BarChart3, Eye, FileDown } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
-import AvatarIniciales from '@/Components/ui/avatar-iniciales';
+import AvatarPaciente from '@/Components/ui/avatar-paciente';
 import clsx from 'clsx';
 import type { PageProps } from '@/types';
 
@@ -25,7 +25,7 @@ interface EcografiaRegistro {
 }
 
 interface Props extends PageProps {
-    paciente: { id_paciente: number; nombre_completo: string; ci: string };
+    paciente: { id_paciente: number; nombre_completo: string; ci: string; avatar_url?: string | null };
     registros: EcografiaRegistro[];
 }
 
@@ -94,7 +94,7 @@ export default function HistorialEcografia({ paciente, registros }: Props) {
                     <div className="px-5 pb-5 -mt-7">
                         <div className="flex items-end gap-4">
                             <div className="rounded-full border-[3px] border-surface-card shadow-md dark:border-surface-card-dark">
-                                <AvatarIniciales nombre={paciente.nombre_completo} size={56} />
+                                <AvatarPaciente nombre={paciente.nombre_completo} avatarUrl={paciente.avatar_url} size="lg" />
                             </div>
                             <div className="flex-1 pb-1">
                                 <h1 className="text-[18px] font-bold text-ink dark:text-ink-dark leading-tight">{paciente.nombre_completo}</h1>

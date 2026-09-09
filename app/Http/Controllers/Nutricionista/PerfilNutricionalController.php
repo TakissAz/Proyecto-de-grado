@@ -27,6 +27,8 @@ use App\Models\Receta;
 use App\Services\Nutricion\PerfilNutricionalService;
 use App\Services\Nutricion\RequerimientoNutricionalService;
 use App\Services\Nutricion\ElegibilidadPlanificacionNutricionalService;
+use App\Services\SistemaExperto\OrquestadorNutricionalExpertoService;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -41,10 +43,12 @@ class PerfilNutricionalController extends Controller
         private readonly PerfilNutricionalService $service,
         private readonly RequerimientoNutricionalService $requerimientoService,
         private readonly ElegibilidadPlanificacionNutricionalService $elegibilidadService,
+        private readonly OrquestadorNutricionalExpertoService $orquestadorNutricional,
     ) {}
 
     public function index(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         $elegibilidad = $this->elegibilidadService->evaluar($paciente);
         $ultima = fn (string $relacion, string $fecha, string $id) => $paciente->{$relacion}()
             ->where('estado', true)->latest($fecha)->latest($id)->first();
@@ -77,7 +81,11 @@ class PerfilNutricionalController extends Controller
             'recomendacionExpertaAprobada' => $this->service->recomendacionExpertaAprobada($paciente),
             'elegibilidadPlanificacion' => $elegibilidad,
             'derivacionNutricional' => Schema::hasTable('derivaciones_nutricionales')
-                ? $paciente->derivacionesNutricionales()->with('endocrinologo:id,name')->latest('fecha_derivacion')->first()
+                ? $paciente->derivacionesNutricionales()
+                    ->with('endocrinologo:id,name')
+                    ->whereIn('estado', ['pendiente', 'vista', 'en_proceso'])
+                    ->latest('fecha_derivacion')
+                    ->first()
                 : null,
             'puedeGenerarPlanSemanal' => $elegibilidad['elegible']
                 && $this->service->recomendacionExpertaAprobada($paciente) !== null,
@@ -85,7 +93,7 @@ class PerfilNutricionalController extends Controller
                 'id_alimento', 'nombre', 'grupo_alimentario', 'unidad_base', 'cantidad_base', 'calorias', 'proteinas', 'carbohidratos', 'grasas', 'fibra',
             ]),
             'recetasPlan' => Receta::query()->where('estado', 'activo')->orderBy('nombre')->limit(200)->get([
-                'id_receta', 'nombre', 'tipo_comida', 'porciones', 'calorias_totales', 'proteinas_totales', 'carbohidratos_totales', 'grasas_totales', 'fibra_total',
+                'id_receta', 'nombre', 'imagen_url', 'tipo_comida', 'porciones', 'calorias_totales', 'proteinas_totales', 'carbohidratos_totales', 'grasas_totales', 'fibra_total',
             ]),
             'opciones' => [
                 'nivel_actividad' => ['sedentario', 'ligero', 'moderado', 'activo', 'muy_activo'],
@@ -103,6 +111,28 @@ class PerfilNutricionalController extends Controller
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialPlanes', [
             'paciente' => $paciente,
             'historialPlanes' => $this->service->historialPlanes($paciente),
+        ]);
+    }
+
+    public function adherencia(Paciente $paciente): Response
+    {
+        $paciente->loadMissing('user');
+
+        return Inertia::render('Nutricionista/Pacientes/Adherencia/Index', [
+            'paciente' => $paciente,
+            'seguimiento' => $this->service->seguimientoPaciente($paciente),
+            'analitica' => $this->service->analiticaEvolucion($paciente),
+            'fechaActualBolivia' => now('America/La_Paz')->toDateString(),
+            'horaActualBolivia' => now('America/La_Paz')->format('H:i'),
+        ]);
+    }
+
+    public function analiticaEvolucion(Paciente $paciente): Response
+    {
+        $paciente->loadMissing('user');
+        return Inertia::render('Nutricionista/Pacientes/AnaliticaEvolucion/Index', [
+            'paciente' => $paciente,
+            'analitica' => $this->service->analiticaEvolucion($paciente),
         ]);
     }
 
@@ -185,8 +215,23 @@ class PerfilNutricionalController extends Controller
 
         try {
             $this->requerimientoService->calcularYCrear($paciente, (int) Auth::id());
+            $elegibilidad = $this->elegibilidadService->evaluar($paciente);
 
-            return back()->with('success', 'Requerimientos nutricionales calculados correctamente.');
+            if ($elegibilidad['elegible']) {
+                /** @var User $nutricionista */
+                $nutricionista = Auth::user();
+                try {
+                    $this->orquestadorNutricional->generarRecomendacionBase($paciente, $nutricionista);
+                } catch (Throwable $exception) {
+                    report($exception);
+
+                    return back()->with('error', 'Los requerimientos se recalcularon, pero no se pudo actualizar la orientación experta. Puede volver a generarla desde su sección.');
+                }
+            }
+
+            return back()->with('success', $elegibilidad['elegible']
+                ? 'Requerimientos recalculados y orientación experta actualizada. La nueva recomendación requiere validación profesional.'
+                : 'Requerimientos nutricionales calculados correctamente.');
         } catch (ValidationException) {
             return back()->with('error', 'No se pudieron calcular los requerimientos nutricionales.');
         } catch (Throwable $exception) {
@@ -200,14 +245,30 @@ class PerfilNutricionalController extends Controller
 
     public function historialEvaluaciones(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialEvaluaciones', [
             'paciente' => $paciente,
             'registros' => $paciente->evaluacionesNutricionales()->latest('fecha_evaluacion')->get(),
         ]);
     }
 
+    public function historialRequerimientos(Paciente $paciente): Response
+    {
+        $paciente->loadMissing('user');
+
+        return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialRequerimientos', [
+            'paciente' => $paciente,
+            'registros' => $paciente->requerimientosNutricionales()
+                ->whereNull('deleted_at')
+                ->latest('created_at')
+                ->latest('id_requerimiento_nutricional')
+                ->get(),
+        ]);
+    }
+
     public function historialHabitos(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialHabitos', [
             'paciente' => $paciente,
             'registros' => $paciente->habitosAlimentarios()->latest('created_at')->get(),
@@ -216,6 +277,7 @@ class PerfilNutricionalController extends Controller
 
     public function historialPreferencias(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialPreferencias', [
             'paciente' => $paciente,
             'registros' => $paciente->preferenciasAlimentarias()->latest('created_at')->get(),
@@ -224,6 +286,7 @@ class PerfilNutricionalController extends Controller
 
     public function historialRestricciones(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialRestricciones', [
             'paciente' => $paciente,
             'registros' => $paciente->restriccionesAlimentarias()->latest('created_at')->get(),
@@ -232,6 +295,7 @@ class PerfilNutricionalController extends Controller
 
     public function historialObjetivos(Paciente $paciente): Response
     {
+        $paciente->loadMissing('user');
         return Inertia::render('Nutricionista/Pacientes/PerfilNutricional/HistorialObjetivos', [
             'paciente' => $paciente,
             'registros' => $paciente->objetivosNutricionales()->latest('created_at')->get(),

@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
+            LimpiezaDatosObsoletosSeeder::class,
             PacienteDiagnosticoClinicoSeeder::class,
             PerfilNutricionalPacienteSeeder::class,
             OtrosPerfilesNutricionalesSeeder::class,
@@ -20,7 +21,10 @@ class DatabaseSeeder extends Seeder
             PerfilesEndocrinologicosCompletosSeeder::class,
             ReglasNutricionalesSeeder::class,
             FlujoOperativoNutricionalRealistaSeeder::class,
+            ProgresoReportesNutricionistaSeeder::class,
             CompletarTodosLosPacientesSeeder::class,
+            CompletarComponentesPlanesSeeder::class,
+            FotosPerfilPacientesSeeder::class,
         ]);
     }
 }

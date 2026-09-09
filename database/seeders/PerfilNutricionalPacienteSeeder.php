@@ -20,7 +20,7 @@ class PerfilNutricionalPacienteSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $nutricionista = User::query()->where('email', 'nutri@pmos.test')->firstOrFail();
-            $paciente = Paciente::query()->where('ci', 'CLINICA-PMOS-001')->firstOrFail();
+            $paciente = Paciente::query()->where('ci', PacienteDiagnosticoClinicoSeeder::CI_PACIENTE)->firstOrFail();
 
             $consulta = ConsultaNutricional::withTrashed()->updateOrCreate(
                 ['id_paciente' => $paciente->id_paciente, 'fecha_consulta' => '2026-08-18'],

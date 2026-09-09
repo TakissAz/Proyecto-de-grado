@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Hash;
 
 class PacienteDiagnosticoClinicoSeeder extends Seeder
 {
+    public const CI_PACIENTE = '8297316';
+    public const EMAIL_PACIENTE = 'maria.quispe@nutrigo.bo';
+
     public function run(): void
     {
         DB::transaction(function (): void {
@@ -30,23 +33,27 @@ class PacienteDiagnosticoClinicoSeeder extends Seeder
                 ->where('email', 'endocrino@pmos.test')
                 ->firstOrFail();
 
-            $usuarioPaciente = User::withTrashed()->updateOrCreate(
-                ['email' => 'paciente.clinica@pmos.test'],
-                [
-                    'name' => 'María Fernanda Quispe Flores',
-                    'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
-                    'estado' => 'activo',
-                ]
-            );
+            $usuarioPaciente = User::withTrashed()
+                ->whereIn('email', [self::EMAIL_PACIENTE, 'paciente.clinica@pmos.test'])
+                ->first() ?? new User();
+            $usuarioPaciente->forceFill([
+                'email' => self::EMAIL_PACIENTE,
+                'name' => 'María Fernanda Quispe Flores',
+                'password' => $usuarioPaciente->exists ? $usuarioPaciente->password : Hash::make('password'),
+                'email_verified_at' => now(),
+                'estado' => 'activo',
+                'deleted_at' => null,
+            ])->save();
             if ($usuarioPaciente->trashed()) {
                 $usuarioPaciente->restore();
             }
             $this->asignarRolPaciente($usuarioPaciente);
 
-            $paciente = Paciente::withTrashed()->updateOrCreate(
-                ['ci' => 'CLINICA-PMOS-001'],
-                [
+            $paciente = Paciente::withTrashed()
+                ->whereIn('ci', [self::CI_PACIENTE, 'CLINICA-PMOS-001'])
+                ->first() ?? new Paciente();
+            $paciente->forceFill([
+                    'ci' => self::CI_PACIENTE,
                     'user_id' => $usuarioPaciente->id,
                     'nombres' => 'María Fernanda',
                     'apellido_paterno' => 'Quispe',
@@ -59,9 +66,9 @@ class PacienteDiagnosticoClinicoSeeder extends Seeder
                     'estado_civil' => 'soltera',
                     'fecha_registro' => now()->toDateString(),
                     'estado' => 'activo',
-                    'observaciones' => 'Caso demostrativo completo para evaluación PMOS y resistencia a la insulina.',
-                ]
-            );
+                    'observaciones' => 'Paciente derivada por alteraciones menstruales, signos de hiperandrogenismo y riesgo metabólico.',
+                    'deleted_at' => null,
+                ])->save();
             if ($paciente->trashed()) {
                 $paciente->restore();
             }

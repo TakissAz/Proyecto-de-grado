@@ -11,6 +11,7 @@ import {
   CookingPot,
   ShoppingCart,
   UserCog,
+  UserRound,
   ShieldCheck,
   DatabaseBackup,
   LogIn,
@@ -96,6 +97,11 @@ export const menuNutricionista: MenuItem[] = [
     icon: TrendingUp,
   },
   {
+    label: 'Vigencia de planes',
+    href: '/nutricionista/vigencia-planes',
+    icon: CalendarClock,
+  },
+  {
     label: 'Reportes',
     href: '/nutricionista/reportes',
     icon: FileBarChart,
@@ -109,6 +115,7 @@ export const menuPaciente: MenuItem[] = [
     href: '/paciente/dashboard',
     icon: LayoutDashboard,
   },
+  { label: 'Mi perfil', href: '/paciente/mi-perfil', icon: UserRound },
   {
     label: 'Mi Plan',
     href: '/paciente/mi-plan',
@@ -120,12 +127,17 @@ export const menuPaciente: MenuItem[] = [
     icon: ClipboardList,
   },
   {
+    label: 'Síntomas y bienestar',
+    href: '/paciente/sintomas',
+    icon: Activity,
+  },
+  {
     label: 'Lista de compras',
     href: '/paciente/compras',
     icon: ShoppingCart,
   },
   {
-    label: 'Orientación',
+    label: 'Habla con tu nutricionista',
     href: '/paciente/orientacion',
     icon: MessageSquare,
   },

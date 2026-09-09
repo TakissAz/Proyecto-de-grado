@@ -22,8 +22,10 @@ class CitaController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Cita::with(['paciente', 'profesional'])
+        $usuario = Auth::user();
+        $query = Cita::with(['paciente.user', 'profesional'])
             ->where('tipo_profesional', $this->tipoProfesional)
+            ->where('id_profesional', $usuario->id)
             ->latest('fecha_cita')
             ->latest('hora_inicio');
 
@@ -49,12 +51,13 @@ class CitaController extends Controller
             );
         }
 
-        $citas = $query->paginate(15)->through(fn (Cita $c) => [
+        $transformarCita = fn (Cita $c) => [
             'id_cita' => $c->id_cita,
             'paciente' => $c->paciente ? [
                 'id_paciente' => $c->paciente->id_paciente,
                 'nombre_completo' => trim("{$c->paciente->nombres} {$c->paciente->apellido_paterno} {$c->paciente->apellido_materno}"),
                 'ci' => $c->paciente->ci,
+                'avatar_url' => $c->paciente->user?->avatar_url,
             ] : null,
             'profesional' => $c->profesional ? ['id' => $c->profesional->id, 'name' => $c->profesional->name] : null,
             'tipo_profesional' => $c->tipo_profesional,
@@ -68,23 +71,36 @@ class CitaController extends Controller
             'estado' => $c->estado,
             'observaciones' => $c->observaciones,
             'motivo_cancelacion' => $c->motivo_cancelacion,
-        ]);
+        ];
+
+        $citas = $query->paginate(6)->withQueryString()->through($transformarCita);
+
+        // El calendario no puede depender de la pagina actual del listado. Se
+        // entrega una fuente completa y separada para pintar dias y ocupacion.
+        $citasAgenda = Cita::with(['paciente.user', 'profesional'])
+            ->where('tipo_profesional', $this->tipoProfesional)
+            ->where('id_profesional', $usuario->id)
+            ->orderBy('fecha_cita')
+            ->orderBy('hora_inicio')
+            ->get()
+            ->map($transformarCita)
+            ->values();
 
         $folder = $this->tipoProfesional === 'nutricionista' ? 'Nutricionista' : 'Endocrinologo';
-        $usuario = Auth::user();
-
-        $pacientes = Paciente::where('estado', 'activo')
+        $pacientes = Paciente::with('user')->where('estado', 'activo')
             ->orderBy('apellido_paterno')
             ->get()
             ->map(fn (Paciente $p) => [
                 'id_paciente' => $p->id_paciente,
                 'nombre_completo' => trim("{$p->nombres} {$p->apellido_paterno} {$p->apellido_materno}"),
                 'ci' => $p->ci,
+                'avatar_url' => $p->user?->avatar_url,
             ])
             ->values();
 
         return Inertia::render("{$folder}/Citas/Index", [
             'citas' => $citas,
+            'citasAgenda' => $citasAgenda,
             'filtros' => $request->only(['fecha', 'estado', 'tipo_cita', 'modalidad', 'paciente']),
             'pacientes' => $pacientes,
             'profesional' => ['id' => $usuario->id, 'name' => $usuario->name],
@@ -94,13 +110,14 @@ class CitaController extends Controller
 
     public function create(): Response
     {
-        $pacientes = Paciente::where('estado', 'activo')
+        $pacientes = Paciente::with('user')->where('estado', 'activo')
             ->orderBy('apellido_paterno')
             ->get()
             ->map(fn (Paciente $p) => [
                 'id_paciente' => $p->id_paciente,
                 'nombre_completo' => trim("{$p->nombres} {$p->apellido_paterno} {$p->apellido_materno}"),
                 'ci' => $p->ci,
+                'avatar_url' => $p->user?->avatar_url,
             ])
             ->values();
 
@@ -133,7 +150,6 @@ class CitaController extends Controller
     {
         $validated = $request->validate([
             'id_paciente' => ['required', 'integer', 'exists:pacientes,id_paciente'],
-            'id_profesional' => ['required', 'integer', 'exists:users,id'],
             'fecha_cita' => ['required', 'date', 'after_or_equal:today'],
             'hora_inicio' => ['required', 'date_format:H:i'],
             'tipo_cita' => ['required', 'string', 'max:50'],
@@ -141,6 +157,8 @@ class CitaController extends Controller
             'motivo' => ['required', 'string', 'max:500'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $validated['id_profesional'] = (int) Auth::id();
 
         try {
             $datosAgenda = $this->agendaService->validarOCrearDatosAgenda($validated);
@@ -164,13 +182,14 @@ class CitaController extends Controller
 
     public function edit(Cita $cita): Response
     {
-        $pacientes = Paciente::where('estado', 'activo')
+        $pacientes = Paciente::with('user')->where('estado', 'activo')
             ->orderBy('apellido_paterno')
             ->get()
             ->map(fn (Paciente $p) => [
                 'id_paciente' => $p->id_paciente,
                 'nombre_completo' => trim("{$p->nombres} {$p->apellido_paterno} {$p->apellido_materno}"),
                 'ci' => $p->ci,
+                'avatar_url' => $p->user?->avatar_url,
             ])
             ->values();
 

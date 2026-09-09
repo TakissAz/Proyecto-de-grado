@@ -14,7 +14,7 @@ class CitasPacienteService
     public function obtenerResumen(Paciente $paciente): array
     {
         $citas = $paciente->citas()->with('profesional')->orderBy('fecha_cita')->orderBy('hora_inicio')->get();
-        $pendientes = $citas->filter(fn (Cita $cita) => in_array($cita->estado, self::ACTIVAS, true) && $this->fechaHora($cita)->greaterThanOrEqualTo(now()))->values();
+        $pendientes = $citas->filter(fn (Cita $cita) => in_array($cita->estado, self::ACTIVAS, true) && $this->fechaHora($cita)->greaterThanOrEqualTo(now('America/La_Paz')))->values();
         $historial = $citas->reject(fn (Cita $cita) => $pendientes->contains(fn (Cita $pendiente) => $pendiente->getKey() === $cita->getKey()))
             ->sortByDesc(fn (Cita $cita) => $this->fechaHora($cita)->timestamp)->values();
         $ultima = $historial->first();
@@ -54,6 +54,6 @@ class CitasPacienteService
 
     private function fechaHora(Cita $cita): Carbon
     {
-        return Carbon::parse($cita->fecha_cita->toDateString().' '.substr((string) $cita->hora_inicio, 0, 8));
+        return Carbon::parse($cita->fecha_cita->toDateString().' '.substr((string) $cita->hora_inicio, 0, 8), 'America/La_Paz');
     }
 }

@@ -1,115 +1,15 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Historial menstrual</title>
-<style>
-@page{margin:28px 34px}
-body{font-family:DejaVu Sans,sans-serif;color:#243632;font-size:9.5px;line-height:1.45}
-.brand{color:#176b5b;font-size:9px;font-weight:bold;letter-spacing:1.2px}
-.header{border-bottom:3px solid #1f8a70;padding-bottom:12px}
-.header h1{font-size:20px;margin:4px 0;color:#123d35}
-.meta{color:#657a75}
-.hero{margin:14px 0;padding:12px 14px;background:#eaf7f3;border-radius:8px}
-.hero .label{font-size:8px;text-transform:uppercase;color:#667b76}
-.hero strong{font-size:15px;color:#176b5b}
-h2{font-size:12px;color:#176b5b;border-bottom:1px solid #b9d8d0;padding-bottom:4px;margin:15px 0 7px}
-table{width:100%;border-collapse:collapse;margin:5px 0}
-td,th{border:1px solid #d6e2df;padding:5px 6px;text-align:left;font-size:8.5px}
-th{background:#f2f7f5;color:#365d54}
-.label{font-size:8px;text-transform:uppercase;color:#667b76}
-.value{font-size:11px;font-weight:bold}
-.stats td{width:25%;text-align:center;background:#f7fbfa}
-.stats .num{font-size:16px;font-weight:bold;color:#176b5b}
-.chip{display:inline-block;padding:2px 6px;border-radius:8px;font-size:7.5px;font-weight:bold;background:#fff2e0;color:#b45d00;margin:1px}
-.chip-red{background:#fde3e0;color:#c0392b}
-.chip-green{background:#e3f5e0;color:#1e7a2e}
-.filtro{display:inline-block;padding:3px 8px;background:#fff;border:1px solid #80bcae;border-radius:10px;font-size:8px;margin-right:5px}
-.footer{position:fixed;bottom:-15px;left:0;right:0;text-align:center;color:#78908a;font-size:8px}
-.note{padding:9px;background:#fff8df;border:1px solid #e3cb75;border-radius:6px;margin-top:14px}
-.signature{margin-top:28px;width:45%;border-top:1px solid #667b76;padding-top:5px;text-align:center;font-size:8.5px}
+﻿<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Evolución menstrual</title><style>
+@page{margin:26px 32px 38px}body{font-family:DejaVu Sans,sans-serif;color:#293a35;font-size:8.6px;line-height:1.4}h1{margin:3px 0;font-size:20px;color:#153f35}h2{margin:15px 0 7px;border-bottom:1px solid #bed5cd;padding-bottom:4px;color:#176b5b;font-size:11.5px}.header{border-bottom:3px solid #25836b;padding-bottom:10px}.brand{color:#25836b;font-size:8px;font-weight:bold;letter-spacing:1.2px}.right{float:right;text-align:right}.clear{clear:both}.muted{color:#6c807a}.hero{margin:11px 0;padding:10px 12px;border:1px solid #d5e5df;background:#f3f8f6}.hero strong{font-size:14px;color:#164d40}.label{font-size:7px;font-weight:bold;text-transform:uppercase;color:#6d817a}.grid{width:100%;border-collapse:separate;border-spacing:5px}.grid td{vertical-align:top}.stat{border:1px solid #d8e4e0;background:#f8faf9;padding:8px}.stat b{display:block;margin-top:2px;color:#176b5b;font-size:14px}.panel{border:1px solid #d8e4e0;padding:9px}.bar-row{margin:6px 0}.track{height:8px;background:#edf0ef}.fill{height:8px;background:#e39422}.red{background:#d84b42}.purple{background:#9b4fc4}.blue{background:#3790bd}.green{background:#3a9860}.value{float:right;font-weight:bold;color:#ad6500}.scale{font-size:6.8px;color:#899792}.timeline{width:100%;border-collapse:collapse}.timeline th,.timeline td{border:1px solid #d7e2de;padding:5px;vertical-align:top}.timeline th{background:#eaf2ef;color:#24594c;font-size:7.3px}.alert{font-weight:bold;color:#b04b35}.filter{display:inline-block;margin:4px 3px 0 0;border:1px solid #b8d4ca;padding:2px 6px}.note{margin-top:12px;border:1px solid #d7e2de;background:#f6f9f8;padding:8px}.footer{position:fixed;bottom:-22px;left:0;right:0;border-top:1px solid #cad5d1;padding-top:5px;text-align:center;color:#7b8d87;font-size:7px}.avoid{page-break-inside:avoid}
 </style></head><body>
-
-<div class="header">
-    <div class="brand">HISTORIA CLÍNICA · SALUD ENDOCRINA</div>
-    <h1>Reporte de historia menstrual</h1>
-    <div class="meta">Documento clínico · Generado {{ $fechaGeneracion->format('d/m/Y H:i') }}</div>
-</div>
-
-<div class="hero">
-    <div class="label">Paciente</div>
-    <strong>{{ $nombrePaciente ?: 'Sin nombre' }}</strong>
-    <div>CI: {{ $paciente->ci ?: 'N/D' }} · Edad: {{ $paciente->fecha_nacimiento?->age ?? 'N/D' }} años</div>
-</div>
-
-@if($filtros['regularidad'] ?? $filtros['hallazgo'] ?? $filtros['desde'] ?? $filtros['hasta'] ?? false)
-<h2>Filtros aplicados</h2>
-<div>
-    @if($filtros['regularidad'] ?? false)<span class="filtro">Regularidad: {{ ucfirst($filtros['regularidad']) }}</span>@endif
-    @if($filtros['hallazgo'] ?? false)<span class="filtro">Hallazgo: {{ str_replace('_', ' ', $filtros['hallazgo']) }}</span>@endif
-    @if($filtros['desde'] ?? false)<span class="filtro">Desde: {{ $filtros['desde'] }}</span>@endif
-    @if($filtros['hasta'] ?? false)<span class="filtro">Hasta: {{ $filtros['hasta'] }}</span>@endif
-</div>
-@endif
-
-<h2>Resumen estadístico</h2>
-<table class="stats">
-    <tr>
-        <td><div class="num">{{ $stats['total'] }}</div><div class="label">Registros</div></td>
-        <td><div class="num">{{ $stats['promedio_duracion'] ? round($stats['promedio_duracion'], 1) : '—' }}</div><div class="label">Duración prom. (días)</div></td>
-        <td><div class="num">{{ $stats['promedio_intervalo'] ? round($stats['promedio_intervalo'], 1) : '—' }}</div><div class="label">Intervalo prom. (días)</div></td>
-        <td><div class="num">{{ $stats['con_anovulacion'] }}</div><div class="label">Anovulación confirmada</div></td>
-    </tr>
-</table>
-
-<h2>Registros cronológicos ({{ $registros->count() }})</h2>
-@if($registros->isEmpty())
-    <p style="color:#657a75;font-style:italic">No se encontraron registros con los filtros seleccionados.</p>
-@else
-<table>
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Regularidad</th>
-            <th>Duración</th>
-            <th>Intervalo</th>
-            <th>Menarquía</th>
-            <th>Últ. menst.</th>
-            <th>Progest.</th>
-            <th>Hallazgos</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($registros as $r)
-        <tr>
-            <td>{{ $r->created_at?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ ['regular'=>'Regular','irregular'=>'Irregular','ausente'=>'Ausente'][$r->regularidad_ciclo] ?? '—' }}</td>
-            <td>{{ $r->duracion_ciclo_dias ? $r->duracion_ciclo_dias.' días' : '—' }}</td>
-            <td>{{ $r->intervalo_entre_ciclos_dias ? $r->intervalo_entre_ciclos_dias.' días' : '—' }}</td>
-            <td>{{ $r->edad_menarquia ? $r->edad_menarquia.' años' : '—' }}</td>
-            <td>{{ $r->fecha_ultima_menstruacion?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $r->progesterona_lutea ?? '—' }}</td>
-            <td>
-                @if($r->amenorrea)<span class="chip">Amenorrea</span>@endif
-                @if($r->oligomenorrea)<span class="chip">Oligomenorrea</span>@endif
-                @if($r->sangrado_abundante)<span class="chip">Sangrado abund.</span>@endif
-                @if($r->dolor_menstrual)<span class="chip">Dolor</span>@endif
-                @if($r->sospecha_anovulacion)<span class="chip">Sosp. anovulación</span>@endif
-                @if($r->confirma_anovulacion_por_progesterona)<span class="chip chip-red">Anovulación confirmada</span>@endif
-                @if(!$r->amenorrea && !$r->oligomenorrea && !$r->sangrado_abundante && !$r->dolor_menstrual && !$r->sospecha_anovulacion && !$r->confirma_anovulacion_por_progesterona)
-                    <span class="chip chip-green">Sin hallazgos</span>
-                @endif
-            </td>
-        </tr>
-        @if($r->observaciones)
-        <tr>
-            <td colspan="8" style="background:#fafcfb;color:#657a75;font-style:italic">Obs.: {{ $r->observaciones }}</td>
-        </tr>
-        @endif
-        @endforeach
-    </tbody>
-</table>
-@endif
-
-<div class="note">
-    <b>Nota clínica:</b> Este reporte refleja los registros de historia menstrual de la paciente según los filtros aplicados. La interpretación clínica es responsabilidad del profesional tratante.
-</div>
-
-<div class="footer">Reporte confidencial · Historia menstrual de {{ $nombrePaciente }}</div>
-</body></html>
+<div class="header"><div class="right"><b>{{ $fechaGeneracion->format('d/m/Y H:i') }}</b><br><span class="muted">Hora de Bolivia</span></div><div class="brand">Almendra Nutrición · SALUD MENSTRUAL</div><h1>Evolución de la historia menstrual</h1><div class="muted">Informe longitudinal para apoyo de la evaluación endocrinológica</div><div class="clear"></div></div>
+<div class="hero"><div class="right"><span class="label">Profesional responsable</span><br><b>{{ $profesional->name ?? 'Sin registro' }}</b></div><span class="label">Paciente</span><br><strong>{{ $nombrePaciente ?: 'Sin nombre' }}</strong><br>CI: {{ $paciente->ci ?: 'N/D' }} · Edad: {{ $paciente->fecha_nacimiento?->age ?? 'N/D' }} años<div class="clear"></div></div>
+@if($filtros['regularidad'] ?? $filtros['hallazgo'] ?? $filtros['desde'] ?? $filtros['hasta'] ?? false)<div><b>Alcance filtrado:</b> @if($filtros['regularidad'] ?? false)<span class="filter">{{ ucfirst($filtros['regularidad']) }}</span>@endif @if($filtros['hallazgo'] ?? false)<span class="filter">{{ ucfirst(str_replace('_',' ',$filtros['hallazgo'])) }}</span>@endif @if($filtros['desde'] ?? false)<span class="filter">Desde {{ $filtros['desde'] }}</span>@endif @if($filtros['hasta'] ?? false)<span class="filter">Hasta {{ $filtros['hasta'] }}</span>@endif</div>@endif
+<h2>1. Resumen del periodo</h2><table class="grid"><tr><td class="stat"><span class="label">Controles</span><b>{{ $stats['total'] }}</b></td><td class="stat"><span class="label">Duración promedio</span><b>{{ $stats['promedio_duracion']!==null?round($stats['promedio_duracion'],1).' días':'—' }}</b></td><td class="stat"><span class="label">Intervalo promedio</span><b>{{ $stats['promedio_intervalo']!==null?round($stats['promedio_intervalo'],1).' días':'—' }}</b></td><td class="stat"><span class="label">Progesterona promedio</span><b>{{ $stats['promedio_progesterona']!==null?round($stats['promedio_progesterona'],1):'—' }}</b></td></tr></table>
+@if($registros->isNotEmpty())
+<table class="grid"><tr><td style="width:50%" class="panel avoid"><span class="label">Hallazgos registrados</span>@foreach($stats['hallazgos'] as $nombre=>$dato)<div class="bar-row"><b>{{ $nombre }}</b><span class="value">{{ $stats['total'] === 1 ? ($dato['cantidad'] > 0 ? 'Si' : 'No') : ($dato['cantidad'].' de '.$stats['total']) }}</span><div class="clear"></div><div class="track"><div class="fill {{ str_contains($nombre,'confirmada')?'red':(str_contains($nombre,'Dolor')?'purple':(str_contains($nombre,'Sangrado')?'blue':'')) }}" style="width:{{ $dato['porcentaje'] }}%"></div></div><span class="scale">{{ $stats['total'] === 1 ? ($dato['cantidad'] > 0 ? 'Presente en el registro' : 'Ausente en el registro') : 'Presente en '.$dato['cantidad'].' de '.$stats['total'].' controles' }}</span></div>@endforeach</td>
+<td style="width:50%" class="panel avoid"><span class="label">Regularidad registrada</span>@php($pctRegular=$stats['total']?round($stats['regulares']/$stats['total']*100,1):0)<div class="bar-row" style="margin-top:14px"><b>Ciclo regular</b><span class="value">{{ $stats['total'] === 1 ? ($stats['regulares'] > 0 ? 'Sí' : 'No') : ($stats['regulares'].' de '.$stats['total']) }}</span><div class="clear"></div><div class="track"><div class="fill green" style="width:{{ $pctRegular }}%"></div></div><span class="scale">{{ $stats['total'] === 1 ? ($stats['regulares'] > 0 ? 'Regular en el registro' : 'No regular en el registro') : 'Regular en '.$stats['regulares'].' de '.$stats['total'].' controles' }}</span></div><div class="note"><b>{{ $stats['con_anovulacion'] }} control(es)</b> con anovulación confirmada por progesterona. Los rangos deben interpretarse según el momento del ciclo y el contexto clínico.</div></td></tr></table>
+<h2>2. Evolución de las mediciones</h2>
+@foreach($cronologicos as $r)<div class="avoid" style="margin-bottom:9px"><b>{{ $r->created_at?->format('d/m/Y') }}</b><table style="width:100%;border-collapse:separate;border-spacing:4px"><tr><td style="width:33%"><span class="label">Intervalo</span><div class="track"><div class="fill {{ $r->intervalo_entre_ciclos_dias>=21&&$r->intervalo_entre_ciclos_dias<=35?'green':'' }}" style="width:{{ min(100,(($r->intervalo_entre_ciclos_dias??0)/60)*100) }}%"></div></div>{{ $r->intervalo_entre_ciclos_dias??'—' }} días</td><td style="width:33%"><span class="label">Duración</span><div class="track"><div class="fill {{ $r->duracion_ciclo_dias>=3&&$r->duracion_ciclo_dias<=7?'green':'' }}" style="width:{{ min(100,(($r->duracion_ciclo_dias??0)/14)*100) }}%"></div></div>{{ $r->duracion_ciclo_dias??'—' }} días</td><td style="width:33%"><span class="label">Progesterona lútea</span><div class="track"><div class="fill {{ ($r->progesterona_lutea??0)>=10?'green':'red' }}" style="width:{{ min(100,(($r->progesterona_lutea??0)/30)*100) }}%"></div></div>{{ $r->progesterona_lutea??'—' }} ng/mL</td></tr></table></div>@endforeach
+<h2>3. Detalle cronológico</h2><table class="timeline"><thead><tr><th>Fecha</th><th>Regularidad</th><th>Duración</th><th>Intervalo</th><th>Últ. menstruación</th><th>Progesterona</th><th>Interpretación</th></tr></thead><tbody>@foreach($cronologicos as $r) @php($alterada=$r->amenorrea||$r->oligomenorrea||$r->sospecha_anovulacion||$r->confirma_anovulacion_por_progesterona||in_array($r->regularidad_ciclo,['irregular','ausente']))<tr><td>{{ $r->created_at?->format('d/m/Y')??'—' }}</td><td>{{ ucfirst($r->regularidad_ciclo??'—') }}</td><td>{{ $r->duracion_ciclo_dias!==null?$r->duracion_ciclo_dias.' días':'—' }}</td><td>{{ $r->intervalo_entre_ciclos_dias!==null?$r->intervalo_entre_ciclos_dias.' días':'—' }}</td><td>{{ $r->fecha_ultima_menstruacion?->format('d/m/Y')??'—' }}</td><td>{{ $r->progesterona_lutea!==null?$r->progesterona_lutea.' ng/mL':'—' }}</td><td class="{{ $alterada?'alert':'' }}">{{ $alterada?'Patrón alterado':'Sin alteración evidente' }}</td></tr>@if($r->observaciones)<tr><td colspan="7" class="muted"><b>Observación:</b> {{ $r->observaciones }}</td></tr>@endif @endforeach</tbody></table>
+@else<div class="note">No se encontraron registros con los filtros seleccionados.</div>@endif
+<div class="note"><b>Lectura profesional:</b> Los hallazgos son respuestas clínicas de presencia o ausencia, no niveles porcentuales. Cuando existen varios controles, la longitud de cada barra indica en cuántos registros apareció el hallazgo; no representa su gravedad. La progesterona debe interpretarse según la fase del ciclo, tratamiento y criterio endocrinológico.</div><div class="footer">Documento confidencial · {{ $nombrePaciente }} · Almendra Nutrición</div></body></html>

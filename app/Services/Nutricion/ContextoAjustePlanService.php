@@ -5,6 +5,7 @@ namespace App\Services\Nutricion;
 use App\Models\Paciente;
 use App\Services\Paciente\SeguimientoSintomasPacienteService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class ContextoAjustePlanService
@@ -16,11 +17,17 @@ class ContextoAjustePlanService
         $plan = $paciente->planesAlimentarios()->whereIn('estado_plan', ['activo', 'aprobado'])
             ->orderByRaw("CASE WHEN estado_plan = 'activo' THEN 0 ELSE 1 END")
             ->latest('id_plan_alimentario')->first();
+        $hoy = Carbon::today('America/La_Paz');
+        if ($plan?->fecha_inicio?->gt($hoy)) return $this->contextoVacio($plan, 'no_iniciado');
         $seguimientos = collect();
         if ($plan) {
             $plan->load(['dias.comidas.componentes.receta.alimentos', 'dias.comidas.componentes.alimento']);
             $seguimientos = $paciente->seguimientosComidas()->where('id_plan_alimentario', $plan->getKey())
+                ->whereDate('fecha_seguimiento', '<=', $hoy)
+                ->when($plan->fecha_inicio, fn ($q, $fecha) => $q->whereDate('fecha_seguimiento', '>=', $fecha))
+                ->when($plan->fecha_fin, fn ($q, $fecha) => $q->whereDate('fecha_seguimiento', '<=', $fecha))
                 ->with(['comidaPlanAlimentario.componentes.receta.alimentos', 'comidaPlanAlimentario.componentes.alimento'])->get();
+            if ($seguimientos->isEmpty()) return $this->contextoVacio($plan, 'sin_registros');
         }
 
         $bien = collect(); $evitar = collect(); $alimentosEvitar = collect();
@@ -83,6 +90,7 @@ class ContextoAjustePlanService
         }
 
         $contexto = [
+            'estado_periodo' => $seguimientos->isEmpty() ? 'sin_registros' : ($plan?->fecha_fin?->lt($hoy) ? 'finalizado' : 'en_curso'),
             'id_plan_considerado' => $plan?->getKey(), 'nombre_plan_considerado' => $plan?->nombre,
             'recetas_bien_aceptadas' => $this->unicos($bien, 'id_receta'), 'recetas_a_evitar' => $this->unicos($evitar, 'id_receta'),
             'alimentos_a_evitar' => $this->unicos($alimentosEvitar, 'id_alimento'),
@@ -101,6 +109,19 @@ class ContextoAjustePlanService
         ];
         $contexto['resumen_ajuste'] = $this->resumen($contexto);
         return $contexto;
+    }
+
+    private function contextoVacio($plan, string $estado): array
+    {
+        return [
+            'estado_periodo'=>$estado, 'id_plan_considerado'=>$plan?->getKey(), 'nombre_plan_considerado'=>$plan?->nombre,
+            'recetas_bien_aceptadas'=>[], 'recetas_a_evitar'=>[], 'alimentos_a_evitar'=>[], 'preparaciones_problematicas'=>[],
+            'tipos_comida_problematicos'=>[], 'ingredientes_no_conseguidos'=>[], 'recetas_dificiles'=>[], 'necesita_mas_saciedad'=>[],
+            'hambre_nocturna_frecuente'=>false, 'ansiedad_comida_frecuente'=>false, 'antojos_dulces_frecuentes'=>false,
+            'hinchazon_frecuente'=>false, 'baja_energia_frecuente'=>false, 'sueno_deficiente_frecuente'=>false, 'actividad_fisica_baja'=>false,
+            'recomendaciones_nutricionista'=>[], 'banderas_profesionales'=>['aumentar_saciedad'=>false,'mas_proteina'=>false,'mas_fibra'=>false,'menos_dulce'=>false,'simplificar_preparacion'=>false],
+            'resumen_ajuste'=>[],
+        ];
     }
 
     private function datoReceta($receta, string $motivo, bool $descartar = false): array { return ['id_receta' => $receta->getKey(), 'nombre' => $receta->nombre, 'tipo_comida' => $receta->tipo_comida, 'motivo' => $motivo, 'descartar_temporalmente' => $descartar]; }

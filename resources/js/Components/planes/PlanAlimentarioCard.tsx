@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
-import { router } from '@inertiajs/react';
-import { AlertTriangle, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Coffee, FileDown, LoaderCircle, Moon, Pencil, Plus, Sparkles, Sun, Sunrise, Trash2, XCircle } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { AlertTriangle, ArrowRight, CalendarDays, CheckCircle2, Coffee, FileDown, LoaderCircle, Moon, Pencil, Plus, Sparkles, Sun, Sunrise, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Boton } from '@/Components/ui/boton';
@@ -9,7 +9,7 @@ import type { CatalogoAlimento, CatalogoReceta, ComidaPlan, ComponentePlan, DiaP
 import ModalComponentePlan from './ModalComponentePlan';
 import ModalEditarComidaPlan from './ModalEditarComidaPlan';
 
-interface Props { plan: PlanAlimentario | null; recomendacion: RecomendacionNutricionalExperta | null; puedeGenerar: boolean; alimentos: CatalogoAlimento[]; recetas: CatalogoReceta[] }
+interface Props { plan: PlanAlimentario | null; recomendacion: RecomendacionNutricionalExperta | null; puedeGenerar: boolean; alimentos: CatalogoAlimento[]; recetas: CatalogoReceta[]; pacienteId?: number; modoDetalle?: boolean; soloPlanificacion?: boolean }
 type Accion = (clave: string, fn: () => Promise<unknown>) => void;
 const num = (v: unknown) => Number(v ?? 0);
 const n = (v: unknown) => num(v).toLocaleString('es-BO', { maximumFractionDigits: 2 });
@@ -29,26 +29,43 @@ const manana = () => {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
 };
 const errorDe = (e: unknown) => { const d = (e as AxiosError<{ message?: string; errors?: Record<string, string[]> }>).response?.data; return Object.values(d?.errors ?? {})[0]?.[0] ?? d?.message ?? 'No se pudo completar la operación.'; };
-const datosGroq = (observaciones?: string | null) => {
-    const coincidencia = observaciones?.match(/Ranking Groq:\s*([\d.]+)\/100\.\s*(.*)$/is);
-    return coincidencia ? { puntaje: Number(coincidencia[1]), motivos: coincidencia[2].trim() } : null;
-};
-
-export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar, alimentos, recetas }: Props) {
-    const [detalle, setDetalle] = useState(false), [cargando, setCargando] = useState(''), [mensaje, setMensaje] = useState(''), [esError, setEsError] = useState(false), [modalCiclo, setModalCiclo] = useState(false), [modalGenerar, setModalGenerar] = useState(false), [fechaInicio, setFechaInicio] = useState(manana), [fechaNuevo, setFechaNuevo] = useState(''), [observacion, setObservacion] = useState('');
-    const recargar = () => router.reload({ only: ['planAlimentarioPrincipal', 'recomendacionExpertaAprobada', 'puedeGenerarPlanSemanal', 'historialPlanes', 'analiticaEvolucion', 'seguimientoPaciente'] });
+export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar, alimentos, recetas, pacienteId, modoDetalle = false, soloPlanificacion = false }: Props) {
+    const [cargando, setCargando] = useState(''), [mensaje, setMensaje] = useState(''), [esError, setEsError] = useState(false), [modalCiclo, setModalCiclo] = useState(false), [modalGenerar, setModalGenerar] = useState(false), [modalManual, setModalManual] = useState(false), [fechaInicio, setFechaInicio] = useState(manana), [fechaNuevo, setFechaNuevo] = useState(''), [observacion, setObservacion] = useState(''), [nombreManual, setNombreManual] = useState('Plan semanal personalizado'), [objetivoManual, setObjetivoManual] = useState('');
+    const recargar = () => modoDetalle
+        ? router.reload()
+        : router.reload({ only: ['planAlimentarioPrincipal', 'recomendacionExpertaAprobada', 'puedeGenerarPlanSemanal', 'historialPlanes', 'analiticaEvolucion', 'seguimientoPaciente'] });
     const accion: Accion = async (clave, fn) => { setCargando(clave); setMensaje(''); try { await fn(); setEsError(false); setMensaje('Operación realizada correctamente.'); recargar() } catch (e) { setEsError(true); setMensaje(errorDe(e)) } finally { setCargando('') } };
-    const generar = () => recomendacion && accion('generar', async () => {
-        await axios.post(`/nutricionista/recomendaciones-expertas/${recomendacion.id_recomendacion_nutricional_experta}/generar-plan`, { fecha_inicio: fechaInicio }, { headers: { Accept: 'application/json' } });
-        setModalGenerar(false);
+    const recomendacionAprobada = !!recomendacion && ['aprobado', 'validado'].includes(recomendacion.estado_validacion_experta);
+    const puedeGenerarSeguro = puedeGenerar && recomendacionAprobada;
+    const generar = () => {
+        if (!recomendacionAprobada) {
+            setEsError(true);
+            setMensaje('La recomendación nutricional debe aprobarse antes de generar el plan semanal.');
+            setModalGenerar(false);
+            return;
+        }
+        accion('generar', async () => {
+            await axios.post(`/nutricionista/recomendaciones-expertas/${recomendacion.id_recomendacion_nutricional_experta}/generar-plan`, {
+                fecha_inicio: fechaInicio,
+                reemplazar_plan_id: plan && editable && !plan.generado_por_sistema_experto ? plan.id_plan_alimentario : undefined,
+            }, { headers: { Accept: 'application/json' } });
+            setModalGenerar(false);
+        });
+    };
+    const crearManual = () => accion('manual', async () => {
+        if (!pacienteId) throw new Error('No se pudo identificar al paciente.');
+        await axios.post(`/nutricionista/pacientes/${pacienteId}/planes-alimentarios/manual`, { nombre: nombreManual, fecha_inicio: fechaInicio, objetivo_plan: objetivoManual || null }, { headers: { Accept: 'application/json' } });
+        setModalManual(false);
     });
     const cambiarEstado = (estado: 'aprobado' | 'rechazado') => plan && accion(estado, () => axios.patch(`/nutricionista/planes-alimentarios/${plan.id_plan_alimentario}/estado`, { estado_plan: estado }, { headers: { Accept: 'application/json' } }));
     const editable = !!plan && ['sugerido', 'en_revision'].includes(plan.estado_plan);
     const validable = !!plan && ['sugerido', 'en_revision', 'aprobado', 'rechazado'].includes(plan.estado_plan);
     const finalizable = !!plan && ['aprobado', 'activo'].includes(plan.estado_plan);
-    const componentesPlan = plan?.dias.flatMap(dia => dia.comidas.flatMap(comida => comida.componentes)) ?? [];
-    const componentesGroq = componentesPlan.filter(componente => datosGroq(componente.observaciones));
     const finalizar = () => plan && router.post(route('nutricionista.planes.finalizar-y-generar-siguiente', plan.id_plan_alimentario), { fecha_inicio: fechaNuevo || null, observacion_finalizacion: observacion || null }, { preserveScroll: true, onStart: () => setCargando('finalizar'), onSuccess: () => { setModalCiclo(false); setEsError(false); setMensaje('Plan finalizado y nueva planificación generada.'); recargar() }, onError: e => { setEsError(true); setMensaje(Object.values(e)[0] ?? 'No se pudo finalizar.') }, onFinish: () => setCargando('') });
+
+    if (soloPlanificacion && plan) {
+        return <PlanificacionSemanal dias={plan.dias} editable={editable} alimentos={alimentos} recetas={recetas} accion={accion} recargar={recargar} />;
+    }
 
     return (
         <article className="space-y-4">
@@ -68,34 +85,19 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                 {plan && <Badge color={plan.estado_plan === 'aprobado' || plan.estado_plan === 'activo' ? 'green' : plan.estado_plan === 'rechazado' ? 'red' : 'orange'}>{etiqueta(plan.estado_plan)}</Badge>}
             </div>
 
-            {plan && componentesPlan.length > 0 && (
-                <div className={clsx('flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3', componentesGroq.length > 0 ? 'border-brand-green/25 bg-brand-green/[0.05]' : 'border-brand-orange/25 bg-brand-orange/[0.05]')}>
-                    <div className="flex items-center gap-2.5">
-                        <Sparkles size={16} className={componentesGroq.length > 0 ? 'text-brand-green-dark dark:text-brand-green' : 'text-brand-orange'} />
-                        <div>
-                            <p className="text-[11.5px] font-bold text-ink dark:text-ink-dark">Selección asistida por Groq</p>
-                            <p className="text-[10px] text-ink-muted dark:text-ink-muted-dark">{componentesGroq.length > 0 ? `${componentesGroq.length} de ${componentesPlan.length} recetas recibieron priorización de IA; las demás conservaron el ranking clínico seguro.` : 'Groq no intervino en este plan; se utilizó únicamente el ranking clínico determinista.'}</p>
-                        </div>
+            {/* Elección del origen del plan */}
+            {!plan && (
+                <div className="grid gap-3 md:grid-cols-2">
+                    <div className={clsx('rounded-2xl border p-4', puedeGenerarSeguro ? 'border-brand-green/25 bg-brand-green/[.04]' : 'border-surface-border bg-black/[.015] opacity-70 dark:border-surface-border-dark dark:bg-white/[.02]')}>
+                        <div className="flex items-start gap-3"><div className="rounded-xl bg-brand-green/12 p-2.5 text-brand-green-dark dark:text-brand-green"><Sparkles size={18}/></div><div><h4 className="text-[12.5px] font-bold text-ink dark:text-ink-dark">Con asistencia experta</h4><p className="mt-1 text-[10px] leading-relaxed text-ink-muted">Genera una propuesta desde la recomendación validada para que nutrición la revise.</p></div></div>
+                        <button type="button" onClick={() => setModalGenerar(true)} disabled={!puedeGenerarSeguro || !!cargando} className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-3 text-[10.5px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-35"><Sparkles size={13}/> Generar propuesta</button>
+                        {!puedeGenerarSeguro && <p className="mt-2 text-[9px] text-ink-muted">Requiere una recomendación experta aprobada.</p>}
                     </div>
-                    <Badge color={componentesGroq.length > 0 ? 'green' : 'orange'}>{componentesGroq.length > 0 ? 'Groq aplicado' : 'Fallback seguro'}</Badge>
-                </div>
-            )}
-
-            {/* Sin plan */}
-            {!plan && !puedeGenerar && (
-                <div className="flex items-center gap-2 rounded-xl border border-brand-orange/20 bg-brand-orange/5 px-4 py-3 dark:bg-brand-orange/[0.06]">
-                    <AlertTriangle size={14} strokeWidth={1.8} className="text-brand-orange shrink-0" />
-                    <span className="text-[12px] text-ink dark:text-ink-dark">Primero debe existir una recomendación nutricional aprobada.</span>
-                </div>
-            )}
-            {!plan && puedeGenerar && (
-                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-surface-border py-8 text-center dark:border-surface-border-dark">
-                    <Sparkles size={28} strokeWidth={1.2} className="text-brand-green/40" />
-                    <p className="text-[12.5px] text-ink-muted dark:text-ink-muted-dark">La recomendación está lista para convertirse en un plan semanal.</p>
-                    <Boton variante="primary" tamano="sm" onClick={() => setModalGenerar(true)} disabled={!!cargando}>
-                        <Plus size={14} strokeWidth={1.8} />
-                        Generar plan
-                    </Boton>
+                    <div className="rounded-2xl border border-info/25 bg-info/[.035] p-4">
+                        <div className="flex items-start gap-3"><div className="rounded-xl bg-info/10 p-2.5 text-info"><Pencil size={18}/></div><div><h4 className="text-[12.5px] font-bold text-ink dark:text-ink-dark">Planificación manual</h4><p className="mt-1 text-[10px] leading-relaxed text-ink-muted">Crea los 7 días y completa personalmente recetas, porciones y horarios.</p></div></div>
+                        <button type="button" onClick={() => setModalManual(true)} disabled={!!cargando || !pacienteId} className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-info/30 bg-info/10 px-3 text-[10.5px] font-bold text-info hover:bg-info/15 disabled:opacity-35"><Plus size={13}/> Crear plan manual</button>
+                        <p className="mt-2 text-[9px] text-ink-muted">No utiliza ni modifica el sistema experto.</p>
+                    </div>
                 </div>
             )}
 
@@ -111,6 +113,26 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                     {/* Origen */}
                     <Origen plan={plan} recomendacion={plan.recomendacion_nutricional_experta ?? recomendacion} />
 
+                    {editable && !plan.generado_por_sistema_experto && (
+                        <section className="rounded-2xl border border-brand-green/25 bg-gradient-to-r from-brand-green/[0.08] via-brand-green/[0.035] to-transparent p-4 dark:from-brand-green/[0.1]">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-start gap-3">
+                                    <div className="rounded-xl bg-brand-green/15 p-2.5 text-brand-green-dark dark:text-brand-green"><Sparkles size={18} /></div>
+                                    <div>
+                                        <p className="text-[9.5px] font-semibold uppercase tracking-wider text-brand-green-dark dark:text-brand-green">Alternativa disponible</p>
+                                        <h4 className="mt-0.5 text-[12.5px] font-bold text-ink dark:text-ink-dark">¿Prefieres una propuesta del sistema experto?</h4>
+                                        <p className="mt-1 max-w-2xl text-[10.5px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">El sistema tomará la orientación experta validada y preparará los 7 días con recetas sugeridas. Tu borrador manual quedará guardado en el historial como reemplazado.</p>
+                                    </div>
+                                </div>
+                                <button type="button" onClick={() => setModalGenerar(true)} disabled={!puedeGenerarSeguro || !!cargando}
+                                    className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-green px-3.5 text-[10.5px] font-bold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-40">
+                                    <Sparkles size={13} /> Usar propuesta experta
+                                </button>
+                            </div>
+                            {!puedeGenerarSeguro && <p className="mt-3 rounded-lg bg-black/[0.035] px-3 py-2 text-[9.5px] text-ink-muted dark:bg-white/[0.04] dark:text-ink-muted-dark">Primero genera y aprueba la orientación en la etapa <b>Cálculo</b>; luego podrás crear la propuesta experta desde aquí.</p>}
+                        </section>
+                    )}
+
                     {/* Datos del plan */}
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1.1fr_1.5fr_1fr]">
                         <DatoItem label="Plan vigente" valor={nombrePlanLegible(plan.nombre)} icono={<CalendarDays size={15} />} />
@@ -123,11 +145,7 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
 
                     {/* Acciones */}
                     <div className="flex flex-wrap items-center gap-2">
-                        <button type="button" onClick={() => setDetalle(!detalle)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-4 py-2 text-[12px] font-semibold text-ink transition-colors hover:bg-black/[0.03] dark:border-surface-border-dark dark:text-ink-dark dark:hover:bg-white/[0.04]">
-                            {detalle ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                            {detalle ? 'Ocultar detalle' : 'Ver planificación completa'}
-                        </button>
+                        {!modoDetalle && <Link href={route('nutricionista.planes.detalle', plan.id_plan_alimentario)} className="inline-flex items-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-[11.5px] font-bold text-white shadow-sm transition hover:bg-brand-green-dark">Ver planificación completa <ArrowRight size={14}/></Link>}
                         <a className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-2 text-[11px] font-semibold text-ink-muted transition-colors hover:bg-black/[0.03] hover:text-ink dark:border-surface-border-dark dark:text-ink-muted-dark dark:hover:bg-white/[0.04] dark:hover:text-ink-dark"
                             href={route('nutricionista.planes.reporte-pdf', plan.id_plan_alimentario)} target="_blank" rel="noreferrer">
                             <FileDown size={13} strokeWidth={1.8} /> PDF
@@ -154,7 +172,7 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                     )}
 
                     {/* Detalle de días */}
-                    {detalle && <PlanificacionSemanal dias={plan.dias} editable={editable} alimentos={alimentos} recetas={recetas} accion={accion} recargar={recargar} />}
+                    {modoDetalle && <PlanificacionSemanal dias={plan.dias} editable={editable} alimentos={alimentos} recetas={recetas} accion={accion} recargar={recargar} />}
                 </>
             )}
 
@@ -165,16 +183,29 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                 </div>
             )}
 
+            {modalManual && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-[3px]">
+                    <div className="w-full max-w-lg space-y-4 rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl dark:border-surface-border-dark dark:bg-surface-card-dark">
+                        <div className="flex items-start gap-3"><div className="rounded-xl bg-info/10 p-2.5 text-info"><Pencil size={18}/></div><div><h3 className="text-[15px] font-bold text-ink dark:text-ink-dark">Crear planificación manual</h3><p className="mt-1 text-[11px] leading-relaxed text-ink-muted">Se prepararán 7 días con desayuno, almuerzo, merienda y cena. Después podrás incorporar recetas o alimentos en cada comida.</p></div></div>
+                        <label className="block"><span className="mb-1.5 block text-[10px] font-semibold text-ink-muted">Nombre del plan</span><input value={nombreManual} maxLength={150} onChange={e => setNombreManual(e.target.value)} className="w-full rounded-xl border border-surface-border bg-transparent px-4 py-3 text-[12px] text-ink outline-none focus:border-info/50 dark:border-surface-border-dark dark:text-ink-dark" /></label>
+                        <label className="block"><span className="mb-1.5 block text-[10px] font-semibold text-ink-muted">Fecha de inicio</span><input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} className="w-full rounded-xl border border-surface-border bg-transparent px-4 py-3 text-[12px] text-ink outline-none focus:border-info/50 dark:border-surface-border-dark dark:text-ink-dark" /><span className="mt-1 block text-[9px] text-ink-muted">Puedes elegir la fecha que necesites; el periodo tendrá siete días consecutivos.</span></label>
+                        <label className="block"><span className="mb-1.5 block text-[10px] font-semibold text-ink-muted">Objetivo u orientación del plan <i className="font-normal">(opcional)</i></span><textarea value={objetivoManual} maxLength={500} onChange={e => setObjetivoManual(e.target.value)} placeholder="Ej.: mejorar regularidad de comidas y facilitar preparaciones..." className="min-h-20 w-full resize-none rounded-xl border border-surface-border bg-transparent px-4 py-3 text-[12px] text-ink outline-none focus:border-info/50 dark:border-surface-border-dark dark:text-ink-dark" /></label>
+                        <div className="rounded-xl border border-info/20 bg-info/[.04] px-4 py-3 text-[9.5px] leading-relaxed text-ink-muted"><b className="text-info">Qué sucederá:</b> se copiarán únicamente las metas del cálculo nutricional. No se seleccionarán recetas automáticamente y el plan quedará “En revisión” hasta completar sus 28 comidas.</div>
+                        <div className="flex justify-end gap-3"><Boton type="button" variante="ghost" tamano="sm" onClick={() => setModalManual(false)} disabled={!!cargando}>Cancelar</Boton><button type="button" onClick={crearManual} disabled={!!cargando || !nombreManual.trim() || !fechaInicio} className="inline-flex items-center gap-2 rounded-lg bg-info px-4 py-2 text-[11px] font-bold text-white disabled:opacity-40">{cargando === 'manual' ? <LoaderCircle size={13} className="animate-spin"/> : <CalendarDays size={13}/>} Crear estructura de 7 días</button></div>
+                    </div>
+                </div>
+            )}
+
             {modalGenerar && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 backdrop-blur-[3px] p-4">
                     <div className="w-full max-w-md space-y-4 rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl dark:border-surface-border-dark dark:bg-surface-card-dark">
                         <div>
-                            <h3 className="text-[15px] font-bold text-ink dark:text-ink-dark">Programar plan semanal</h3>
-                            <p className="mt-1 text-[12px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">El inicio automático es mañana. Puedes elegir una fecha posterior; el sistema calculará exactamente 7 días consecutivos.</p>
+                            <h3 className="text-[15px] font-bold text-ink dark:text-ink-dark">{plan && editable && !plan.generado_por_sistema_experto ? 'Cambiar a propuesta experta' : 'Programar plan semanal'}</h3>
+                            <p className="mt-1 text-[12px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">{plan && editable && !plan.generado_por_sistema_experto ? 'Se conservará el borrador manual en el historial y el sistema preparará una nueva propuesta de 7 días para tu revisión.' : 'Elige la fecha de inicio que necesites. El sistema calculará exactamente 7 días consecutivos.'}</p>
                         </div>
                         <div>
                             <label className="mb-1.5 block text-[10.5px] font-semibold text-ink-muted dark:text-ink-muted-dark">Fecha de inicio</label>
-                            <input type="date" min={manana()} required value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
+                            <input type="date" required value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
                                 className="w-full rounded-xl border border-surface-border bg-[#FAF9F6] px-4 py-3 text-[13px] text-ink outline-none focus:border-brand-green/50 focus:ring-0 dark:border-surface-border-dark dark:bg-[#20232B] dark:text-ink-dark" />
                             <p className="mt-1.5 text-[10px] text-ink-muted dark:text-ink-muted-dark">Finaliza el {fechaInicio ? fechaLegible(new Date(`${fechaInicio}T00:00:00`).getTime() ? new Date(new Date(`${fechaInicio}T00:00:00`).getTime() + 6 * 86400000).toISOString().slice(0, 10) : null) : '—'}.</p>
                         </div>
@@ -182,7 +213,7 @@ export default function PlanAlimentarioCard({ plan, recomendacion, puedeGenerar,
                             <Boton type="button" variante="ghost" tamano="sm" onClick={() => setModalGenerar(false)} disabled={!!cargando}>Cancelar</Boton>
                             <Boton type="button" variante="primary" tamano="sm" onClick={generar} disabled={!!cargando || !fechaInicio}>
                                 {cargando === 'generar' ? <LoaderCircle size={14} className="animate-spin" /> : <CalendarDays size={14} />}
-                                Generar 7 días
+                                {plan && editable && !plan.generado_por_sistema_experto ? 'Crear propuesta experta' : 'Generar 7 días'}
                             </Boton>
                         </div>
                     </div>
@@ -246,33 +277,78 @@ function Origen({ plan, recomendacion }: { plan: PlanAlimentario; recomendacion:
 function Resumen({ plan }: { plan: PlanAlimentario }) {
     const dias = Math.max(plan.duracion_dias || 7, 1);
     const datos = [
-        ['Calorías', plan.calorias_objetivo, plan.calorias_totales, 'kcal', 'bg-brand-green', 'text-brand-green-dark dark:text-brand-green'],
-        ['Proteínas', plan.proteinas_objetivo, plan.proteinas_totales, 'g', 'bg-category-dairy', 'text-category-dairy'],
-        ['Carbohidratos', plan.carbohidratos_objetivo, plan.carbohidratos_totales, 'g', 'bg-brand-orange', 'text-brand-orange'],
-        ['Grasas', plan.grasas_objetivo, plan.grasas_totales, 'g', 'bg-category-others', 'text-category-others'],
-        ['Fibra', plan.fibra_objetivo, plan.fibra_total, 'g', 'bg-info', 'text-info'],
+        ['Calorías', plan.calorias_objetivo, plan.calorias_totales, 'kcal'],
+        ['Proteínas', plan.proteinas_objetivo, plan.proteinas_totales, 'g'],
+        ['Carbohidratos', plan.carbohidratos_objetivo, plan.carbohidratos_totales, 'g'],
+        ['Grasas', plan.grasas_objetivo, plan.grasas_totales, 'g'],
+        ['Fibra', plan.fibra_objetivo, plan.fibra_total, 'g'],
     ] as const;
 
+    const apariencia = (porcentaje: number, esMetaMinima = false) => {
+        if (esMetaMinima && porcentaje >= 85) return {
+            etiqueta: porcentaje >= 100 ? 'Objetivo cubierto' : 'Próximo al objetivo',
+            borde: 'border-brand-green/30 bg-brand-green/[0.045]',
+            barra: 'bg-brand-green', texto: 'text-brand-green-dark dark:text-brand-green',
+        };
+        if (porcentaje < 70 || porcentaje > 130) return {
+            etiqueta: porcentaje < 70 ? 'Muy por debajo' : 'Muy por encima',
+            borde: 'border-category-others/35 bg-category-others/[0.055]',
+            barra: 'bg-category-others', texto: 'text-category-others',
+        };
+        if (porcentaje < 85 || porcentaje > 115) return {
+            etiqueta: porcentaje < 85 ? 'Por debajo' : 'Por encima',
+            borde: 'border-brand-orange/35 bg-brand-orange/[0.055]',
+            barra: 'bg-brand-orange', texto: 'text-brand-orange',
+        };
+        return {
+            etiqueta: 'Dentro del rango',
+            borde: 'border-brand-green/30 bg-brand-green/[0.045]',
+            barra: 'bg-brand-green', texto: 'text-brand-green-dark dark:text-brand-green',
+        };
+    };
+
     return (
-        <div>
-            <div className="mb-2 flex items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">Balance nutricional semanal</p><p className="mt-0.5 text-[9.5px] text-ink-muted/80 dark:text-ink-muted-dark/80">Comparación entre el total planificado y la meta calculada para {dias} días.</p></div><span className="hidden text-[9px] text-ink-muted sm:block">Rango esperado: 85–115%</span></div>
+        <div className="space-y-3">
+            <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">Balance nutricional semanal</p>
+                <p className="mt-1 max-w-3xl text-[10px] leading-relaxed text-ink-muted/90 dark:text-ink-muted-dark/90">
+                    Cada porcentaje indica cuánto aporta el plan frente a la meta de los {dias} días: total planificado ÷ meta semanal × 100. Un 100% equivale a cubrir exactamente la meta.
+                </p>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {datos.map(([l, o, p, u, fondo, colorTexto]) => {
+                {datos.map(([l, o, p, u]) => {
                     const objetivo = num(o) * dias;
                     const porcentajeReal = objetivo ? (num(p) / objetivo) * 100 : 0;
                     const pct = Math.min(Math.max(porcentajeReal, 0), 100);
-                    const alerta = objetivo > 0 && (porcentajeReal < 85 || porcentajeReal > 115);
+                    const esFibra = l === 'Fibra';
+                    const estado = apariencia(porcentajeReal, esFibra);
+                    const diferencia = porcentajeReal - 100;
+                    const lectura = esFibra && diferencia >= 0
+                        ? `Cubre el mínimo recomendado y aporta ${n(diferencia)}% adicional`
+                        : diferencia < 0
+                        ? `Falta ${n(Math.abs(diferencia))}% para alcanzar la meta`
+                        : diferencia > 0
+                            ? `Supera la meta en ${n(diferencia)}%`
+                            : 'Meta cubierta exactamente';
                     return (
-                        <div key={l} className={clsx('relative overflow-hidden rounded-xl border px-3 py-3', alerta ? 'border-brand-orange/35 bg-brand-orange/[0.055]' : 'border-surface-border bg-black/[0.02] dark:border-surface-border-dark dark:bg-white/[0.03]')}>
-                            <div className="flex items-center justify-between"><p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{l}</p>{alerta && <AlertTriangle size={11} className="text-brand-orange" />}</div>
-                            <p className={clsx('mt-1 text-[12px] font-bold', colorTexto)}>{n(p)} <span className="text-[9.5px] font-medium text-ink-muted">/ {n(objetivo)} {u}</span></p>
+                        <div key={l} className={clsx('relative overflow-hidden rounded-xl border px-3 py-3', estado.borde)}>
+                            <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">{l}</p><span className={clsx('text-[8px] font-bold', estado.texto)}>{estado.etiqueta}</span></div>
+                            <p className={clsx('mt-1 text-[12px] font-bold', estado.texto)}>{n(p)} <span className="text-[9.5px] font-medium text-ink-muted">/ {n(objetivo)} {u}</span></p>
                             <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/[0.08]">
-                                <div className={clsx('h-full rounded-full transition-all duration-500', alerta ? 'bg-brand-orange' : fondo)} style={{ width: `${pct}%` }} />
+                                <div className={clsx('h-full rounded-full transition-all duration-500', estado.barra)} style={{ width: `${pct}%` }} />
                             </div>
-                            <p className={clsx('mt-1.5 text-[9px] font-semibold', alerta ? 'text-brand-orange' : 'text-ink-muted dark:text-ink-muted-dark')}>{objetivo ? `${n(porcentajeReal)}% de la meta` : 'Sin meta definida'}</p>
+                            <p className={clsx('mt-1.5 text-[10px] font-bold', estado.texto)}>{objetivo ? `${n(porcentajeReal)}% de la meta` : 'Sin meta definida'}</p>
+                            {objetivo > 0 && <p className="mt-1 text-[8.5px] leading-snug text-ink-muted dark:text-ink-muted-dark">{lectura}</p>}
                         </div>
                     );
                 })}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-surface-border bg-black/[0.015] px-3 py-2.5 text-[9px] text-ink-muted dark:border-surface-border-dark dark:bg-white/[0.02] dark:text-ink-muted-dark">
+                <span className="font-semibold text-ink dark:text-ink-dark">Cómo interpretarlo:</span>
+                <span><i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-category-others" />Menos de 70% o más de 130%: diferencia amplia</span>
+                <span><i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-brand-orange" />70–84% o 116–130%: requiere ajuste</span>
+                <span><i className="mr-1.5 inline-block h-2 w-2 rounded-full bg-brand-green" />85–115%: rango esperado</span>
+                <span>En fibra, 100% representa el mínimo recomendado; un valor mayor se revisa según tolerancia.</span>
             </div>
         </div>
     );
@@ -367,7 +443,6 @@ const TIPO_ICONO_LUCIDE: Record<string, typeof Sunrise> = { desayuno: Sunrise, a
 
 function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { comida: ComidaPlan; editable: boolean; alimentos: CatalogoAlimento[]; recetas: CatalogoReceta[]; accion: Accion; recargar: () => void }) {
     const [editarComida, setEditarComida] = useState(false), [modalComponente, setModalComponente] = useState(false), [seleccionado, setSeleccionado] = useState<ComponentePlan | null>(null);
-    const [verDetalle, setVerDetalle] = useState(false);
     const manual = comida.componentes.some(c => c.tipo_componente === 'manual');
     const estilo = TIPO_ESTILOS[comida.tipo_comida] ?? { bg: 'bg-black/[0.03] dark:bg-white/[0.04]', accent: 'text-ink-muted dark:text-ink-muted-dark', dot: 'bg-ink-muted', label: comida.tipo_comida.toUpperCase(), iconBg: 'bg-black/[0.06] text-ink-muted dark:text-ink-muted-dark' };
     const IconoComida = TIPO_ICONO_LUCIDE[comida.tipo_comida] ?? Sun;
@@ -417,50 +492,89 @@ function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { co
 
                 {comida.componentes.length > 0 && (
                     <>
-                        <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-muted/70 dark:text-ink-muted-dark/70 mb-2">Recetas planificadas</p>
-                        <div className="divide-y divide-surface-border/50 dark:divide-surface-border-dark/50">
-                            {comida.componentes.map(c => (
-                                <div key={c.id_componente_comida_plan} className="flex items-center gap-2 py-2 group">
-                                    <div className={clsx('h-5 w-1 rounded-full shrink-0', c.tipo_componente === 'receta' ? 'bg-brand-green' : c.tipo_componente === 'alimento' ? 'bg-category-dairy' : 'bg-brand-orange')} />
-                                    <span className="flex-1 text-[12px] text-ink dark:text-ink-dark truncate">{c.receta?.nombre ?? c.alimento?.nombre ?? c.nombre_manual}</span>
-                                    {datosGroq(c.observaciones) && <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-green/10 px-1.5 py-0.5 text-[8.5px] font-bold text-brand-green-dark dark:text-brand-green"><Sparkles size={9} /> Groq</span>}
-                                    <span className="text-[11px] text-ink-muted dark:text-ink-muted-dark font-medium shrink-0 tabular-nums">{n(c.cantidad)} {c.unidad}</span>
-                                    {editable && (
-                                        <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button type="button" title="Cambiar receta" onClick={() => { setSeleccionado(c); setModalComponente(true) }} className="flex h-5 w-5 items-center justify-center rounded text-ink-muted/50 hover:text-ink hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"><Pencil size={10} /></button>
-                                            <button type="button" onClick={() => confirm('¿Eliminar?') && accion(`eliminar-${c.id_componente_comida_plan}`, () => axios.delete(`/nutricionista/componentes-plan/${c.id_componente_comida_plan}`, { headers: { Accept: 'application/json' } }))} className="flex h-5 w-5 items-center justify-center rounded text-ink-muted/50 hover:text-category-fruits hover:bg-category-fruits/10"><Trash2 size={10} /></button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
                         {comida.componentes.filter(c => c.tipo_componente === 'receta' && c.receta).map(c => {
                             const ingredientes = c.receta?.receta_alimentos ?? [];
                             const factor = Math.max(Number(c.cantidad ?? 1), 0);
+                            const preparacion = c.receta?.preparacion?.trim();
 
                             return (
-                                <div key={`detalle-receta-${c.id_componente_comida_plan}`} className="mt-3 grid gap-3 rounded-xl border border-surface-border/70 bg-black/[0.015] p-3 sm:grid-cols-2 dark:border-surface-border-dark/70 dark:bg-white/[0.02]">
-                                    <div>
-                                        <p className="mb-1.5 text-[9.5px] font-bold uppercase tracking-wider text-brand-green-dark dark:text-brand-green">Ingredientes</p>
-                                        {ingredientes.length > 0 ? (
-                                            <ul className="space-y-1">
-                                                {ingredientes.map(ingrediente => (
-                                                    <li key={ingrediente.id_receta_alimento} className="flex items-start justify-between gap-3 text-[10.5px]">
-                                                        <span className="text-ink/80 dark:text-ink-dark/80">{ingrediente.alimento?.nombre ?? 'Alimento'}</span>
-                                                        <span className="shrink-0 font-semibold tabular-nums text-ink-muted dark:text-ink-muted-dark">{n(Number(ingrediente.cantidad) * factor)} {ingrediente.unidad}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : <p className="text-[10.5px] italic text-ink-muted dark:text-ink-muted-dark">Sin ingredientes detallados.</p>}
+                                <div key={`detalle-receta-${c.id_componente_comida_plan}`} className="group mt-4 overflow-hidden rounded-2xl border border-surface-border/70 bg-black/[0.015] transition-all duration-300 hover:border-brand-green/25 hover:shadow-[0_14px_35px_-24px_rgba(0,0,0,0.45)] dark:border-surface-border-dark/70 dark:bg-white/[0.02] dark:hover:border-brand-green/20">
+                                    <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
+                                        {/* Imagen protagonista de la receta */}
+                                        <div className="relative min-h-44 overflow-hidden bg-surface-muted md:min-h-full dark:bg-surface-muted-dark">
+                                            <img
+                                                src={c.receta?.imagen_url || '/images/recetas/receta-saludable-portada.png'}
+                                                alt={`Fotografía de ${c.receta?.nombre ?? 'la receta'}`}
+                                                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+                                            />
+                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-3 pb-3 pt-10 md:hidden">
+                                                <span className="inline-flex rounded-full border border-white/25 bg-black/25 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-sm">Receta del plan</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="min-w-0">
+                                    {/* Nombre de la receta */}
+                                    <div className="flex flex-wrap items-center gap-2 border-b border-surface-border/50 px-4 py-3 dark:border-surface-border-dark/50">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="hidden text-[8.5px] font-bold uppercase tracking-[0.14em] text-brand-green-dark/75 md:block dark:text-brand-green/80">Receta del plan</p>
+                                            <span className="block text-[12px] font-bold leading-snug text-ink dark:text-ink-dark">{c.receta?.nombre ?? 'Receta'}</span>
+                                        </div>
+                                        {editable && <button type="button" onClick={() => { setSeleccionado(c); setModalComponente(true) }} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-surface-border px-2.5 py-1.5 text-[9px] font-semibold text-ink-muted transition hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-brand-green-dark dark:border-surface-border-dark dark:text-ink-muted-dark dark:hover:text-brand-green"><Pencil size={9} /> Ajustar receta</button>}
+                                        {editable && <button type="button" title="Eliminar receta" onClick={() => confirm('¿Eliminar esta receta?') && accion(`eliminar-${c.id_componente_comida_plan}`, () => axios.delete(`/nutricionista/componentes-plan/${c.id_componente_comida_plan}`, { headers: { Accept: 'application/json' } }))} className="flex h-6 w-6 items-center justify-center rounded-lg text-ink-muted/60 transition hover:bg-category-fruits/10 hover:text-category-fruits"><Trash2 size={10} /></button>}
                                     </div>
-                                    <div>
-                                        <p className="mb-1.5 text-[9.5px] font-bold uppercase tracking-wider text-category-dairy">PreparaciÃ³n</p>
-                                        <p className="whitespace-pre-line text-[10.5px] leading-relaxed text-ink/80 dark:text-ink-dark/80">{c.receta?.preparacion || 'Sin instrucciones de preparaciÃ³n.'}</p>
+
+                                    <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-surface-border/50 dark:divide-surface-border-dark/50">
+                                        {/* ── Ingredientes ── */}
+                                        <div className="px-4 py-3">
+                                            <p className="mb-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-brand-green-dark dark:text-brand-green">
+                                                <span className="inline-block h-2 w-2 rounded-sm bg-brand-green/60" />
+                                                Ingredientes
+                                            </p>
+                                            {ingredientes.length > 0 ? (
+                                                <ul className="space-y-1.5">
+                                                    {ingredientes.map(ingrediente => (
+                                                        <li key={ingrediente.id_receta_alimento} className="flex items-baseline justify-between gap-2">
+                                                            <span className="text-[10.5px] text-ink/80 dark:text-ink-dark/80 leading-tight">{ingrediente.alimento?.nombre ?? 'Alimento'}</span>
+                                                            <span className="shrink-0 font-semibold tabular-nums text-[10px] text-ink-muted dark:text-ink-muted-dark whitespace-nowrap">
+                                                                {n(Number(ingrediente.cantidad) * factor)} {ingrediente.unidad}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-[10.5px] italic text-ink-muted dark:text-ink-muted-dark">Sin ingredientes registrados.</p>
+                                            )}
+                                        </div>
+
+                                        {/* ── Preparación ── */}
+                                        <div className="px-4 py-3">
+                                            <p className="mb-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-category-dairy">
+                                                <span className="inline-block h-2 w-2 rounded-sm bg-category-dairy/60" />
+                                                Preparación
+                                            </p>
+                                            {preparacion ? (
+                                                <p className="whitespace-pre-line text-[10.5px] leading-relaxed text-ink/80 dark:text-ink-dark/80">
+                                                    {preparacion}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[10.5px] italic text-ink-muted dark:text-ink-muted-dark">
+                                                    Sin instrucciones de preparación registradas.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                        </div>
                                     </div>
                                 </div>
                             );
                         })}
+                        {comida.componentes.filter(c => c.tipo_componente !== 'receta' || !c.receta).map(c => (
+                            <div key={`componente-${c.id_componente_comida_plan}`} className="mt-3 flex items-center gap-3 rounded-xl border border-surface-border/70 bg-black/[0.015] px-3 py-3 dark:border-surface-border-dark/70 dark:bg-white/[0.02]">
+                                <span className={clsx('h-7 w-1 rounded-full', c.tipo_componente === 'alimento' ? 'bg-category-dairy' : 'bg-brand-orange')} />
+                                <div className="min-w-0 flex-1"><p className="truncate text-[11px] font-bold text-ink dark:text-ink-dark">{c.alimento?.nombre ?? c.nombre_manual ?? 'Componente complementario'}</p><p className="mt-0.5 text-[9px] text-ink-muted dark:text-ink-muted-dark">{n(c.calorias)} kcal · complemento del tiempo de comida</p></div>
+                                {editable && <button type="button" onClick={() => { setSeleccionado(c); setModalComponente(true) }} className="inline-flex items-center gap-1 rounded-lg border border-surface-border px-2 py-1 text-[9px] font-semibold text-ink-muted dark:border-surface-border-dark dark:text-ink-muted-dark"><Pencil size={9} /> Ajustar</button>}
+                            </div>
+                        ))}
                     </>
                 )}
 
@@ -469,37 +583,6 @@ function Comida({ comida, editable, alimentos, recetas, accion, recargar }: { co
                     <div className="mt-3 pt-3 border-t border-surface-border/50 dark:border-surface-border-dark/50">
                         <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-muted/70 dark:text-ink-muted-dark/70 mb-1">Indicaciones adicionales</p>
                         <p className="text-[11.5px] text-ink/80 dark:text-ink-dark/80 leading-relaxed">{comida.observaciones}</p>
-                    </div>
-                )}
-
-                {/* Ver detalle expandido con macros por componente */}
-                {comida.componentes.length > 0 && (
-                    <button type="button" onClick={() => setVerDetalle(!verDetalle)}
-                        className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted dark:text-ink-muted-dark hover:text-ink dark:hover:text-ink-dark transition-colors">
-                        {verDetalle ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        {verDetalle ? 'Ocultar detalle' : 'Ver detalle'}
-                    </button>
-                )}
-
-                {verDetalle && (
-                    <div className="mt-2 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] p-3 space-y-2">
-                        {comida.componentes.map(c => (
-                            <div key={c.id_componente_comida_plan} className="space-y-2 rounded-lg border border-surface-border/50 p-2 dark:border-surface-border-dark/50">
-                                <div className="flex items-center justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-semibold text-ink dark:text-ink-dark truncate">{c.receta?.nombre ?? c.alimento?.nombre ?? c.nombre_manual}</p>
-                                    <div className="flex gap-2 mt-0.5">
-                                        <span className="text-[9px] text-brand-green-dark dark:text-brand-green font-medium">{n(c.calorias)} kcal</span>
-                                        <span className="text-[9px] text-category-dairy font-medium">{n(c.proteinas)}g P</span>
-                                        <span className="text-[9px] text-brand-orange font-medium">{n(c.carbohidratos)}g C</span>
-                                        <span className="text-[9px] text-category-others font-medium">{n(c.grasas)}g G</span>
-                                    </div>
-                                </div>
-                                <span className={clsx('text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0', c.tipo_componente === 'receta' ? 'bg-brand-green/10 text-brand-green-dark dark:text-brand-green' : c.tipo_componente === 'alimento' ? 'bg-category-dairy/10 text-category-dairy' : 'bg-brand-orange/10 text-brand-orange')}>{c.tipo_componente}</span>
-                                </div>
-                                {datosGroq(c.observaciones) ? <div className="rounded-lg bg-brand-green/[0.06] px-2.5 py-2"><p className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-brand-green-dark dark:text-brand-green"><Sparkles size={10} /> Groq {n(datosGroq(c.observaciones)?.puntaje)}/100</p><p className="mt-1 text-[10px] leading-relaxed text-ink/75 dark:text-ink-dark/75">{datosGroq(c.observaciones)?.motivos}</p></div> : c.tipo_componente === 'receta' && <p className="text-[9.5px] text-ink-muted dark:text-ink-muted-dark">Seleccionada mediante reglas clínicas deterministas.</p>}
-                            </div>
-                        ))}
                     </div>
                 )}
 

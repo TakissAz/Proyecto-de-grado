@@ -41,21 +41,27 @@ export default function TarjetaHiperandrogenismo({ hiperandrogenismo, idPaciente
     const acneRelevante = hiperandrogenismo.acne && (hiperandrogenismo.acne_grado === 'moderado' || hiperandrogenismo.acne_grado === 'severo');
     const tieneHA = hiperandrogenismo.hirsutismo || hiperandrogenismo.alopecia_androgenica || acneRelevante || ferrimanAlto;
 
-    const hallazgos = [
-        acneRelevante && `Acné ${formatGrado(hiperandrogenismo.acne_grado)}`,
-        hiperandrogenismo.hirsutismo && 'Hirsutismo',
-        ferrimanAlto && `Ferriman-Gallwey ≥ 8`,
-        hiperandrogenismo.alopecia_androgenica && 'Alopecia androgénica',
-        hiperandrogenismo.seborrea && 'Seborrea',
-        hiperandrogenismo.progresion_sintomas === 'progresivo' && 'Progresión activa',
-    ].filter(Boolean) as string[];
+    const criteriosPrincipales = [
+        acneRelevante,
+        hiperandrogenismo.hirsutismo || ferrimanAlto,
+        hiperandrogenismo.alopecia_androgenica,
+    ].filter(Boolean).length;
+    const criterioDeterminante = ferrimanAlto
+        ? `Ferriman–Gallwey de ${hiperandrogenismo.puntaje_ferriman_gallwey}, por encima del umbral clínico de 8.`
+        : hiperandrogenismo.hirsutismo
+            ? 'Hirsutismo clínico presente; falta completar la escala Ferriman–Gallwey.'
+            : acneRelevante
+                ? `Acné ${formatGrado(hiperandrogenismo.acne_grado).toLowerCase()}, considerado clínicamente relevante.`
+                : hiperandrogenismo.alopecia_androgenica
+                    ? 'Alopecia androgénica presente como manifestación clínica relevante.'
+                    : null;
 
     // Datos para el gráfico de severidad
     const radarData = [
-        { label: 'Acné', valor: hiperandrogenismo.acne ? (hiperandrogenismo.acne_grado === 'severo' ? 3 : hiperandrogenismo.acne_grado === 'moderado' ? 2 : 1) : 0, max: 3, descripcion: hiperandrogenismo.acne ? formatGrado(hiperandrogenismo.acne_grado) : 'Ausente', referencia: 'Moderado/Severo = relevante', color: 'bg-category-fruits', colorTexto: 'text-category-fruits' },
-        { label: 'Hirsutismo (F-G)', valor: hiperandrogenismo.puntaje_ferriman_gallwey ?? 0, max: 20, descripcion: hiperandrogenismo.puntaje_ferriman_gallwey != null ? `${hiperandrogenismo.puntaje_ferriman_gallwey} pts` : 'No evaluado', referencia: '≥ 8 pts = positivo', color: 'bg-brand-orange', colorTexto: 'text-brand-orange' },
-        { label: 'Alopecia', valor: hiperandrogenismo.alopecia_androgenica ? 2 : 0, max: 3, descripcion: hiperandrogenismo.alopecia_androgenica ? 'Presente' : 'Ausente', referencia: 'Presente = relevante', color: 'bg-category-dairy', colorTexto: 'text-category-dairy' },
-        { label: 'Seborrea', valor: hiperandrogenismo.seborrea ? 1.5 : 0, max: 3, descripcion: hiperandrogenismo.seborrea ? 'Presente' : 'Ausente', referencia: 'Signo menor', color: 'bg-category-grains', colorTexto: 'text-category-grains' },
+        { label: 'Acné', valor: hiperandrogenismo.acne ? (hiperandrogenismo.acne_grado === 'severo' ? 3 : hiperandrogenismo.acne_grado === 'moderado' ? 2 : 1) : 0, max: 3, tipo: 'escala' as const, descripcion: hiperandrogenismo.acne ? formatGrado(hiperandrogenismo.acne_grado) : 'Ausente', referencia: 'Moderado/Severo = relevante', color: 'bg-category-fruits', colorTexto: 'text-category-fruits' },
+        { label: 'Hirsutismo (F-G)', valor: hiperandrogenismo.puntaje_ferriman_gallwey ?? (hiperandrogenismo.hirsutismo ? 1 : 0), max: hiperandrogenismo.puntaje_ferriman_gallwey != null ? 36 : 1, tipo: hiperandrogenismo.puntaje_ferriman_gallwey != null ? 'escala' as const : 'binario' as const, descripcion: hiperandrogenismo.puntaje_ferriman_gallwey != null ? `${hiperandrogenismo.puntaje_ferriman_gallwey} pts` : hiperandrogenismo.hirsutismo ? 'Presente · sin puntaje' : 'No evaluado', referencia: hiperandrogenismo.puntaje_ferriman_gallwey != null ? '≥ 8 pts = positivo' : 'Conviene completar la escala F-G', color: 'bg-brand-orange', colorTexto: 'text-brand-orange' },
+        { label: 'Alopecia', valor: hiperandrogenismo.alopecia_androgenica ? 1 : 0, max: 1, tipo: 'binario' as const, descripcion: hiperandrogenismo.alopecia_androgenica ? 'Presente' : 'Ausente', referencia: 'Presente = relevante', color: 'bg-category-dairy', colorTexto: 'text-category-dairy' },
+        { label: 'Seborrea', valor: hiperandrogenismo.seborrea ? 1 : 0, max: 1, tipo: 'binario' as const, descripcion: hiperandrogenismo.seborrea ? 'Presente' : 'Ausente', referencia: 'Signo menor', color: 'bg-category-grains', colorTexto: 'text-category-grains' },
     ];
 
     return (
@@ -97,7 +103,7 @@ export default function TarjetaHiperandrogenismo({ hiperandrogenismo, idPaciente
                 <GraficoSeveridad datos={radarData} tieneHA={tieneHA} />
 
                 {/* Datos clínicos */}
-                <div>
+                <div className="flex min-h-full flex-col">
                     <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark mb-2">
                         Evaluación clínica
                     </p>
@@ -109,22 +115,23 @@ export default function TarjetaHiperandrogenismo({ hiperandrogenismo, idPaciente
                         {hiperandrogenismo.inicio_sintomas && <DatoItem label="Inicio" valor={hiperandrogenismo.inicio_sintomas} />}
                         {hiperandrogenismo.progresion_sintomas && <DatoItem label="Progresión" valor={formatProgresion(hiperandrogenismo.progresion_sintomas)} destacar={hiperandrogenismo.progresion_sintomas === 'progresivo'} />}
                     </div>
+
+                    {/* Interpretación: ocupa el espacio restante junto al gráfico */}
+                    <div className={clsx('mt-3 flex-1 rounded-xl border px-4 py-3', tieneHA ? 'border-brand-orange/25 bg-brand-orange/[0.06]' : 'border-brand-green/20 bg-brand-green/[0.05]')}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted dark:text-ink-muted-dark">Interpretación clínica</p>
+                            {tieneHA && <span className="rounded-full bg-brand-orange/15 px-2 py-1 text-[9.5px] font-bold text-brand-orange">{criteriosPrincipales} criterio(s) principal(es)</span>}
+                        </div>
+                        <p className={clsx('mt-1 text-[12.5px] font-bold', tieneHA ? 'text-brand-orange' : 'text-brand-green-dark dark:text-brand-green')}>
+                            {tieneHA ? 'Compatible con hiperandrogenismo clínico' : 'Sin evidencia clínica relevante'}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-ink-muted dark:text-ink-muted-dark">
+                            {criterioDeterminante ?? 'Los signos registrados no alcanzan actualmente criterios clínicos de relevancia.'}
+                            {hiperandrogenismo.seborrea && ' La seborrea se considera un signo complementario, no determinante por sí solo.'}
+                        </p>
+                    </div>
                 </div>
             </div>
-
-            {/* Hallazgos como badges */}
-            {hallazgos.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                    {hallazgos.map((h) => (
-                        <Badge key={h} color={h.includes('Ferriman') || h.includes('Progresión') ? 'red' : 'orange'}>{h}</Badge>
-                    ))}
-                </div>
-            )}
-
-            {/* Interpretación */}
-            <p className={clsx('text-[12px] font-medium', tieneHA ? 'text-brand-orange' : 'text-ink-muted dark:text-ink-muted-dark')}>
-                {tieneHA ? 'Datos compatibles con hiperandrogenismo clínico.' : 'Sin signos clínicos relevantes registrados.'}
-            </p>
 
             {/* Observaciones */}
             {hiperandrogenismo.observaciones && (

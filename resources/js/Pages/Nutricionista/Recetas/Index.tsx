@@ -19,6 +19,7 @@ export interface RecetaRow {
   id_receta: number;
   nombre: string;
   descripcion: string | null;
+  imagen_url: string | null;
   tipo_comida: string;
   porciones: number;
   tiempo_preparacion_minutos: number | null;
@@ -229,7 +230,7 @@ export default function Index({ recetas, filtros, flash, alimentos }: Props) {
               <table className="w-full min-w-[700px] border-collapse">
                 <thead>
                   <tr className="border-b border-surface-border text-left text-[11px] font-semibold text-ink-muted dark:border-surface-border-dark dark:text-ink-muted-dark">
-                    <th className="px-5 py-2.5">Nombre</th>
+                    <th className="px-5 py-2.5">Receta</th>
                     <th className="px-3 py-2.5">Tipo</th>
                     <th className="px-3 py-2.5 text-right">Calorias</th>
                     <th className="px-3 py-2.5 text-right">Porciones</th>
@@ -247,7 +248,12 @@ export default function Index({ recetas, filtros, flash, alimentos }: Props) {
                         receta.estado === 'inactivo' && 'opacity-50'
                       )}
                     >
-                      <td className="px-5 py-3 text-[12.5px] font-semibold text-ink dark:text-ink-dark">{receta.nombre}</td>
+                      <td className="px-5 py-2.5">
+                        <div className="flex items-center gap-3">
+                          <img src={receta.imagen_url || '/images/recetas/receta-saludable-portada.png'} alt="" className="h-11 w-14 rounded-xl object-cover ring-1 ring-black/5 dark:ring-white/10" loading="lazy" />
+                          <div><p className="text-[12.5px] font-semibold text-ink dark:text-ink-dark">{receta.nombre}</p>{receta.descripcion && <p className="mt-0.5 max-w-[260px] truncate text-[10px] text-ink-muted dark:text-ink-muted-dark">{receta.descripcion}</p>}</div>
+                        </div>
+                      </td>
                       <td className="px-3 py-3">
                         <Badge color={(tipoComidaColor[receta.tipo_comida] ?? 'gray') as any}>
                           {tipoComidaLabel[receta.tipo_comida] ?? receta.tipo_comida}

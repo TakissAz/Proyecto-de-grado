@@ -12,7 +12,7 @@ class ProgresoPacientesNutricionistaService
     public function obtener(User $nutricionista): array
     {
         $planes = PlanAlimentario::query()
-            ->with(['paciente:id_paciente,nombres,apellido_paterno,apellido_materno,ci', 'dias.comidas', 'seguimientosComidas'])
+            ->with(['paciente.user', 'dias.comidas', 'seguimientosComidas'])
             ->where('id_nutricionista', $nutricionista->getKey())
             ->whereIn('estado_plan', ['activo', 'aprobado'])
             ->orderByRaw("CASE WHEN estado_plan = 'activo' THEN 0 ELSE 1 END")
@@ -29,6 +29,8 @@ class ProgresoPacientesNutricionistaService
                 'en_progreso' => $planes->where('estado_seguimiento', 'en_progreso')->count(),
                 'requieren_atencion' => $planes->whereIn('estado_seguimiento', ['requiere_atencion', 'sin_registros'])->count(),
                 'adherencia_promedio' => round((float) $planes->avg('adherencia_semanal'), 1),
+                'planes_por_vencer' => $planes->whereIn('vigencia.estado', ['vence_hoy', 'vence_pronto'])->count(),
+                'planes_vencidos' => $planes->where('vigencia.estado', 'vencido')->count(),
             ],
             'pacientes' => $planes->sortBy([
                 fn (array $item) => match ($item['estado_seguimiento']) { 'requiere_atencion' => 0, 'sin_registros' => 1, 'en_progreso' => 2, default => 3 },
@@ -58,9 +60,18 @@ class ProgresoPacientesNutricionistaService
         $alDia = $conRegistro && ($estadisticasSemana['porcentaje'] >= 85 || ($diaHoy && $estadisticasHoy['porcentaje'] >= 85));
         $estado = ! $conRegistro ? 'sin_registros' : ($requiereAtencion ? 'requiere_atencion' : ($alDia ? 'al_dia' : 'en_progreso'));
         $nombre = trim(implode(' ', array_filter([$plan->paciente?->nombres, $plan->paciente?->apellido_paterno, $plan->paciente?->apellido_materno])));
+        $hoyBolivia = now('America/La_Paz')->startOfDay();
+        $fin = $plan->fecha_fin?->copy()->startOfDay();
+        $diasRestantes = $fin ? (int) $hoyBolivia->diffInDays($fin, false) : null;
+        $estadoVigencia = $diasRestantes === null ? 'sin_fecha' : match (true) {
+            $diasRestantes < 0 => 'vencido',
+            $diasRestantes === 0 => 'vence_hoy',
+            $diasRestantes <= 2 => 'vence_pronto',
+            default => 'vigente',
+        };
 
         return [
-            'paciente' => ['id_paciente' => $plan->id_paciente, 'nombre' => $nombre ?: 'Paciente sin nombre', 'ci' => $plan->paciente?->ci],
+            'paciente' => ['id_paciente' => $plan->id_paciente, 'nombre' => $nombre ?: 'Paciente sin nombre', 'ci' => $plan->paciente?->ci, 'avatar_url' => $plan->paciente?->user?->avatar_url],
             'plan' => ['id_plan_alimentario' => $plan->getKey(), 'nombre' => $plan->nombre, 'estado' => $plan->estado_plan, 'fecha_inicio' => $plan->fecha_inicio?->toDateString(), 'fecha_fin' => $plan->fecha_fin?->toDateString()],
             'estado_seguimiento' => $estado,
             'adherencia_semanal' => $estadisticasSemana['porcentaje'],
@@ -70,6 +81,7 @@ class ProgresoPacientesNutricionistaService
             'dias_cumplidos' => $diasCumplidos,
             'total_dias' => $dias->count(),
             'ultima_actualizacion' => $plan->seguimientosComidas->max('updated_at')?->toISOString(),
+            'vigencia' => ['estado' => $estadoVigencia, 'dias_restantes' => $diasRestantes, 'fecha_fin' => $plan->fecha_fin?->toDateString()],
         ];
     }
 
